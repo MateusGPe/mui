@@ -6,12 +6,14 @@
 
 namespace mui
 {
+  class Group;
+  using GroupPtr = std::shared_ptr<Group>;
 
   class Group : public Control
   {
   private:
     uiGroup *group;
-    std::shared_ptr<Control> child;
+    ControlPtr child;
 
   protected:
     void onHandleDestroyed() override;
@@ -20,15 +22,15 @@ namespace mui
     Group(const std::string &title);
 
     template <typename... Args>
-    static std::shared_ptr<Group> create(Args &&...args)
+    static GroupPtr create(Args &&...args)
     {
       return std::make_shared<Group>(std::forward<Args>(args)...);
     }
 
-    std::shared_ptr<Group> setChild(std::shared_ptr<Control> child);
-    std::shared_ptr<Group> setMargined(bool margined);
+    GroupPtr setChild(ControlPtr child);
+    GroupPtr setMargined(bool margined);
     std::string getTitle() const;
-    std::shared_ptr<Group> setTitle(const std::string &title);
+    GroupPtr setTitle(const std::string &title);
     bool getMargined() const;
   };
 

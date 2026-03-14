@@ -11,7 +11,7 @@ namespace mui
     handle = uiControl(label);
   }
 
-  std::shared_ptr<Label> Label::setText(const std::string &text)
+  LabelPtr Label::setText(const std::string &text)
   {
     verifyState();
     uiLabelSetText(label, text.c_str());
@@ -21,8 +21,7 @@ namespace mui
   std::string Label::getText() const
   {
     verifyState();
-    const char *text = uiLabelText(label);
-    return text ? std::string(text) : std::string();
+    return UiText(uiLabelText(label));
   }
 
 } // namespace mui

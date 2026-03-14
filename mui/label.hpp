@@ -7,6 +7,9 @@
 namespace mui
 {
 
+  class Label;
+  using LabelPtr = std::shared_ptr<Label>;
+
   class Label : public Control
   {
     uiLabel *label;
@@ -15,12 +18,12 @@ namespace mui
     Label(const std::string &text);
 
     template <typename... Args>
-    static std::shared_ptr<Label> create(Args &&...args)
+    static LabelPtr create(Args &&...args)
     {
       return std::make_shared<Label>(std::forward<Args>(args)...);
     }
 
-    std::shared_ptr<Label> setText(const std::string &text);
+    LabelPtr setText(const std::string &text);
     std::string getText() const;
   };
 

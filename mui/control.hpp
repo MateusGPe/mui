@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
 #include <ui.h>
+#include <string>
 
 namespace mui
 {
@@ -12,6 +13,14 @@ namespace mui
     class Box;
     class Label;
     class Button;
+    class Control;
+    using ControlPtr = std::shared_ptr<Control>;
+
+    inline static std::string UiText(char *rawString)
+    {
+        std::unique_ptr<char, decltype(&uiFreeText)> cstr(rawString, uiFreeText);
+        return cstr ? std::string(cstr.get()) : std::string();
+    }
 
     // --- Base Control Class ---
     class Control : public std::enable_shared_from_this<Control>

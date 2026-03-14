@@ -39,7 +39,7 @@ namespace mui
       self->onFocusChangedCb();
   }
 
-  std::shared_ptr<Window> Window::onFocusChanged(std::function<void()> cb)
+  WindowPtr Window::onFocusChanged(std::function<void()> cb)
   {
     verifyState();
     onFocusChangedCb = std::move(cb);
@@ -60,7 +60,7 @@ namespace mui
       self->onContentSizeChangedCb();
   }
 
-  std::shared_ptr<Window> Window::onContentSizeChanged(std::function<void()> cb)
+  WindowPtr Window::onContentSizeChanged(std::function<void()> cb)
   {
     verifyState();
     onContentSizeChangedCb = std::move(cb);
@@ -75,7 +75,7 @@ namespace mui
       self->onPositionChangedCb();
   }
 
-  std::shared_ptr<Window> Window::onPositionChanged(std::function<void()> cb)
+  WindowPtr Window::onPositionChanged(std::function<void()> cb)
   {
     verifyState();
     onPositionChangedCb = std::move(cb);
@@ -90,7 +90,7 @@ namespace mui
       child->onHandleDestroyed();
   }
 
-  std::shared_ptr<Window> Window::setChild(std::shared_ptr<Control> c)
+  WindowPtr Window::setChild(ControlPtr c)
   {
     verifyState();
     child = c;
@@ -99,14 +99,14 @@ namespace mui
     return std::static_pointer_cast<Window>(shared_from_this());
   }
 
-  std::shared_ptr<Window> Window::setMargined(bool margined)
+  WindowPtr Window::setMargined(bool margined)
   {
     verifyState();
     uiWindowSetMargined(win, margined ? 1 : 0);
     return std::static_pointer_cast<Window>(shared_from_this());
   }
 
-  std::shared_ptr<Window> Window::onClosing(std::function<bool()> cb)
+  WindowPtr Window::onClosing(std::function<bool()> cb)
   {
     verifyState();
     onClosingCb = std::move(cb);
@@ -116,12 +116,10 @@ namespace mui
   std::string Window::getTitle() const
   {
     verifyState();
-    std::unique_ptr<char, decltype(&uiFreeText)> title(uiWindowTitle(win),
-                                                      uiFreeText);
-    return title ? std::string(title.get()) : std::string();
+    return UiText(uiWindowTitle(win));
   }
 
-  std::shared_ptr<Window> Window::setTitle(const std::string &title)
+  WindowPtr Window::setTitle(const std::string &title)
   {
     verifyState();
     uiWindowSetTitle(win, title.c_str());
@@ -136,7 +134,7 @@ namespace mui
     return {width, height};
   }
 
-  std::shared_ptr<Window> Window::setContentSize(int width, int height)
+  WindowPtr Window::setContentSize(int width, int height)
   {
     verifyState();
     uiWindowSetContentSize(win, width, height);
@@ -149,7 +147,7 @@ namespace mui
     return uiWindowFullscreen(win);
   }
 
-  std::shared_ptr<Window> Window::setFullscreen(bool fullscreen)
+  WindowPtr Window::setFullscreen(bool fullscreen)
   {
     verifyState();
     uiWindowSetFullscreen(win, fullscreen);
@@ -162,7 +160,7 @@ namespace mui
     return uiWindowBorderless(win);
   }
 
-  std::shared_ptr<Window> Window::setBorderless(bool borderless)
+  WindowPtr Window::setBorderless(bool borderless)
   {
     verifyState();
     uiWindowSetBorderless(win, borderless);
@@ -175,7 +173,7 @@ namespace mui
     return uiWindowResizeable(win);
   }
 
-  std::shared_ptr<Window> Window::setResizeable(bool resizeable)
+  WindowPtr Window::setResizeable(bool resizeable)
   {
     verifyState();
     uiWindowSetResizeable(win, resizeable);
@@ -190,7 +188,7 @@ namespace mui
     return {x, y};
   }
 
-  std::shared_ptr<Window> Window::setPosition(int x, int y)
+  WindowPtr Window::setPosition(int x, int y)
   {
     verifyState();
     uiWindowSetPosition(win, x, y);

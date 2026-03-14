@@ -20,8 +20,7 @@ namespace mui
       c->onHandleDestroyed();
   }
 
-  std::shared_ptr<Tab> Tab::append(const std::string &name,
-                                   std::shared_ptr<Control> child)
+  TabPtr Tab::append(const std::string &name, ControlPtr child)
   {
     verifyState();
     children.push_back(child);
@@ -30,7 +29,7 @@ namespace mui
     return std::static_pointer_cast<Tab>(shared_from_this());
   }
 
-  std::shared_ptr<Tab> Tab::setMargined(int page, bool margined)
+  TabPtr Tab::setMargined(int page, bool margined)
   {
     verifyState();
     uiTabSetMargined(tab, page, margined ? 1 : 0);
@@ -44,15 +43,15 @@ namespace mui
       self->onSelectedCb();
   }
 
-  std::shared_ptr<Tab> Tab::onSelected(std::function<void()> cb)
+  TabPtr Tab::onSelected(std::function<void()> cb)
   {
     verifyState();
     onSelectedCb = std::move(cb);
     return std::static_pointer_cast<Tab>(shared_from_this());
   }
 
-  std::shared_ptr<Tab> Tab::insertAt(const std::string &name, int index,
-                                     std::shared_ptr<Control> child)
+  TabPtr Tab::insertAt(const std::string &name, int index,
+                       ControlPtr child)
   {
     verifyState();
     children.insert(children.begin() + index, child);
@@ -61,7 +60,7 @@ namespace mui
     return std::static_pointer_cast<Tab>(shared_from_this());
   }
 
-  std::shared_ptr<Tab> Tab::deletePage(int index)
+  TabPtr Tab::deletePage(int index)
   {
     verifyState();
     if (index >= 0 && index < children.size())
@@ -85,7 +84,7 @@ namespace mui
     return uiTabSelected(tab);
   }
 
-  std::shared_ptr<Tab> Tab::setSelected(int index)
+  TabPtr Tab::setSelected(int index)
   {
     verifyState();
     uiTabSetSelected(tab, index);

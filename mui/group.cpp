@@ -17,7 +17,7 @@ namespace mui
     if (child)
       child->onHandleDestroyed();
   }
-  std::shared_ptr<Group> Group::setChild(std::shared_ptr<Control> c)
+  GroupPtr Group::setChild(ControlPtr c)
   {
     verifyState();
     child = c;
@@ -25,7 +25,7 @@ namespace mui
     c->releaseOwnership();
     return std::static_pointer_cast<Group>(shared_from_this());
   }
-  std::shared_ptr<Group> Group::setMargined(bool margined)
+  GroupPtr Group::setMargined(bool margined)
   {
     verifyState();
     uiGroupSetMargined(group, margined ? 1 : 0);
@@ -35,10 +35,10 @@ namespace mui
   std::string Group::getTitle() const
   {
     verifyState();
-    return uiGroupTitle(group);
+    return UiText(uiGroupTitle(group));
   }
 
-  std::shared_ptr<Group> Group::setTitle(const std::string &title)
+  GroupPtr Group::setTitle(const std::string &title)
   {
     verifyState();
     uiGroupSetTitle(group, title.c_str());

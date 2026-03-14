@@ -22,26 +22,24 @@ namespace mui
   std::string Entry::getText() const
   {
     verifyState();
-    std::unique_ptr<char, decltype(&uiFreeText)> cstr(uiEntryText(entry),
-                                                      uiFreeText);
-    return cstr ? std::string(cstr.get()) : std::string();
+    return UiText(uiEntryText(entry));
   }
 
-  std::shared_ptr<Entry> Entry::setText(const std::string &text)
+  EntryPtr Entry::setText(const std::string &text)
   {
     verifyState();
     uiEntrySetText(entry, text.c_str());
     return std::static_pointer_cast<Entry>(shared_from_this());
   }
 
-  std::shared_ptr<Entry> Entry::setReadOnly(bool readOnly)
+  EntryPtr Entry::setReadOnly(bool readOnly)
   {
     verifyState();
     uiEntrySetReadOnly(entry, readOnly ? 1 : 0);
     return std::static_pointer_cast<Entry>(shared_from_this());
   }
 
-  std::shared_ptr<Entry> Entry::onChanged(std::function<void()> cb)
+  EntryPtr Entry::onChanged(std::function<void()> cb)
   {
     verifyState();
     onChangedCb = std::move(cb);

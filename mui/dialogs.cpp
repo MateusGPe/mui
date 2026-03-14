@@ -25,10 +25,7 @@ namespace mui
   std::string Dialogs::openFile(Control &parent)
   {
     parent.verifyState();
-    // RAII for char array return from openFile
-    std::unique_ptr<char, decltype(&uiFreeText)> res(
-        uiOpenFile(uiWindow(parent.getHandle())), uiFreeText);
-    return res ? std::string(res.get()) : std::string();
+    return UiText(uiOpenFile(uiWindow(parent.getHandle())));
   }
 
 } // namespace mui

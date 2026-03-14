@@ -6,7 +6,10 @@
 
 namespace mui
 {
+  class Spinbox;
+  using SpinboxPtr = std::shared_ptr<Spinbox>;
 
+  // --- Spinbox ---
   class Spinbox : public Control
   {
     uiSpinbox *spinbox;
@@ -17,14 +20,14 @@ namespace mui
     Spinbox(int min, int max);
 
     template <typename... Args>
-    static std::shared_ptr<Spinbox> create(Args &&...args)
+    static SpinboxPtr create(Args &&...args)
     {
       return std::make_shared<Spinbox>(std::forward<Args>(args)...);
     }
 
     int getValue() const;
-    std::shared_ptr<Spinbox> setValue(int val);
-    std::shared_ptr<Spinbox> onChanged(std::function<void()> cb);
+    SpinboxPtr setValue(int val);
+    SpinboxPtr onChanged(std::function<void()> cb);
   };
 
 } // namespace mui

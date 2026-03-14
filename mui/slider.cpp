@@ -25,14 +25,14 @@ namespace mui
     return uiSliderValue(slider);
   }
 
-  std::shared_ptr<Slider> Slider::setValue(int val)
+  SliderPtr Slider::setValue(int val)
   {
     verifyState();
     uiSliderSetValue(slider, val);
     return std::static_pointer_cast<Slider>(shared_from_this());
   }
 
-  std::shared_ptr<Slider> Slider::onChanged(std::function<void()> cb)
+  SliderPtr Slider::onChanged(std::function<void()> cb)
   {
     verifyState();
     onChangedCb = std::move(cb);

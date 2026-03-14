@@ -22,8 +22,7 @@ namespace mui
   std::string Button::getText() const
   {
     verifyState();
-    const char *text = uiButtonText(btn);
-    return text ? std::string(text) : std::string();
+    return UiText(uiButtonText(btn));
   }
 
   void Button::setText(const std::string &text)
@@ -32,7 +31,7 @@ namespace mui
     uiButtonSetText(btn, text.c_str());
   }
 
-  std::shared_ptr<Button> Button::onClick(std::function<void()> cb)
+  ButtonPtr Button::onClick(std::function<void()> cb)
   {
     verifyState();
     onClickCb = std::move(cb);

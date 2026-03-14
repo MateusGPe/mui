@@ -8,6 +8,9 @@
 namespace mui
 {
 
+  class Button;
+  using ButtonPtr = std::shared_ptr<Button>;
+
   class Button : public Control
   {
     uiButton *btn;
@@ -18,7 +21,7 @@ namespace mui
     Button(const std::string &text);
 
     template <typename... Args>
-    static std::shared_ptr<Button> create(Args &&...args)
+    static ButtonPtr create(Args &&...args)
     {
       return std::make_shared<Button>(std::forward<Args>(args)...);
     }
@@ -26,7 +29,7 @@ namespace mui
     std::string getText() const;
     void setText(const std::string &text);
 
-    std::shared_ptr<Button> onClick(std::function<void()> cb);
+    ButtonPtr onClick(std::function<void()> cb);
   };
 
 } // namespace mui

@@ -11,7 +11,7 @@ namespace mui
     handle = uiControl(progress);
   }
 
-  std::shared_ptr<ProgressBar> ProgressBar::setValue(int val)
+  ProgressBarPtr ProgressBar::setValue(int val)
   {
     verifyState();
     uiProgressBarSetValue(progress, val);

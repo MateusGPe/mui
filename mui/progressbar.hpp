@@ -6,6 +6,9 @@
 namespace mui
 {
 
+  class ProgressBar;
+  using ProgressBarPtr = std::shared_ptr<ProgressBar>;
+
   class ProgressBar : public Control
   {
     uiProgressBar *progress;
@@ -14,12 +17,12 @@ namespace mui
     ProgressBar();
 
     template <typename... Args>
-    static std::shared_ptr<ProgressBar> create(Args &&...args)
+    static ProgressBarPtr create(Args &&...args)
     {
       return std::make_shared<ProgressBar>(std::forward<Args>(args)...);
     }
 
-    std::shared_ptr<ProgressBar> setValue(int val);
+    ProgressBarPtr setValue(int val);
   };
 
 } // namespace mui

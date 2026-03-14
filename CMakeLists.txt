@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14) 
+cmake_minimum_required(VERSION 3.14)
 project(nifl C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -48,7 +48,7 @@ add_executable(${PROJECT_NAME} main.cpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE mui)
 
 # FIX: Tell the linker to search both possible Meson output directories
-target_link_directories(${PROJECT_NAME} PRIVATE 
+target_link_directories(${PROJECT_NAME} PRIVATE
     "${LIBUI_OUT_DIR}"
     "${LIBUI_OUT_DIR}/meson-out"
 )

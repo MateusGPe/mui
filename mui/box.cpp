@@ -15,7 +15,7 @@ namespace mui
       c->onHandleDestroyed();
   }
 
-  std::shared_ptr<Box> Box::append(std::shared_ptr<Control> child, bool stretchy)
+  BoxPtr Box::append(ControlPtr child, bool stretchy)
   {
     verifyState();
     children.push_back(child);
@@ -24,7 +24,7 @@ namespace mui
     return std::static_pointer_cast<Box>(shared_from_this());
   }
 
-  std::shared_ptr<Box> Box::deleteChild(int index)
+  BoxPtr Box::deleteChild(int index)
   {
     verifyState();
     if (index >= 0 && index < children.size())
@@ -37,7 +37,7 @@ namespace mui
     return std::static_pointer_cast<Box>(shared_from_this());
   }
 
-  std::shared_ptr<Box> Box::setPadded(bool padded)
+  BoxPtr Box::setPadded(bool padded)
   {
     verifyState();
     uiBoxSetPadded(box, padded ? 1 : 0);

@@ -6,6 +6,8 @@
 
 namespace mui
 {
+  class Slider;
+  using SliderPtr = std::shared_ptr<Slider>;
 
   class Slider : public Control
   {
@@ -17,14 +19,14 @@ namespace mui
     Slider(int min, int max);
 
     template <typename... Args>
-    static std::shared_ptr<Slider> create(Args &&...args)
+    static SliderPtr create(Args &&...args)
     {
       return std::make_shared<Slider>(std::forward<Args>(args)...);
     }
 
     int getValue() const;
-    std::shared_ptr<Slider> setValue(int val);
-    std::shared_ptr<Slider> onChanged(std::function<void()> cb);
+    SliderPtr setValue(int val);
+    SliderPtr onChanged(std::function<void()> cb);
   };
 
 } // namespace mui

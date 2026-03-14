@@ -28,8 +28,7 @@ namespace mui
   std::string Checkbox::getText() const
   {
     verifyState();
-    const char *text = uiCheckboxText(checkbox);
-    return text ? std::string(text) : std::string();
+    return UiText(uiCheckboxText(checkbox));
   }
 
   void Checkbox::setText(const std::string &text)
@@ -38,14 +37,14 @@ namespace mui
     uiCheckboxSetText(checkbox, text.c_str());
   }
 
-  std::shared_ptr<Checkbox> Checkbox::setChecked(bool checked)
+  CheckboxPtr Checkbox::setChecked(bool checked)
   {
     verifyState();
     uiCheckboxSetChecked(checkbox, checked ? 1 : 0);
     return std::static_pointer_cast<Checkbox>(shared_from_this());
   }
 
-  std::shared_ptr<Checkbox> Checkbox::onToggled(std::function<void()> cb)
+  CheckboxPtr Checkbox::onToggled(std::function<void()> cb)
   {
     verifyState();
     onToggledCb = std::move(cb);

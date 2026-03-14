@@ -8,6 +8,13 @@
 namespace mui
 {
 
+  class Entry;
+  using EntryPtr = std::shared_ptr<Entry>;
+  class PasswordEntry;
+  using PasswordEntryPtr = std::shared_ptr<PasswordEntry>;
+  class SearchEntry;
+  using SearchEntryPtr = std::shared_ptr<SearchEntry>;
+
   class Entry : public Control
   {
     uiEntry *entry;
@@ -21,16 +28,16 @@ namespace mui
     Entry();
 
     template <typename... Args>
-    static std::shared_ptr<Entry> create(Args &&...args)
+    static EntryPtr create(Args &&...args)
     {
       return std::make_shared<Entry>(std::forward<Args>(args)...);
     }
 
     std::string getText() const;
-    std::shared_ptr<Entry> setText(const std::string &text);
-    std::shared_ptr<Entry> setReadOnly(bool readOnly);
+    EntryPtr setText(const std::string &text);
+    EntryPtr setReadOnly(bool readOnly);
     bool isReadOnly() const;
-    std::shared_ptr<Entry> onChanged(std::function<void()> cb);
+    EntryPtr onChanged(std::function<void()> cb);
   };
 
   class PasswordEntry : public Entry
@@ -39,7 +46,7 @@ namespace mui
     PasswordEntry();
 
     template <typename... Args>
-    static std::shared_ptr<PasswordEntry> create(Args &&...args)
+    static PasswordEntryPtr create(Args &&...args)
     {
       return std::make_shared<PasswordEntry>(std::forward<Args>(args)...);
     }
@@ -51,7 +58,7 @@ namespace mui
     SearchEntry();
 
     template <typename... Args>
-    static std::shared_ptr<SearchEntry> create(Args &&...args)
+    static SearchEntryPtr create(Args &&...args)
     {
       return std::make_shared<SearchEntry>(std::forward<Args>(args)...);
     }

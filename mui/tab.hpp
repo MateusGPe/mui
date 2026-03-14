@@ -8,12 +8,14 @@
 
 namespace mui
 {
+  class Tab;
+  using TabPtr = std::shared_ptr<Tab>;
 
   class Tab : public Control
   {
   private:
     uiTab *tab;
-    std::vector<std::shared_ptr<Control>> children;
+    std::vector<ControlPtr> children;
     std::function<void()> onSelectedCb;
     static void onSelectedStub(uiTab *t, void *data);
 
@@ -24,22 +26,22 @@ namespace mui
     Tab();
 
     template <typename... Args>
-    static std::shared_ptr<Tab> create(Args &&...args)
+    static TabPtr create(Args &&...args)
     {
       return std::make_shared<Tab>(std::forward<Args>(args)...);
     }
 
-    std::shared_ptr<Tab> append(const std::string &name,
-                                std::shared_ptr<Control> child);
-    std::shared_ptr<Tab> insertAt(const std::string &name, int index,
-                                  std::shared_ptr<Control> child);
-    std::shared_ptr<Tab> deletePage(int index);
+    TabPtr append(const std::string &name,
+                  ControlPtr child);
+    TabPtr insertAt(const std::string &name, int index,
+                    ControlPtr child);
+    TabPtr deletePage(int index);
     int getNumPages() const;
     int getSelected() const;
-    std::shared_ptr<Tab> setSelected(int index);
-    std::shared_ptr<Tab> onSelected(std::function<void()> cb);
+    TabPtr setSelected(int index);
+    TabPtr onSelected(std::function<void()> cb);
     bool getMargined(int page) const;
-    std::shared_ptr<Tab> setMargined(int page, bool margined);
+    TabPtr setMargined(int page, bool margined);
   };
 
 } // namespace mui

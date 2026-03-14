@@ -1,7 +1,7 @@
 #include "mui/mui.hpp"
 #include <iostream>
 
-std::shared_ptr<mui::Window> buildNiflInterface()
+mui::WindowPtr buildNiflInterface()
 {
     // 1. Instantiate interactive components
     auto promptEntry = mui::Entry::create();
