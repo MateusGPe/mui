@@ -4,12 +4,7 @@
 namespace mui
 {
 
-  void Slider::onChangedStub(uiSlider *s, void *data)
-  {
-    auto self = static_cast<Slider *>(data);
-    if (self->onChangedCb)
-      self->onChangedCb();
-  }
+  MUI_IMPL_STATELESS_CB(Slider, uiSlider, onChangedStub, onChangedCb)
 
   Slider::Slider(int min, int max)
   {

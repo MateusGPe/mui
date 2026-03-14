@@ -4,18 +4,28 @@
 namespace mui
 {
 
+  MUI_IMPL_STATELESS_CB(Window, uiWindow, onFocusChangedStub, onFocusChangedCb)
+  MUI_IMPL_STATELESS_CB(Window, uiWindow, onContentSizeChangedStub, onContentSizeChangedCb)
+  MUI_IMPL_STATELESS_CB(Window, uiWindow, onPositionChangedStub, onPositionChangedCb)
+
   // --- Window ---
   int Window::onClosingStub(uiWindow *w, void *data)
   {
-    auto self = static_cast<Window *>(data);
-    // If no callback is provided, default to closing the window.
-    bool shouldClose = self->onClosingCb ? self->onClosingCb() : true;
+    auto instance = static_cast<Window *>(data);
+    bool shouldClose = true;
+    
+    if (instance->onClosingCb) {
+        try {
+            shouldClose = instance->onClosingCb();
+        } catch (...) {
+            // Default to safe closure on exception boundary
+            shouldClose = true;
+        }
+    }
+
     if (shouldClose)
     {
-      // libui destroys the window and its children on returning 1.
-      // We must cascade the destruction state through the C++ tree to prevent
-      // double-freeing.
-      self->onHandleDestroyed();
+      instance->onHandleDestroyed();
     }
     return shouldClose ? 1 : 0;
   }
@@ -32,13 +42,6 @@ namespace mui
     uiWindowOnFocusChanged(win, onFocusChangedStub, this);
   }
 
-  void Window::onFocusChangedStub(uiWindow *w, void *data)
-  {
-    auto self = static_cast<Window *>(data);
-    if (self->onFocusChangedCb)
-      self->onFocusChangedCb();
-  }
-
   WindowPtr Window::onFocusChanged(std::function<void()> cb)
   {
     verifyState();
@@ -52,27 +55,11 @@ namespace mui
     return uiWindowFocused(win);
   }
 
-
-  void Window::onContentSizeChangedStub(uiWindow *w, void *data)
-  {
-    auto self = static_cast<Window *>(data);
-    if (self->onContentSizeChangedCb)
-      self->onContentSizeChangedCb();
-  }
-
   WindowPtr Window::onContentSizeChanged(std::function<void()> cb)
   {
     verifyState();
     onContentSizeChangedCb = std::move(cb);
     return self();
-  }
-
-
-  void Window::onPositionChangedStub(uiWindow *w, void *data)
-  {
-    auto self = static_cast<Window *>(data);
-    if (self->onPositionChangedCb)
-      self->onPositionChangedCb();
   }
 
   WindowPtr Window::onPositionChanged(std::function<void()> cb)
@@ -93,9 +80,13 @@ namespace mui
   WindowPtr Window::setChild(ControlPtr c)
   {
     verifyState();
+    if (child) {
+        child->acquireOwnership();
+        child.reset(); // Destroy existing child to prevent memory leak
+    }
     child = c;
     uiWindowSetChild(win, c->getHandle());
-    c->releaseOwnership(); // libui takes memory ownership
+    c->releaseOwnership(); 
     return self();
   }
 

@@ -3,13 +3,7 @@
 
 namespace mui
 {
-
-  void Button::onClickedStub(uiButton *b, void *data)
-  {
-    auto self = static_cast<Button *>(data);
-    if (self->onClickCb)
-      self->onClickCb();
-  }
+  MUI_IMPL_STATELESS_CB(Button, uiButton, onClickedStub, onClickCb)
 
   Button::Button(const std::string &text)
   {

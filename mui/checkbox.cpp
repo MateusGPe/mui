@@ -4,12 +4,7 @@
 namespace mui
 {
 
-  void Checkbox::onToggledStub(uiCheckbox *c, void *data)
-  {
-    auto self = static_cast<Checkbox *>(data);
-    if (self->onToggledCb)
-      self->onToggledCb();
-  }
+  MUI_IMPL_STATELESS_CB(Checkbox, uiCheckbox, onToggledStub, onToggledCb)
 
   Checkbox::Checkbox(const std::string &text)
   {

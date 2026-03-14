@@ -20,6 +20,10 @@ namespace mui
   GroupPtr Group::setChild(ControlPtr c)
   {
     verifyState();
+    if (child) {
+        child->acquireOwnership();
+        child.reset(); // Safely triggers C++ ~Control() and uiControlDestroy
+    }
     child = c;
     uiGroupSetChild(group, c->getHandle());
     c->releaseOwnership();

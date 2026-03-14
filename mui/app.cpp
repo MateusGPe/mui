@@ -15,11 +15,10 @@ namespace mui
         const char *err = uiInit(&options);
         if (err != nullptr)
         {
-            // RAII cleanup of initialization error messages
-            std::unique_ptr<const char, decltype(&uiFreeInitError)> errorStr(
-                err, uiFreeInitError);
-            throw std::runtime_error(std::string("Failed to initialize libui-ng: ") +
-                                     errorStr.get());
+            // Immediate copy and free, avoiding incomplete type errors with unique_ptr
+            std::string errorStr(err);
+            uiFreeInitError(err);
+            throw std::runtime_error("Failed to initialize libui-ng: " + errorStr);
         }
     }
 

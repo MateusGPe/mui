@@ -4,6 +4,8 @@
 namespace mui
 {
 
+  MUI_IMPL_STATELESS_CB(Tab, uiTab, onSelectedStub, onSelectedCb)
+
   Tab::Tab()
   {
     App::assertMainThread();
@@ -36,13 +38,6 @@ namespace mui
     return self();
   }
 
-  void Tab::onSelectedStub(uiTab *t, void *data)
-  {
-    auto self = static_cast<Tab *>(data);
-    if (self->onSelectedCb)
-      self->onSelectedCb();
-  }
-
   TabPtr Tab::onSelected(std::function<void()> cb)
   {
     verifyState();
@@ -50,8 +45,7 @@ namespace mui
     return self();
   }
 
-  TabPtr Tab::insertAt(const std::string &name, int index,
-                       ControlPtr child)
+  TabPtr Tab::insertAt(const std::string &name, int index, ControlPtr child)
   {
     verifyState();
     children.insert(children.begin() + index, child);

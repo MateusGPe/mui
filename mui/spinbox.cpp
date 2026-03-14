@@ -4,12 +4,7 @@
 namespace mui
 {
 
-  void Spinbox::onChangedStub(uiSpinbox *s, void *data)
-  {
-    auto self = static_cast<Spinbox *>(data);
-    if (self->onChangedCb)
-      self->onChangedCb();
-  }
+  MUI_IMPL_STATELESS_CB(Spinbox, uiSpinbox, onChangedStub, onChangedCb)
 
   Spinbox::Spinbox(int min, int max)
   {

@@ -4,12 +4,7 @@
 namespace mui
 {
 
-  void Entry::onChangedStub(uiEntry *e, void *data)
-  {
-    auto self = static_cast<Entry *>(data);
-    if (self->onChangedCb)
-      self->onChangedCb();
-  }
+  MUI_IMPL_STATELESS_CB(Entry, uiEntry, onChangedStub, onChangedCb)
 
   Entry::Entry(uiEntry *e) : entry(e)
   {
