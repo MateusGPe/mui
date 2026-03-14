@@ -15,7 +15,7 @@ namespace mui
   {
     verifyState();
     uiLabelSetText(label, text.c_str());
-    return std::static_pointer_cast<Label>(shared_from_this());
+    return self();
   }
 
   std::string Label::getText() const

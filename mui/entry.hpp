@@ -15,7 +15,7 @@ namespace mui
   class SearchEntry;
   using SearchEntryPtr = std::shared_ptr<SearchEntry>;
 
-  class Entry : public Control
+  class Entry : public Control, public Chainable<Entry>
   {
     uiEntry *entry;
     std::function<void()> onChangedCb;

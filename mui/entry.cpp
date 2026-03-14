@@ -29,21 +29,21 @@ namespace mui
   {
     verifyState();
     uiEntrySetText(entry, text.c_str());
-    return std::static_pointer_cast<Entry>(shared_from_this());
+    return self();
   }
 
   EntryPtr Entry::setReadOnly(bool readOnly)
   {
     verifyState();
     uiEntrySetReadOnly(entry, readOnly ? 1 : 0);
-    return std::static_pointer_cast<Entry>(shared_from_this());
+    return self();
   }
 
   EntryPtr Entry::onChanged(std::function<void()> cb)
   {
     verifyState();
     onChangedCb = std::move(cb);
-    return std::static_pointer_cast<Entry>(shared_from_this());
+    return self();
   }
 
   bool Entry::isReadOnly() const

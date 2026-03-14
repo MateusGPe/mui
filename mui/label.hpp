@@ -10,7 +10,7 @@ namespace mui
   class Label;
   using LabelPtr = std::shared_ptr<Label>;
 
-  class Label : public Control
+  class Label: public Control, public Chainable<Label>
   {
     uiLabel *label;
 

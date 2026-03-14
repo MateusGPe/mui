@@ -41,14 +41,14 @@ namespace mui
   {
     verifyState();
     uiCheckboxSetChecked(checkbox, checked ? 1 : 0);
-    return std::static_pointer_cast<Checkbox>(shared_from_this());
+    return self();
   }
 
   CheckboxPtr Checkbox::onToggled(std::function<void()> cb)
   {
     verifyState();
     onToggledCb = std::move(cb);
-    return std::static_pointer_cast<Checkbox>(shared_from_this());
+    return self();
   }
 
 } // namespace mui

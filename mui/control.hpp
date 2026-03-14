@@ -2,6 +2,7 @@
 #include <memory>
 #include <ui.h>
 #include <string>
+#include "core.hpp"
 
 namespace mui
 {
@@ -23,7 +24,7 @@ namespace mui
     }
 
     // --- Base Control Class ---
-    class Control : public std::enable_shared_from_this<Control>
+    class Control // : public std::enable_shared_from_this<Control>
     {
     protected:
         uiControl *handle = nullptr;

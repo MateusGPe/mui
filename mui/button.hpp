@@ -11,7 +11,7 @@ namespace mui
   class Button;
   using ButtonPtr = std::shared_ptr<Button>;
 
-  class Button : public Control
+  class Button: public Control, public Chainable<Button>
   {
     uiButton *btn;
     std::function<void()> onClickCb;

@@ -10,7 +10,7 @@ namespace mui
   using SpinboxPtr = std::shared_ptr<Spinbox>;
 
   // --- Spinbox ---
-  class Spinbox : public Control
+  class Spinbox: public Control, public Chainable<Spinbox>
   {
     uiSpinbox *spinbox;
     std::function<void()> onChangedCb;

@@ -29,14 +29,14 @@ namespace mui
   {
     verifyState();
     uiSpinboxSetValue(spinbox, val);
-    return std::static_pointer_cast<Spinbox>(shared_from_this());
+    return self();
   }
 
   SpinboxPtr Spinbox::onChanged(std::function<void()> cb)
   {
     verifyState();
     onChangedCb = std::move(cb);
-    return std::static_pointer_cast<Spinbox>(shared_from_this());
+    return self();
   }
 
 } // namespace mui

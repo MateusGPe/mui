@@ -10,7 +10,7 @@ namespace mui
   class Window;
   using WindowPtr = std::shared_ptr<Window>;
   // --- Window ---
-  class Window : public Control
+  class Window: public Control, public Chainable<Window>
   {
   private:
     uiWindow *win = nullptr;

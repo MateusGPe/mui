@@ -35,7 +35,7 @@ namespace mui
   {
     verifyState();
     onClickCb = std::move(cb);
-    return std::static_pointer_cast<Button>(shared_from_this());
+    return self();
   }
 
 } // namespace mui

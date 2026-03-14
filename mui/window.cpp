@@ -43,7 +43,7 @@ namespace mui
   {
     verifyState();
     onFocusChangedCb = std::move(cb);
-    return std::static_pointer_cast<Window>(shared_from_this());
+    return self();
   }
 
   bool Window::getFocused() const
@@ -64,7 +64,7 @@ namespace mui
   {
     verifyState();
     onContentSizeChangedCb = std::move(cb);
-    return std::static_pointer_cast<Window>(shared_from_this());
+    return self();
   }
 
 
@@ -79,7 +79,7 @@ namespace mui
   {
     verifyState();
     onPositionChangedCb = std::move(cb);
-    return std::static_pointer_cast<Window>(shared_from_this());
+    return self();
   }
 
   void Window::onHandleDestroyed()
@@ -96,21 +96,21 @@ namespace mui
     child = c;
     uiWindowSetChild(win, c->getHandle());
     c->releaseOwnership(); // libui takes memory ownership
-    return std::static_pointer_cast<Window>(shared_from_this());
+    return self();
   }
 
   WindowPtr Window::setMargined(bool margined)
   {
     verifyState();
     uiWindowSetMargined(win, margined ? 1 : 0);
-    return std::static_pointer_cast<Window>(shared_from_this());
+    return self();
   }
 
   WindowPtr Window::onClosing(std::function<bool()> cb)
   {
     verifyState();
     onClosingCb = std::move(cb);
-    return std::static_pointer_cast<Window>(shared_from_this());
+    return self();
   }
 
   std::string Window::getTitle() const
@@ -123,7 +123,7 @@ namespace mui
   {
     verifyState();
     uiWindowSetTitle(win, title.c_str());
-    return std::static_pointer_cast<Window>(shared_from_this());
+    return self();
   }
 
   std::pair<int, int> Window::getContentSize() const
@@ -138,7 +138,7 @@ namespace mui
   {
     verifyState();
     uiWindowSetContentSize(win, width, height);
-    return std::static_pointer_cast<Window>(shared_from_this());
+    return self();
   }
 
   bool Window::getFullscreen() const
@@ -151,7 +151,7 @@ namespace mui
   {
     verifyState();
     uiWindowSetFullscreen(win, fullscreen);
-    return std::static_pointer_cast<Window>(shared_from_this());
+    return self();
   }
 
   bool Window::getBorderless() const
@@ -164,7 +164,7 @@ namespace mui
   {
     verifyState();
     uiWindowSetBorderless(win, borderless);
-    return std::static_pointer_cast<Window>(shared_from_this());
+    return self();
   }
 
   bool Window::getResizeable() const
@@ -177,7 +177,7 @@ namespace mui
   {
     verifyState();
     uiWindowSetResizeable(win, resizeable);
-    return std::static_pointer_cast<Window>(shared_from_this());
+    return self();
   }
 
   std::pair<int, int> Window::getPosition() const
@@ -192,7 +192,7 @@ namespace mui
   {
     verifyState();
     uiWindowSetPosition(win, x, y);
-    return std::static_pointer_cast<Window>(shared_from_this());
+    return self();
   }
 
   bool Window::getMargined() const

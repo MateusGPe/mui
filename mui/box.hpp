@@ -15,7 +15,7 @@ namespace mui
   using HBoxPtr = std::shared_ptr<HBox>;
 
   // --- Containers ---
-  class Box : public Control
+  class Box: public Control, public Chainable<Box>
   {
   protected:
     uiBox *box;

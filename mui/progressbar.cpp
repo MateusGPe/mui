@@ -15,7 +15,7 @@ namespace mui
   {
     verifyState();
     uiProgressBarSetValue(progress, val);
-    return std::static_pointer_cast<ProgressBar>(shared_from_this());
+    return self();
   }
 
 } // namespace mui

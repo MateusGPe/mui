@@ -11,7 +11,7 @@ namespace mui
   class Tab;
   using TabPtr = std::shared_ptr<Tab>;
 
-  class Tab : public Control
+  class Tab: public Control, public Chainable<Tab>
   {
   private:
     uiTab *tab;

@@ -9,7 +9,7 @@ namespace mui
   class ProgressBar;
   using ProgressBarPtr = std::shared_ptr<ProgressBar>;
 
-  class ProgressBar : public Control
+  class ProgressBar: public Control, public Chainable<ProgressBar>
   {
     uiProgressBar *progress;
 

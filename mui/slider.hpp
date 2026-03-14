@@ -9,7 +9,7 @@ namespace mui
   class Slider;
   using SliderPtr = std::shared_ptr<Slider>;
 
-  class Slider : public Control
+  class Slider: public Control, public Chainable<Slider>
   {
     uiSlider *slider;
     std::function<void()> onChangedCb;

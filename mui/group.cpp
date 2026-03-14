@@ -23,13 +23,13 @@ namespace mui
     child = c;
     uiGroupSetChild(group, c->getHandle());
     c->releaseOwnership();
-    return std::static_pointer_cast<Group>(shared_from_this());
+    return self();
   }
   GroupPtr Group::setMargined(bool margined)
   {
     verifyState();
     uiGroupSetMargined(group, margined ? 1 : 0);
-    return std::static_pointer_cast<Group>(shared_from_this());
+    return self();
   }
 
   std::string Group::getTitle() const
@@ -42,7 +42,7 @@ namespace mui
   {
     verifyState();
     uiGroupSetTitle(group, title.c_str());
-    return std::static_pointer_cast<Group>(shared_from_this());
+    return self();
   }
 
   bool Group::getMargined() const

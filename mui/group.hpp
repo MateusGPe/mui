@@ -9,7 +9,7 @@ namespace mui
   class Group;
   using GroupPtr = std::shared_ptr<Group>;
 
-  class Group : public Control
+  class Group: public Control, public Chainable<Group>
   {
   private:
     uiGroup *group;

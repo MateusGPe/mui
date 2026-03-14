@@ -11,7 +11,7 @@ namespace mui
   class Checkbox;
   using CheckboxPtr = std::shared_ptr<Checkbox>;
 
-  class Checkbox : public Control
+  class Checkbox: public Control, public Chainable<Checkbox>
   {
     uiCheckbox *checkbox;
     std::function<void()> onToggledCb;
