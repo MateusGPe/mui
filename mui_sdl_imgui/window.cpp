@@ -6,7 +6,7 @@
 namespace mui
 {
     Window::Window(const std::string &title, int width, int height, bool hasMenubar)
-        : title(title), width(width), height(height), isOpen(true)
+        : title(title), width(width), height(height), isOpen(true), dockId(0)
     {
         App::assertMainThread();
         App::activeWindows.push_back(this);
@@ -26,7 +26,10 @@ namespace mui
 
         ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiCond_FirstUseEver);
         
-        // If not margined, push a style to remove the default window padding.
+        if (dockId != 0) {
+            ImGui::SetNextWindowDockID(dockId, ImGuiCond_FirstUseEver);
+        }
+
         if (!margined) {
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
         }
@@ -51,8 +54,6 @@ namespace mui
             }
             if (shouldClose) {
                 isOpen = false;
-                // onHandleDestroyed() is a remnant from the retained-mode backend.
-                // In ImGui, the window simply stops rendering.
             }
         }
     }
@@ -68,6 +69,13 @@ namespace mui
     {
         verifyState();
         margined = m;
+        return self();
+    }
+
+    WindowPtr Window::setDockId(ImGuiID id)
+    {
+        verifyState();
+        dockId = id;
         return self();
     }
 

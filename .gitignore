@@ -70,3 +70,5 @@ Testing/
 .deps/
 *.tar.*
 .DS_Store
+merged_code.md
+merger.sh

@@ -11,7 +11,8 @@ namespace mui
   class Window;
   using WindowPtr = std::shared_ptr<Window>;
 
-  class Window: public Control, public Chainable<Window>
+  using Identifier = unsigned int;
+  class Window : public Control, public Chainable<Window>
   {
   private:
     std::string title;
@@ -38,6 +39,10 @@ namespace mui
     WindowPtr setBorderless(bool borderless);
     bool getMargined() const;
     bool isWindowOpen() const;
+    WindowPtr setDockId(Identifier id);
+
+  private:
+    Identifier dockId;
   };
 
 } // namespace mui

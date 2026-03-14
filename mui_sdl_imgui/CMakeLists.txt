@@ -7,7 +7,7 @@ include(FetchContent)
 FetchContent_Declare(
     imgui
     GIT_REPOSITORY https://github.com/ocornut/imgui.git
-    GIT_TAG master
+    GIT_TAG docking
 )
 FetchContent_MakeAvailable(imgui)
 
@@ -27,6 +27,8 @@ add_library(mui STATIC
     dialogs.cpp
     label.cpp
     group.cpp
+    theme.cpp
+    card.cpp
 )
 
 # Assumes existing .hpp files are in the same directory or provided by the parent
