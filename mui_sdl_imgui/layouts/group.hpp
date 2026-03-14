@@ -15,6 +15,7 @@ namespace mui
 
     public:
         Group(const std::string &title);
+        static GroupPtr create(const std::string &title) { return std::make_shared<Group>(title); }
 
         GroupPtr self() { return std::static_pointer_cast<Group>(shared_from_this()); }
 

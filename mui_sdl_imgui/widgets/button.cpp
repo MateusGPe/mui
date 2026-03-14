@@ -1,6 +1,7 @@
 #include "button.hpp"
 #include "app.hpp"
 #include <imgui.h>
+#include <imgui_internal.h>
 
 namespace mui
 {
@@ -12,7 +13,16 @@ namespace mui
         ImGui::PushID(this);
         ImGui::BeginDisabled(!enabled);
         
-        if (ImGui::Button(text.c_str())) {
+        // Unlike many other widgets, ImGui::Button doesn't automatically respect PushItemWidth.
+        // We need to manually calculate the width and pass it as the size argument.
+        // A width of 0 tells the button to auto-size, which is the default behavior
+        // when no item width is pushed.
+        ImVec2 buttonSize(0, 0);
+        if (useContainerWidth)
+        {
+            buttonSize.x = ImGui::CalcItemWidth();
+        }
+        if (ImGui::Button(text.c_str(), buttonSize)) {
             if (onClickCb) onClickCb();
         }
         
@@ -26,6 +36,12 @@ namespace mui
     ButtonPtr Button::onClick(std::function<void()> cb)
     {
         onClickCb = std::move(cb);
+        return self();
+    }
+
+    ButtonPtr Button::setUseContainerWidth(bool use)
+    {
+        useContainerWidth = use;
         return self();
     }
 } // namespace mui

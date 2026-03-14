@@ -1,4 +1,5 @@
 #pragma once
+#include "IconsFontAwesome6.h"
 #include "app.hpp"
 #include "control.hpp"
 #include "window.hpp"

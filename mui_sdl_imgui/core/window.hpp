@@ -40,6 +40,7 @@ namespace mui
     bool getMargined() const;
     bool isWindowOpen() const;
     WindowPtr setDockId(Identifier id);
+    static WindowPtr create(const std::string &title, int width, int height, bool hasMenubar = false) { return std::make_shared<Window>(title, width, height, hasMenubar); }
 
   private:
     Identifier dockId;

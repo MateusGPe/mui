@@ -12,6 +12,7 @@ namespace mui
 
     public:
         ProgressBar();
+        static ProgressBarPtr create() { return std::make_shared<ProgressBar>(); }
         ProgressBarPtr self() { return std::static_pointer_cast<ProgressBar>(shared_from_this()); }
 
         void render() override;

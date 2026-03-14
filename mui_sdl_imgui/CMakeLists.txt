@@ -1,7 +1,15 @@
 cmake_minimum_required(VERSION 3.20)
 project(mui_sdl_imgui)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# --- Dependencies ---
 find_package(SDL3 REQUIRED)
+
+if(UNIX AND NOT APPLE)
+    find_package(Fontconfig) 
+endif()
 
 include(FetchContent)
 FetchContent_Declare(
@@ -11,34 +19,35 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(imgui)
 
-add_library(mui STATIC
-    app.cpp
-    control.cpp
-    window.cpp
-    button.cpp
-    checkbox.cpp
-    box.cpp
-    grid.cpp
-    tab.cpp
-    entry.cpp
-    spinbox.cpp
-    slider.cpp
-    progressbar.cpp
-    dialogs.cpp
-    label.cpp
-    group.cpp
-    theme.cpp
-    card.cpp
+# --- Source Definitions ---
+
+set(CORE_SOURCES
+    core/app.cpp
+    core/window.cpp
+    core/theme.cpp
+    core/dialogs.cpp
 )
 
-# Assumes existing .hpp files are in the same directory or provided by the parent
-target_include_directories(mui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_include_directories(mui PRIVATE 
-    ${imgui_SOURCE_DIR}
-    ${imgui_SOURCE_DIR}/backends
+set(WIDGET_SOURCES
+    widgets/button.cpp
+    widgets/card.cpp
+    widgets/checkbox.cpp
+    widgets/control.cpp
+    widgets/entry.cpp
+    widgets/label.cpp
+    widgets/progressbar.cpp
+    widgets/slider.cpp
+    widgets/spinbox.cpp
 )
 
-target_sources(mui PRIVATE
+set(LAYOUT_SOURCES
+    layouts/box.cpp
+    layouts/grid.cpp
+    layouts/group.cpp
+    layouts/tab.cpp
+)
+
+set(IMGUI_SOURCES
     ${imgui_SOURCE_DIR}/imgui.cpp
     ${imgui_SOURCE_DIR}/imgui_draw.cpp
     ${imgui_SOURCE_DIR}/imgui_tables.cpp
@@ -48,4 +57,31 @@ target_sources(mui PRIVATE
     ${imgui_SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp
 )
 
+# --- Target Configuration ---
+
+add_library(mui STATIC
+    ${CORE_SOURCES}
+    ${WIDGET_SOURCES}
+    ${LAYOUT_SOURCES}
+    ${IMGUI_SOURCES}
+)
+
+# Include paths for your code and ImGui
+target_include_directories(mui PUBLIC 
+    ${CMAKE_CURRENT_SOURCE_DIR}/core
+    ${CMAKE_CURRENT_SOURCE_DIR}/widgets
+    ${CMAKE_CURRENT_SOURCE_DIR}/layouts
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+target_include_directories(mui PRIVATE 
+    ${imgui_SOURCE_DIR}
+    ${imgui_SOURCE_DIR}/backends
+)
+
+# --- Linking ---
 target_link_libraries(mui PUBLIC SDL3::SDL3)
+
+if(Fontconfig_FOUND)
+    target_link_libraries(mui PRIVATE Fontconfig::Fontconfig)
+endif()

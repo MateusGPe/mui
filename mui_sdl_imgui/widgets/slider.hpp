@@ -14,6 +14,7 @@ namespace mui
 
     public:
         Slider(int min, int max);
+        static SliderPtr create(int min, int max) { return std::make_shared<Slider>(min, max); }
         SliderPtr self() { return std::static_pointer_cast<Slider>(shared_from_this()); }
 
         void render() override;

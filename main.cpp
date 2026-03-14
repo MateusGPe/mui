@@ -1,9 +1,11 @@
-#include "mui_sdl_imgui/mui.hpp"
+#include <mui.hpp>
 #include <iostream>
 #include <memory>
 #include <string>
 
 using namespace mui;
+
+
 
 int main()
 {
@@ -12,7 +14,7 @@ int main()
         App::init();
 
         // 1. Main Window
-        auto win = std::make_shared<Window>("MUI Control Gallery", 640, 480, true);
+        auto win = Window::create("MUI Control Gallery", 640, 480, true);
         win->setMargined(true);
         win->onClosing([]() {
             App::quit();
@@ -20,17 +22,17 @@ int main()
         });
 
         // 2. Root Container: Tab
-        auto tabs = std::make_shared<Tab>();
+        auto tabs = Tab::create();
         win->setChild(tabs);
 
         // --- TAB 1: Basic Controls ---
-        auto vboxBasics = std::make_shared<VBox>();
+        auto vboxBasics = VBox::create();
         vboxBasics->setPadded(true);
 
         // Normalized to make_shared to match the refactored class constructors
-        auto lblStatus = std::make_shared<Label>("Waiting for action...");
-        auto btnClick = std::make_shared<Button>("Click Me");
-        auto chkToggle = std::make_shared<Checkbox>("Enable Feature X");
+        auto lblStatus = Label::create("Waiting for action...");
+        auto btnClick = Button::create(ICON_FA_FLOPPY_DISK " Click Me");
+        auto chkToggle = Checkbox::create("Enable Feature X");
 
         btnClick->onClick([lblStatus]() {
             lblStatus->setText("Button was clicked!");
@@ -40,20 +42,22 @@ int main()
             lblStatus->setText(chkToggle->isChecked() ? "Feature X Enabled" : "Feature X Disabled");
         });
 
-        vboxBasics->append(lblStatus, false)
-                  ->append(btnClick, false)
-                  ->append(chkToggle, false);
+        append_all(vboxBasics, {
+            {lblStatus},
+            {btnClick},
+            {chkToggle}
+        });
 
         tabs->append("Basics", vboxBasics);
         tabs->setMargined(0, true);
 
         // --- TAB 2: Numbers & Progress ---
-        auto vboxNumbers = std::make_shared<VBox>();
+        auto vboxNumbers = VBox::create();
         vboxNumbers->setPadded(true);
 
-        auto spinBox = std::make_shared<Spinbox>(0, 100);
-        auto slider = std::make_shared<Slider>(0, 100);
-        auto progressBar = std::make_shared<ProgressBar>();
+        auto spinBox = Spinbox::create(0, 100);
+        auto slider = Slider::create(0, 100);
+        auto progressBar = ProgressBar::create();
 
         // Synchronize all three controls
         auto syncFunc = [spinBox, slider, progressBar](int value) {
@@ -68,73 +72,79 @@ int main()
         // Initialize to 50
         syncFunc(50);
 
-        vboxNumbers->append(std::make_shared<Label>("Sync Test:"), false)
-                   ->append(spinBox, false)
-                   ->append(slider, false)
-                   ->append(progressBar, false);
+        append_all(vboxNumbers, {
+            {Label::create("Sync Test:"), true},
+            {spinBox, true},
+            {slider, true},
+            {progressBar, true}
+        });
 
         tabs->append("Numbers", vboxNumbers);
         tabs->setMargined(1, true);
 
         // --- TAB 3: Text Entries ---
-        auto vboxText = std::make_shared<VBox>();
+        auto vboxText = VBox::create();
         vboxText->setPadded(true);
 
-        auto entryStandard = std::make_shared<Entry>();
-        auto entryPassword = std::make_shared<PasswordEntry>();
-        auto entrySearch = std::make_shared<SearchEntry>();
-        auto lblMirror = std::make_shared<Label>("Mirror: ");
+        auto entryStandard = Entry::create();
+        auto entryPassword = PasswordEntry::create();
+        auto entrySearch = SearchEntry::create();
+        auto lblMirror = Label::create("Mirror: ");
 
         entryStandard->onChanged([entryStandard, lblMirror]() {
             lblMirror->setText("Mirror: " + entryStandard->getText());
         });
 
-        vboxText->append(std::make_shared<Label>("Standard Entry:"), false)
-                ->append(entryStandard, false)
-                ->append(std::make_shared<Label>("Password Entry:"), false)
-                ->append(entryPassword, false)
-                ->append(std::make_shared<Label>("Search Entry:"), false)
-                ->append(entrySearch, false)
-                ->append(lblMirror, false);
+        append_all(vboxText, {
+            {Label::create("Standard Entry:")},
+            {entryStandard},
+            {Label::create("Password Entry:")},
+            {entryPassword, true},
+            {Label::create("Search Entry:")},
+            {entrySearch},
+            {lblMirror}
+        });
 
         tabs->append("Text Entries", vboxText);
         tabs->setMargined(2, true);
 
         // --- TAB 4: Groups, Layouts & Dialogs ---
-        auto vboxDialogs = std::make_shared<VBox>();
+        auto vboxDialogs = VBox::create();
         vboxDialogs->setPadded(true);
 
-        auto group = std::make_shared<Group>("System Dialogs");
+        auto group = Group::create("System Dialogs");
         group->setMargined(true);
 
-        auto hboxButtons = std::make_shared<HBox>();
+        auto hboxButtons = HBox::create();
         hboxButtons->setPadded(true);
 
-        auto btnInfo = std::make_shared<Button>("Info Msg");
-        auto btnError = std::make_shared<Button>("Error Msg");
-        auto btnFile = std::make_shared<Button>("Open File");
+        auto btnInfo = Button::create("Info Msg");
+        auto btnError = Button::create("Error Msg");
+        auto btnFile = Button::create("Open File");
 
-        btnInfo->onClick([win]() {
+        btnInfo->setUseContainerWidth(true)->onClick([win]() {
             Dialogs::msgBox(*win, "Information", "This is a standard message box testing the C++ wrapper.");
         });
 
-        btnError->onClick([win]() {
+        btnError->setUseContainerWidth(true)->onClick([win]() {
             Dialogs::msgBoxError(*win, "Critical Error", "Failed to load imaginary resources.");
         });
 
-        btnFile->onClick([win]() {
+        btnFile->setUseContainerWidth(true)->onClick([win]() {
             std::string path = Dialogs::openFile(*win);
             if (!path.empty()) {
                 Dialogs::msgBox(*win, "File Selected", "Path: " + path);
             }
         });
 
-        hboxButtons->append(btnInfo, true)
-                   ->append(btnError, true)
-                   ->append(btnFile, true);
+        append_all(hboxButtons, {
+            {btnInfo, true},
+            {btnError, true},
+            {btnFile, true}
+        });
 
         group->setChild(hboxButtons);
-        vboxDialogs->append(group, false);
+        vboxDialogs->append(group, true);
 
         tabs->append("Dialogs & Groups", vboxDialogs);
         tabs->setMargined(3, true);

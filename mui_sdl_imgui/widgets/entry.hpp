@@ -18,6 +18,7 @@ namespace mui
 
     public:
         Entry();
+        static EntryPtr create() { return std::make_shared<Entry>(); }
         EntryPtr self() { return std::static_pointer_cast<Entry>(shared_from_this()); }
 
         void render() override;
@@ -27,15 +28,23 @@ namespace mui
         EntryPtr onChanged(std::function<void()> cb);
     };
 
+    class PasswordEntry;
+    using PasswordEntryPtr = std::shared_ptr<PasswordEntry>;
+
     class PasswordEntry : public Entry
     {
     public:
         PasswordEntry();
+        static PasswordEntryPtr create() { return std::make_shared<PasswordEntry>(); }
     };
+
+    class SearchEntry;
+    using SearchEntryPtr = std::shared_ptr<SearchEntry>;
 
     class SearchEntry : public Entry
     {
     public:
         SearchEntry();
+        static SearchEntryPtr create() { return std::make_shared<SearchEntry>(); }
     };
 } // namespace mui

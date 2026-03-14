@@ -14,6 +14,7 @@ namespace mui
 
     public:
         Spinbox(int min, int max);
+        static SpinboxPtr create(int min, int max) { return std::make_shared<Spinbox>(min, max); }
         SpinboxPtr self() { return std::static_pointer_cast<Spinbox>(shared_from_this()); }
 
         void render() override;

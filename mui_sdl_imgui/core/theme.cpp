@@ -3,6 +3,17 @@
 #include <fstream>
 #include <string>
 
+#if defined(_WIN32)
+#include <windows.h>
+#include <shlobj.h> // For SHGetFolderPathA
+#elif defined(__linux__)
+#include <fontconfig/fontconfig.h>
+#endif
+
+// Include the macro definitions for the icons
+// (Ensure this file is in your include path)
+#include "IconsFontAwesome6.h"
+
 namespace mui
 {
     // Helper to verify file existence before passing to ImGui
@@ -18,39 +29,100 @@ namespace mui
         std::string fontPath = "";
 
 #if defined(_WIN32)
-        fontPath = "C:\\Windows\\Fonts\\segoeui.ttf";
+        CHAR szPath[MAX_PATH];
+        // Get the path to the Windows fonts directory, which is more robust than a hardcoded path.
+        if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_FONTS, NULL, 0, szPath)))
+        {
+            fontPath = std::string(szPath) + "\\segoeui.ttf";
+        }
+        // Fallback to the hardcoded path if the above fails
+        if (fontPath.empty() || !fileExists(fontPath))
+        {
+            fontPath = "C:\\Windows\\Fonts\\segoeui.ttf";
+        }
 #elif defined(__APPLE__)
+        // The system font path on macOS is very stable.
         fontPath = "/System/Library/Fonts/Supplemental/Helvetica.ttc";
 #elif defined(__linux__)
-        // Array of common high-quality Linux sans-serif fonts
-        const char *linuxFonts[] = {
-            "/usr/share/fonts/truetype/ubuntu/Ubuntu-R.ttf",
-            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-            "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
-            "/usr/share/fonts/TTF/DejaVuSans.ttf"};
-        for (const char *path : linuxFonts)
-        {
-            if (fileExists(path))
+        { // The ideal way on Linux is to use fontconfig to find a default font.
+            // This requires linking against the fontconfig library.
+            FcConfig *config = FcInitLoadConfigAndFonts();
+            if (config)
             {
-                fontPath = path;
-                break;
+                FcPattern *pat = FcNameParse((const FcChar8 *)"sans-serif");
+                FcConfigSubstitute(config, pat, FcMatchPattern);
+                FcDefaultSubstitute(pat);
+
+                FcResult result;
+                FcPattern *font = FcFontMatch(config, pat, &result);
+
+                if (font)
+                {
+                    FcChar8 *file = NULL;
+                    if (FcPatternGetString(font, FC_FILE, 0, &file) == FcResultMatch)
+                    {
+                        fontPath = (const char *)file;
+                    }
+                    FcPatternDestroy(font);
+                }
+                FcPatternDestroy(pat);
+                FcConfigDestroy(config);
+            }
+
+            // Fallback to searching known paths if fontconfig fails or is not available
+            if (fontPath.empty() || !fileExists(fontPath))
+            {
+                const char *linuxFonts[] = {
+                    "/usr/share/fonts/truetype/ubuntu/Ubuntu-R.ttf",
+                    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+                    "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+                    "/usr/share/fonts/TTF/DejaVuSans.ttf",
+                    "/usr/share/fonts/noto/NotoSans-Regular.ttf" // Add Noto as another common option
+                };
+                for (const char *path : linuxFonts)
+                {
+                    if (fileExists(path))
+                    {
+                        fontPath = path;
+                        break;
+                    }
+                }
             }
         }
 #endif
 
+        // 1. Configure and Load the Base Text Font
+        ImFontConfig config;
+        config.OversampleH = 3;
+        config.OversampleV = 3;
+        config.PixelSnapH = false;
+
         if (!fontPath.empty() && fileExists(fontPath))
         {
-            // High quality text rendering settings
-            ImFontConfig config;
-            config.OversampleH = 3;
-            config.OversampleV = 1;
-            config.PixelSnapH = true;
             io.Fonts->AddFontFromFileTTF(fontPath.c_str(), fontSize, &config);
         }
         else
         {
-            // Fallback if OS font cannot be resolved
-            io.Fonts->AddFontDefault();
+            io.Fonts->AddFontDefault(&config);
+        }
+
+        // 2. Configure and Merge the Icon Font
+        ImFontConfig icon_config;
+        icon_config.MergeMode = true;            // CRITICAL: Merges with the previously loaded font
+        icon_config.PixelSnapH = true;           // Align icons to pixels for sharpness
+        icon_config.GlyphMinAdvanceX = fontSize; // Forces icons to be monospaced
+        icon_config.OversampleH = 3;
+        icon_config.OversampleV = 3;
+
+        // Define the Unicode range for FontAwesome 6
+        static const ImWchar icon_ranges[] = {ICON_MIN_FA, ICON_MAX_16_FA, 0};
+
+        // Path to your TTF file (adjust this relative to your working directory)
+        const std::string iconFontPath = "fonts/fa-solid-900.ttf";
+
+        if (fileExists(iconFontPath))
+        {
+            io.Fonts->AddFontFromFileTTF(iconFontPath.c_str(), fontSize, &icon_config, icon_ranges);
         }
     }
 
@@ -80,9 +152,9 @@ namespace mui
         style.TabBorderSize = 0.0f;
 
         // Spacing & Padding
-        style.ItemSpacing = ImVec2(12.0f, 12.0f);
-        style.FramePadding = ImVec2(16.0f, 8.0f);
-        style.WindowPadding = ImVec2(16.0f, 16.0f);
+        style.ItemSpacing = ImVec2(8.0f, 8.0f);
+        style.FramePadding = ImVec2(8.0f, 8.0f);
+        style.WindowPadding = ImVec2(8.0f, 8.0f);
 
         // --- APPLY DPI SCALE ---
         style.ScaleAllSizes(dpiScale);

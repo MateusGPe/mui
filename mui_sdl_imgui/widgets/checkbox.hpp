@@ -16,6 +16,7 @@ namespace mui
 
     public:
         Checkbox(const std::string &text);
+        static CheckboxPtr create(const std::string &text) { return std::make_shared<Checkbox>(text); }
 
         CheckboxPtr self() { return std::static_pointer_cast<Checkbox>(shared_from_this()); }
 

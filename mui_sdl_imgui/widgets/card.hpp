@@ -16,6 +16,7 @@ namespace mui
 
     public:
         Card();
+        static CardPtr create() { return std::make_shared<Card>(); }
         CardPtr self() { return std::static_pointer_cast<Card>(shared_from_this()); }
 
         void render() override;
