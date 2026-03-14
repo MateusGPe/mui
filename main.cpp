@@ -1,58 +1,62 @@
-#include "mui.hpp"
+#include "mui/mui.hpp"
 #include <iostream>
 
-int main() {
-    try {
-        mui::App::init();
+std::shared_ptr<mui::Window> buildNiflInterface()
+{
+    // 1. Instantiate interactive components
+    auto promptEntry = mui::Entry::create();
+    auto negPromptEntry = mui::Entry::create();
+    auto generateBtn = mui::Button::create("Generate");
+    auto progressBar = mui::ProgressBar::create();
 
-        // 1. Create the UI components
-        mui::Window window("Modern C++ Wrapper", 400, 200);
-        auto mainLayout = std::make_shared<mui::VBox>();
-        auto inputLayout = std::make_shared<mui::HBox>();
+    // 2. Wire behaviors (using weak pointers to avoid memory leaks)
+    std::weak_ptr<mui::Entry> weakPrompt = promptEntry;
+    std::weak_ptr<mui::ProgressBar> weakProgress = progressBar;
 
-        auto titleLabel = std::make_shared<mui::Label>("Enter your name:");
-        auto nameEntry = std::make_shared<mui::Entry>();
-        auto submitBtn = std::make_shared<mui::Button>("Say Hello");
-        auto resultLabel = std::make_shared<mui::Label>("");
-
-        // 2. Build the layout tree
-        window.setMargined(true);
-        mainLayout->setPadded(true);
-        inputLayout->setPadded(true);
-
-        inputLayout->append(titleLabel, false);
-        inputLayout->append(nameEntry, true); // Stretchy
-
-        mainLayout->append(inputLayout, false);
-        mainLayout->append(submitBtn, false);
-        mainLayout->append(resultLabel, false);
-
-        window.setChild(mainLayout);
-
-        // 3. Hook up modern C++ lambdas for logic
-        submitBtn->onClick([&]() {
-            std::string name = nameEntry->getText();
-            if (name.empty()) {
-                resultLabel->setText("Please enter a name!");
-            } else {
-                resultLabel->setText("Hello there, " + name + "!");
-                nameEntry->setText(""); // clear the input
-            }
-        });
-
-        window.onClosing([&]() {
-            mui::App::quit();
-            return true; // true tells libui to actually destroy the window
-        });
-
-        // 4. Run the app
-        window.show();
-        mui::App::run();
-
-    } catch (const std::exception& e) {
-        std::cerr << "Fatal Error: " << e.what() << std::endl;
-        return 1;
+    generateBtn->onClick([weakPrompt, weakProgress]()
+                         {
+    if (auto prompt = weakPrompt.lock()) {
+      std::cout << "Dispatching to stable-diffusion.cpp: " << prompt->getText()
+                << std::endl;
     }
+    if (auto progress = weakProgress.lock()) {
+      progress->setValue(10); // Simulated progress
+    } });
 
+    // 3. Assemble the UI declaratively
+    auto mainWindow =
+        mui::Window::create("Nifl - Stable Diffusion", 800, 600)
+            ->setMargined(true)
+            ->setChild(
+                mui::VBox::create()
+                    ->setPadded(true)
+                    ->append(
+                        mui::Group::create("Parameters")
+                            ->setMargined(true)
+                            ->setChild(mui::VBox::create()
+                                           ->setPadded(true)
+                                           ->append(mui::Label::create("Prompt"))
+                                           ->append(promptEntry)
+                                           ->append(mui::Label::create("Negative Prompt"))
+                                           ->append(negPromptEntry)))
+                    ->append(generateBtn)
+                    ->append(progressBar));
+
+    mainWindow->onClosing(
+        []()
+        {
+            mui::App::quit();
+            return true;
+        });
+
+    mainWindow->show();
+    return mainWindow;
+}
+
+int main()
+{
+    mui::App::init();
+    auto mainWin = buildNiflInterface();
+    mui::App::run();
     return 0;
 }

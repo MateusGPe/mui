@@ -1,0 +1,27 @@
+---
+Language: Cpp
+BasedOnStyle: LLVM
+# --- General Indentation ---
+IndentWidth: 4
+UseTab: Never
+ContinuationIndentWidth: 4
+
+# --- Line Breaking & Wrapping ---
+# This is the most important setting for fluent interfaces.
+# A lower value will cause clang-format to break long chains more often.
+# Adjust this value to fit your team's preference.
+ColumnLimit: 100
+
+# How to wrap function parameters
+BinPackParameters: false
+AlignAfterOpenBracket: DontAlign
+
+# --- Braces and Pointers ---
+BreakBeforeBraces: Attach
+PointerAlignment: Left
+
+# --- Operator Breaking ---
+# This ensures that when a line is broken, the operator (like ->)
+# is at the beginning of the new line, indented.
+BreakBeforeBinaryOperators: None
+...

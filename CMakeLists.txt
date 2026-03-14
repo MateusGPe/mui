@@ -37,23 +37,21 @@ add_custom_command(
 # 3. Create a target that MyGUIApp can depend on
 add_custom_target(libui_build DEPENDS "${LIBUI_OUT_DIR}/libui_compile.marker")
 
+# --- MUI LIBRARY ---
+add_subdirectory(mui)
+
 # --- YOUR EXECUTABLE ---
-add_executable(${PROJECT_NAME} main.cpp mui.cpp)
+add_executable(${PROJECT_NAME} main.cpp)
 
-# Ensure Meson runs BEFORE compiling your app
-add_dependencies(${PROJECT_NAME} libui_build)
-
-# Ensure the compiler can find <ui.h>
-target_include_directories(${PROJECT_NAME} PRIVATE "${libui_ng_SOURCE_DIR}")
+# Link your app against the mui library.
+# This will transitively link against libui and set up include directories.
+target_link_libraries(${PROJECT_NAME} PRIVATE mui)
 
 # FIX: Tell the linker to search both possible Meson output directories
 target_link_directories(${PROJECT_NAME} PRIVATE 
     "${LIBUI_OUT_DIR}"
     "${LIBUI_OUT_DIR}/meson-out"
 )
-
-# FIX: Link against 'ui' (This safely maps to -lui for the linker)
-target_link_libraries(${PROJECT_NAME} PRIVATE ui)
 
 # Ensure your app can find libui.so at runtime when testing locally
 set_target_properties(${PROJECT_NAME} PROPERTIES BUILD_RPATH "${LIBUI_OUT_DIR}:${LIBUI_OUT_DIR}/meson-out")
