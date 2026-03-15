@@ -56,7 +56,7 @@ int main()
         vboxNumbers->setPadded(true);
 
         auto spinBox = Spinbox::create(0, 100);
-        auto slider = Slider::create(0, 100);
+        auto slider = SliderInt::create(0, 100);
         auto progressBar = ProgressBar::create();
 
         // Synchronize all three controls

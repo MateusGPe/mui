@@ -2,6 +2,7 @@
 #include "control.hpp"
 #include <string>
 #include <functional>
+#include <memory>
 
 namespace mui
 {
@@ -10,21 +11,24 @@ namespace mui
 
     class Checkbox : public Control
     {
+    protected:
         std::string text;
         bool checked;
         std::function<void()> onToggledCb;
 
-    public:
-        Checkbox(const std::string &text);
-        static CheckboxPtr create(const std::string &text) { return std::make_shared<Checkbox>(text); }
-
         CheckboxPtr self() { return std::static_pointer_cast<Checkbox>(shared_from_this()); }
 
+    public:
+        explicit Checkbox(const std::string &text);
+        static CheckboxPtr create(const std::string &text) { return std::make_shared<Checkbox>(text); }
+
         void render() override;
+
         bool isChecked() const;
         std::string getText() const;
-        void setText(const std::string &text);
-        CheckboxPtr setChecked(bool checked);
+        void setText(const std::string &t);
+
+        CheckboxPtr setChecked(bool c);
         CheckboxPtr onToggled(std::function<void()> cb);
     };
 } // namespace mui

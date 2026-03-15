@@ -1,8 +1,9 @@
 #pragma once
-#include "control.hpp"
+#include "../widgets/control.hpp"
 #include <string>
 #include <vector>
 #include <functional>
+#include <memory>
 
 namespace mui
 {
@@ -11,20 +12,24 @@ namespace mui
 
     class Tab : public Control
     {
-        struct Page {
+    protected:
+        struct TabPage
+        {
             std::string name;
             ControlPtr control;
         };
-        std::vector<Page> pages;
+        std::vector<TabPage> pages;
         int selectedIndex = 0;
         std::function<void()> onSelectedCb;
 
-    public:
-        Tab();
         TabPtr self() { return std::static_pointer_cast<Tab>(shared_from_this()); }
 
+    public:
+        Tab();
         static TabPtr create() { return std::make_shared<Tab>(); }
+
         void render() override;
+
         TabPtr append(const std::string &name, ControlPtr child);
         TabPtr setMargined(int page, bool margined) { return self(); } // Stub
         TabPtr onSelected(std::function<void()> cb);

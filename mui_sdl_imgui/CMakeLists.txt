@@ -38,6 +38,11 @@ set(WIDGET_SOURCES
     widgets/progressbar.cpp
     widgets/slider.cpp
     widgets/spinbox.cpp
+    widgets/image.cpp
+    widgets/coloredit.cpp
+    widgets/combobox.cpp
+    widgets/radiogroup.cpp
+    widgets/separator.cpp
 )
 
 set(LAYOUT_SOURCES
@@ -45,6 +50,7 @@ set(LAYOUT_SOURCES
     layouts/grid.cpp
     layouts/group.cpp
     layouts/tab.cpp
+    layouts/treenode.cpp
 )
 
 set(IMGUI_SOURCES

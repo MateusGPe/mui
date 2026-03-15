@@ -2,6 +2,7 @@
 #include "control.hpp"
 #include <string>
 #include <functional>
+#include <memory>
 
 namespace mui
 {
@@ -12,19 +13,32 @@ namespace mui
     {
     protected:
         std::string text;
+        std::string hint;
         bool readOnly;
-        bool isPassword = false;
+        bool isPassword;
+        bool isMultiline;
+        bool autoSelectAll = false;
+        bool noSpaces = false;
+        float width;
+        float height;
+
         std::function<void()> onChangedCb;
+
+        EntryPtr self() { return std::static_pointer_cast<Entry>(shared_from_this()); }
 
     public:
         Entry();
         static EntryPtr create() { return std::make_shared<Entry>(); }
-        EntryPtr self() { return std::static_pointer_cast<Entry>(shared_from_this()); }
 
         void render() override;
+
         std::string getText() const;
-        EntryPtr setText(const std::string &text);
-        EntryPtr setReadOnly(bool readOnly);
+        EntryPtr setText(const std::string &t);
+        EntryPtr setHint(const std::string &h);
+        EntryPtr setReadOnly(bool r);
+        EntryPtr setMultiline(bool m, float w = 0.0f, float h = 0.0f);
+        EntryPtr setAutoSelectAll(bool a);
+        EntryPtr setNoSpaces(bool n);
         EntryPtr onChanged(std::function<void()> cb);
     };
 

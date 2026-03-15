@@ -1,25 +1,64 @@
 #pragma once
 #include "control.hpp"
+#include <string>
 #include <functional>
+#include <memory>
 
 namespace mui
 {
-    class Slider;
-    using SliderPtr = std::shared_ptr<Slider>;
+    class SliderInt;
+    using SliderIntPtr = std::shared_ptr<SliderInt>;
 
-    class Slider : public Control
+    class SliderInt : public Control
     {
-        int minVal, maxVal, value;
+    protected:
+        int minVal;
+        int maxVal;
+        int value;
+        std::string format;
+        bool logarithmic = false;
         std::function<void()> onChangedCb;
 
+        SliderIntPtr self() { return std::static_pointer_cast<SliderInt>(shared_from_this()); }
+
     public:
-        Slider(int min, int max);
-        static SliderPtr create(int min, int max) { return std::make_shared<Slider>(min, max); }
-        SliderPtr self() { return std::static_pointer_cast<Slider>(shared_from_this()); }
+        SliderInt(int min, int max);
+        static SliderIntPtr create(int min, int max) { return std::make_shared<SliderInt>(min, max); }
 
         void render() override;
+
         int getValue() const;
-        SliderPtr setValue(int val);
-        SliderPtr onChanged(std::function<void()> cb);
+        SliderIntPtr setValue(int v);
+        SliderIntPtr setFormat(const std::string &f);
+        SliderIntPtr setLogarithmic(bool l);
+        SliderIntPtr onChanged(std::function<void()> cb);
+    };
+
+    class SliderFloat;
+    using SliderFloatPtr = std::shared_ptr<SliderFloat>;
+
+    class SliderFloat : public Control
+    {
+    protected:
+        float minVal;
+        float maxVal;
+        float value;
+        std::string format;
+        bool logarithmic = false;
+        std::function<void()> onChangedCb;
+
+        SliderFloatPtr self() { return std::static_pointer_cast<SliderFloat>(shared_from_this()); }
+
+    public:
+        SliderFloat(float min, float max);
+        static SliderFloatPtr create(float min, float max) { return std::make_shared<SliderFloat>(min, max); }
+
+        void render() override;
+
+        float getValue() const;
+        SliderFloatPtr setValue(float v);
+        SliderFloatPtr setFormat(const std::string &f);
+        SliderFloatPtr setLogarithmic(bool l);
+        SliderFloatPtr onChanged(std::function<void()> cb);
     };
 } // namespace mui

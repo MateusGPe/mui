@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 #include <memory>
 #include <stdexcept>
 
@@ -32,19 +33,27 @@ namespace mui
     protected:
         bool visible = true;
         bool enabled = true;
-        bool ownsHandle = false;
+        bool ownsHandle = true;
+        std::string tooltip;
+
+        void renderTooltip();
 
     public:
         virtual ~Control();
-        virtual void render() = 0;
 
+        virtual void render() = 0;
+        virtual void onHandleDestroyed();
         void verifyState() const;
-        void onHandleDestroyed();
+
         void show();
         void hide();
+
         void setEnabled(bool enabled);
         bool isEnabled() const;
+
         void releaseOwnership();
         void acquireOwnership();
+
+        ControlPtr setTooltip(const std::string &t);
     };
 } // namespace mui

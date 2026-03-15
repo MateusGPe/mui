@@ -133,7 +133,10 @@ namespace mui
         // --- ENFORCE ANTI-ALIASING ---
         style.AntiAliasedLines = true;
         style.AntiAliasedFill = true;
-        style.AntiAliasedLinesUseTex = true; // Use texture-based AA for lines (smoother)
+        // This flag uses a texture-based method for anti-aliasing lines. While it can produce
+        // smoother lines, it has been known to cause rendering artifacts with other elements,
+        // such as the 1-pixel-wide text input cursor, causing it to appear white.
+        style.AntiAliasedLinesUseTex = true;
 
         // Geometry & Rounding (Base unscaled values)
         style.WindowRounding = 12.0f;
@@ -152,7 +155,7 @@ namespace mui
         style.TabBorderSize = 0.0f;
 
         // Spacing & Padding
-        style.ItemSpacing = ImVec2(8.0f, 8.0f);
+        style.ItemSpacing = ImVec2(8.0f, 4.0f);
         style.FramePadding = ImVec2(8.0f, 8.0f);
         style.WindowPadding = ImVec2(8.0f, 8.0f);
 
@@ -170,6 +173,7 @@ namespace mui
         colors[ImGuiCol_FrameBgHovered] = ImVec4(0.85f, 0.85f, 0.88f, 1.00f);
         colors[ImGuiCol_FrameBgActive] = ImVec4(0.80f, 0.80f, 0.85f, 1.00f);
         colors[ImGuiCol_TitleBg] = ImVec4(0.95f, 0.95f, 0.97f, 1.00f);
+        colors[ImGuiCol_NavCursor] = ImVec4(0.12f, 0.53f, 0.00f, 1.00f);
         colors[ImGuiCol_TitleBgActive] = ImVec4(0.95f, 0.95f, 0.97f, 1.00f);
         colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.95f, 0.95f, 0.97f, 0.51f);
         colors[ImGuiCol_MenuBarBg] = ImVec4(0.95f, 0.95f, 0.97f, 1.00f);
@@ -191,5 +195,30 @@ namespace mui
         colors[ImGuiCol_TabActive] = ImVec4(0.12f, 0.53f, 0.90f, 1.00f);
         colors[ImGuiCol_TabUnfocused] = ImVec4(0.90f, 0.90f, 0.92f, 1.00f);
         colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.85f, 0.85f, 0.88f, 1.00f);
+
+        // --- Add missing colors for a more complete theme ---
+        colors[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f); // Obsolete
+        colors[ImGuiCol_Separator] = colors[ImGuiCol_Border];
+        colors[ImGuiCol_SeparatorHovered] = ImVec4(0.12f, 0.53f, 0.90f, 0.78f);
+        colors[ImGuiCol_SeparatorActive] = ImVec4(0.12f, 0.53f, 0.90f, 1.00f);
+        colors[ImGuiCol_ResizeGrip] = ImVec4(0.95f, 0.95f, 0.97f, 0.20f);
+        colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.12f, 0.53f, 0.90f, 0.67f);
+        colors[ImGuiCol_ResizeGripActive] = ImVec4(0.12f, 0.53f, 0.90f, 0.95f);
+        colors[ImGuiCol_DockingPreview] = ImVec4(0.12f, 0.53f, 0.90f, 0.70f);
+        colors[ImGuiCol_DockingEmptyBg] = colors[ImGuiCol_FrameBg];
+        colors[ImGuiCol_PlotLines] = ImVec4(0.39f, 0.39f, 0.39f, 1.00f);
+        colors[ImGuiCol_PlotLinesHovered] = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
+        colors[ImGuiCol_PlotHistogram] = colors[ImGuiCol_Button];
+        colors[ImGuiCol_PlotHistogramHovered] = colors[ImGuiCol_ButtonHovered];
+        colors[ImGuiCol_TableHeaderBg] = colors[ImGuiCol_FrameBg];
+        colors[ImGuiCol_TableBorderStrong] = ImVec4(0.70f, 0.70f, 0.75f, 1.00f);
+        colors[ImGuiCol_TableBorderLight] = ImVec4(0.80f, 0.80f, 0.85f, 1.00f);
+        colors[ImGuiCol_TableRowBg] = colors[ImGuiCol_ChildBg];
+        colors[ImGuiCol_TableRowBgAlt] = colors[ImGuiCol_WindowBg];
+        colors[ImGuiCol_TextSelectedBg] = ImVec4(0.12f, 0.53f, 0.90f, 0.35f);
+        colors[ImGuiCol_DragDropTarget] = ImVec4(1.00f, 1.00f, 0.00f, 0.90f);
+        colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
+        colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
+        colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.20f, 0.20f, 0.20f, 0.35f);
     }
 } // namespace mui
