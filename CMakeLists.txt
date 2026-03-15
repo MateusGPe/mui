@@ -16,6 +16,9 @@ target_link_libraries(${PROJECT_NAME} PUBLIC mui)
 
 # WORKAROUND: The 'mui' library does not correctly export the include
 # directory for its dependency (ImGui). We manually add it to our
-# executable target here. This assumes ImGui is fetched via FetchContent
-# to the standard location inside the build directory.
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR}/_deps/imgui-src)
+# executable target here. We also add the mui library source as an include
+# path to find its headers.
+target_include_directories(${PROJECT_NAME} PRIVATE
+    ${CMAKE_BINARY_DIR}/_deps/imgui-src
+    mui_sdl_imgui
+)

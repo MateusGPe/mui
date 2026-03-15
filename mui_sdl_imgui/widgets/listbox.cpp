@@ -13,9 +13,11 @@ namespace mui
         ImGui::PushID(this);
         ImGui::BeginDisabled(!enabled);
 
-        if (width > 0) ImGui::SetNextItemWidth(width);
+        if (spanAvailWidth) {
+            ImGui::PushItemWidth(-FLT_MIN);
+        }
 
-        if (ImGui::BeginListBox("##listbox", ImVec2(0, visibleItemsCount * ImGui::GetTextLineHeightWithSpacing()))) {
+        if (ImGui::BeginListBox("##listbox", ImVec2(spanAvailWidth ? -FLT_MIN : 0, visibleItemsCount * ImGui::GetTextLineHeightWithSpacing()))) {
             for (int i = 0; i < (int)items.size(); ++i) {
                 const bool isSelected = (selectedIndex == i);
                 if (ImGui::Selectable(items[i].c_str(), isSelected)) {
@@ -34,6 +36,10 @@ namespace mui
             ImGui::EndListBox();
         }
 
+        if (spanAvailWidth) {
+            ImGui::PopItemWidth();
+        }
+
         renderTooltip();
 
         ImGui::EndDisabled();
@@ -45,7 +51,7 @@ namespace mui
     int ListBox::getSelected() const { return selectedIndex; }
     ListBoxPtr ListBox::setSelected(int index) { selectedIndex = index; return self(); }
     ListBoxPtr ListBox::setVisibleItems(int count) { visibleItemsCount = count; return self(); }
-    ListBoxPtr ListBox::setWidth(float w) { width = w; return self(); }
+    ListBoxPtr ListBox::setSpanAvailWidth(bool span) { spanAvailWidth = span; return self(); }
     ListBoxPtr ListBox::onSelected(std::function<void()> cb) { onSelectedCb = std::move(cb); return self(); }
     ListBoxPtr ListBox::onDoubleClick(std::function<void()> cb) { onDoubleClickCb = std::move(cb); return self(); }
 } // namespace mui

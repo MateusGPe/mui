@@ -1,9 +1,10 @@
 #include "spinbox.hpp"
+#include "app.hpp"
 #include <imgui.h>
 #include <algorithm>
 
 namespace mui {
-    Spinbox::Spinbox(int min, int max) : minVal(min), maxVal(max), value(min) {}
+    Spinbox::Spinbox(int min, int max) : minVal(min), maxVal(max), value(min) { App::assertMainThread(); }
     void Spinbox::renderControl() {
         if (!visible) return;
         ImGui::PushID(this);

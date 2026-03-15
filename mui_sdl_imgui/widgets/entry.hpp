@@ -19,7 +19,6 @@ namespace mui
         bool isMultiline;
         bool autoSelectAll = false;
         bool noSpaces = false;
-        float width;
         float height;
 
         std::function<void()> onChangedCb;
@@ -27,10 +26,10 @@ namespace mui
         EntryPtr self() { return std::static_pointer_cast<Entry>(shared_from_this()); }
 
     public:
-        Entry(const std::string &initialText = "", bool password = false, bool multiline = false, float w = 0.0f, float h = 0.0f);
-        static EntryPtr create(const std::string &initialText = "", bool password = false, bool multiline = false, float w = 0.0f, float h = 0.0f)
+        Entry(const std::string &initialText = "", bool password = false, bool multiline = false, float h = 0.0f);
+        static EntryPtr create(const std::string &initialText = "", bool password = false, bool multiline = false, float h = 0.0f)
         {
-            return std::make_shared<Entry>(initialText, password, multiline, w, h);
+            return std::make_shared<Entry>(initialText, password, multiline, h);
         }
 
         void renderControl() override;
@@ -39,9 +38,10 @@ namespace mui
         EntryPtr setText(const std::string &t);
         EntryPtr setHint(const std::string &h);
         EntryPtr setReadOnly(bool r);
-        EntryPtr setMultiline(bool m, float w = 0.0f, float h = 0.0f);
+        EntryPtr setMultiline(bool m, float h = 0.0f);
         EntryPtr setAutoSelectAll(bool a);
         EntryPtr setNoSpaces(bool n);
+        EntryPtr setSpanAvailWidth(bool s);
         EntryPtr onChanged(std::function<void()> cb);
     };
 

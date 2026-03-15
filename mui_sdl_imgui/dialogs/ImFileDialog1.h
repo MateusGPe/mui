@@ -4,12 +4,13 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include "../core/app.hpp" // Added for mui::App::assertMainThread()
 #include <functional>
 #include <filesystem>
-#include <unordered_map>
-#include <algorithm> // std::min, std::max
 #include <mutex>
 #include <atomic>
+#include <unordered_map>
+#include <algorithm> // std::min, std::max
 
 #define IFD_DIALOG_FILE 0
 #define IFD_DIALOG_DIRECTORY 1
@@ -58,6 +59,14 @@ namespace ifd
 		class FileTreeNode
 		{
 		public:
+#ifdef _WIN32
+			FileTreeNode(const std::wstring &path)
+			{
+				Path = std::filesystem::path(path);
+				Read = false;
+			}
+#endif
+
 			FileTreeNode(const std::string &path)
 			{
 				Path = std::filesystem::u8path(path);
@@ -132,12 +141,11 @@ namespace ifd
 		unsigned int m_sortColumn;
 		unsigned int m_sortDirection;
 		std::vector<FileData> m_content;
-		std::recursive_mutex m_contentMutex;
-		
+		std::mutex m_contentMutex;
 		void m_setDirectory(const std::filesystem::path &p, bool addHistory = true);
 		void m_sortContent(unsigned int column, unsigned int sortDirection);
-
 		void m_renderContent();
+
 		void m_renderPopups();
 		void m_renderFileDialog();
 	};

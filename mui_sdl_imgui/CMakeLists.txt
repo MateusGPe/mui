@@ -20,7 +20,7 @@ FetchContent_MakeAvailable(imgui)
 
 # --- Source Definitions ---
 
-set(CORE_SOURCES core/app.cpp core/window.cpp core/theme.cpp core/dialogs.cpp)
+set(CORE_SOURCES core/app.cpp core/window.cpp core/theme.cpp)
 
 set(WIDGET_SOURCES
     widgets/button.cpp
@@ -35,12 +35,13 @@ set(WIDGET_SOURCES
     widgets/image.cpp
     widgets/coloredit.cpp
     widgets/combobox.cpp
-    widgets/radiogroup.cpp
     widgets/separator.cpp
     widgets/radiobutton.cpp)
 
 set(LAYOUT_SOURCES layouts/box.cpp layouts/grid.cpp layouts/group.cpp
                    layouts/tab.cpp layouts/treenode.cpp)
+
+set(DIALOG_SOURCES dialogs/ImFileDialog.cpp dialogs/dialogs.cpp)
 
 set(IMGUI_SOURCES
     ${imgui_SOURCE_DIR}/imgui.cpp
@@ -54,14 +55,17 @@ set(IMGUI_SOURCES
 # --- Target Configuration ---
 
 add_library(mui STATIC ${CORE_SOURCES} ${WIDGET_SOURCES} ${LAYOUT_SOURCES}
-                       ${IMGUI_SOURCES})
+                       ${DIALOG_SOURCES} ${IMGUI_SOURCES})
 
 # Include paths for your code and ImGui
 target_include_directories(
   mui
-  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/core ${CMAKE_CURRENT_SOURCE_DIR}/widgets
+  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/core
+         ${CMAKE_CURRENT_SOURCE_DIR}/widgets
          ${CMAKE_CURRENT_SOURCE_DIR}/layouts
-         ${CMAKE_CURRENT_SOURCE_DIR}/include)
+         ${CMAKE_CURRENT_SOURCE_DIR}/include
+         ${CMAKE_CURRENT_SOURCE_DIR}/dialogs # Add dialogs folder for headers
+)
 
 target_include_directories(mui PRIVATE ${imgui_SOURCE_DIR}
                                        ${imgui_SOURCE_DIR}/backends)

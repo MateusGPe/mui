@@ -22,7 +22,6 @@ namespace mui
     protected:
         std::string text;
         LabelFormat format;
-        bool wrapped = false; // Kept for backward compatibility with your previous code
 
         bool useCustomColor = false;
         ImVec4 color;
@@ -39,7 +38,6 @@ namespace mui
         LabelPtr setText(const std::string &t);
         LabelPtr setFormat(LabelFormat f);
         LabelPtr setWrapped(bool w);
-        LabelPtr setSpanAvailWidth(bool span);
         LabelPtr setColor(ImVec4 c);
     };
 } // namespace mui

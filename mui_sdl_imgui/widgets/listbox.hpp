@@ -17,7 +17,6 @@ namespace mui
         std::vector<std::string> items;
         int selectedIndex;
         int visibleItemsCount;
-        float width = 0.0f;
         std::function<void()> onSelectedCb;
         std::function<void()> onDoubleClickCb;
 
@@ -35,7 +34,7 @@ namespace mui
         int getSelected() const;
         ListBoxPtr setSelected(int index);
         ListBoxPtr setVisibleItems(int count);
-        ListBoxPtr setWidth(float w);
+        ListBoxPtr setSpanAvailWidth(bool span);
 
         ListBoxPtr onSelected(std::function<void()> cb);
         ListBoxPtr onDoubleClick(std::function<void()> cb);

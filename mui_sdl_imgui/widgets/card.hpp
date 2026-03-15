@@ -14,9 +14,6 @@ namespace mui
         float padding = 8.0f;
         bool fillWidth = false;
         bool fillHeight = false;
-        float shadowBlur = 0.0f;
-        float shadowOffset = 0.0f;
-        int shadowAlpha = 0;
 
         CardPtr self() { return std::static_pointer_cast<Card>(shared_from_this()); }
 
@@ -30,6 +27,5 @@ namespace mui
         CardPtr setPadding(float p);
         CardPtr setFillWidth(bool fill);
         CardPtr setFillHeight(bool fill);
-        CardPtr setShadow(float blur, float offset, int alpha);
     };
 } // namespace mui

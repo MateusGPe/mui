@@ -65,11 +65,7 @@ namespace mui
     }
     LabelPtr Label::setWrapped(bool w)
     {
-        return LabelPtr();
-    }
-    LabelPtr Label::setSpanAvailWidth(bool span)
-    {
-        this->spanAvailWidth = span;
+        format = w ? LabelFormat::Wrapped : LabelFormat::Normal;
         return self();
     }
     LabelPtr Label::setColor(ImVec4 c)

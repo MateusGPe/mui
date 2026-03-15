@@ -15,7 +15,7 @@ namespace mui
         switch (type)
         {
         case SeparatorType::Native:
-            ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
+            ImGui::Separator();
             break;
         case SeparatorType::Text:
             ImGui::SeparatorText(text.c_str());
@@ -41,7 +41,7 @@ namespace mui
 
         if (orientation == SeparatorOrientation::Horizontal)
         {
-            float w = ImGui::CalcItemWidth();
+            float w = ImGui::GetContentRegionAvail().x;
             const ImRect bb(window->DC.CursorPos, ImVec2(window->DC.CursorPos.x + w, window->DC.CursorPos.y + thickness));
             ImGui::ItemSize(bb.GetSize());
             if (ImGui::ItemAdd(bb, 0))
@@ -59,9 +59,9 @@ namespace mui
         else // Vertical
         {
             ImGui::SameLine(0, style.ItemSpacing.x);
-            float h = ImGui::GetFrameHeight();
+            float h = ImGui::GetContentRegionAvail().y;
             const ImRect bb(window->DC.CursorPos, ImVec2(window->DC.CursorPos.x + thickness, window->DC.CursorPos.y + h));
-            ImGui::ItemSize(bb.GetSize(), style.FramePadding.y);
+            ImGui::ItemSize(bb.GetSize());
             if (ImGui::ItemAdd(bb, 0))
             {
                 if (isRect)

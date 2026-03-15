@@ -12,8 +12,6 @@ namespace mui
     {
     protected:
         float value;
-        float width;
-        float height;
         std::string overlayText;
 
         ProgressBarPtr self() { return std::static_pointer_cast<ProgressBar>(shared_from_this()); }
@@ -26,6 +24,6 @@ namespace mui
 
         ProgressBarPtr setValue(float v);
         ProgressBarPtr setOverlayText(const std::string &text);
-        ProgressBarPtr setSize(float w, float h);
+        ProgressBarPtr setSpanAvailWidth(bool span);
     };
 } // namespace mui

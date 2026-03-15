@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 #include <cstdio>
-
 using namespace mui;
 
 // Forward declarations for UI creation functions
@@ -23,7 +22,7 @@ int main()
     try
     {
         App::init();
-        App::setTheme(ThemeType::Dark);
+        App::setTheme(ThemeType::Light);
 
         // Create and show the main window with the control gallery
         auto mainWin = createMainGalleryWindow();
@@ -116,8 +115,8 @@ WindowPtr createInspectorWindow()
     auto cardContent = VBox::create();
     cardContent->setPadded(true);
     card->setChild(cardContent);
-    card->setShadow(0.0f, 4.0f, 128)
-        ->setFillWidth(true); // Card will fill the width of the parent
+    card->setShadow(true, {4.0f, 4.0f}, 0.0f, {0.0f, 0.0f, 0.0f, 0.5f})
+        ->setSpanAvailWidth(true); // Card will fill the width of the parent
 
     append_all(cardContent, {{Label::create("This is a Card")},
                              {Separator::create()->setType(SeparatorType::Custom)},
@@ -202,11 +201,11 @@ ControlPtr createTextEntriesTab(const LabelPtr &lblStatus)
     vbox->setPadded(true);
 
     auto entryStandard = Entry::create();
-    // entryStandard->setPlaceholderText("Type here...");
+    entryStandard->setHint("Type here...");
     auto entryPassword = PasswordEntry::create();
-    // entryPassword->setPlaceholderText("Secret...");
+    entryPassword->setHint("Secret...");
     auto entrySearch = SearchEntry::create();
-    // entrySearch->setPlaceholderText("Search...");
+    entrySearch->setHint("Search...");
     auto lblMirror = Label::create("Mirror: ");
 
     entryStandard->onChanged([entryStandard, lblMirror]()
@@ -242,25 +241,29 @@ ControlPtr createDialogsTab(const WindowPtr &win, const LabelPtr &lblStatus)
     auto btnError = Button::create("Error Msg");
     auto btnFile = Button::create("Open File");
 
-    btnInfo->onClick([win, lblStatus]()
-                     {
-        Dialogs::msgBox(*win, "Information", "This is a standard message box.");
-        lblStatus->setText("Info dialog shown."); });
+    btnInfo->onClick(
+        [win, lblStatus]()
+        {
+            Dialogs::msgBox("Information", "This is a standard message box.");
+            lblStatus->setText("Info dialog shown.");
+        });
 
-    btnError->onClick([win, lblStatus]()
-                      {
-        Dialogs::msgBoxError(*win, "Critical Error", "Failed to load imaginary resources.");
-        lblStatus->setText("Error dialog shown."); });
+    btnError->onClick(
+        [win, lblStatus]()
+        {
+            Dialogs::msgBoxError("Critical Error", "Failed to load imaginary resources.");
+            lblStatus->setText("Error dialog shown.");
+        });
 
-    btnFile->onClick([win, lblStatus]()
-                     {
-        std::string path = Dialogs::openFile(*win);
-        if (!path.empty()) {
-            Dialogs::msgBox(*win, "File Selected", "Path: " + path);
-            lblStatus->setText("File selected: " + path);
-        } else {
-            lblStatus->setText("File open dialog was cancelled.");
-        } });
+    btnFile->onClick(
+        [win, lblStatus]()
+        {
+            Dialogs::openFile("Open File", "All Files {*.*}", [lblStatus](const std::string &path)
+                              {
+                    Dialogs::msgBox("File Selected", "Path: " + path);
+                    lblStatus->setText("File selected: " + path); }, [lblStatus]()
+                              { lblStatus->setText("File open dialog was cancelled."); });
+        });
 
     append_all(hboxButtons, {{btnInfo, true},
                              {btnError, true},

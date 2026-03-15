@@ -35,5 +35,6 @@ namespace mui
         ComboBoxPtr setSelectedIndex(int index);
         ComboBoxPtr onChanged(std::function<void()> cb);
         ComboBoxPtr setUseContainerWidth(bool use);
+        ComboBoxPtr setSpanAvailWidth(bool span);
     };
 } // namespace mui

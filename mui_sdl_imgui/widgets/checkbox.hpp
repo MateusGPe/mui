@@ -26,7 +26,7 @@ namespace mui
 
         bool isChecked() const;
         std::string getText() const;
-        void setText(const std::string &t);
+        CheckboxPtr setText(const std::string &t);
 
         CheckboxPtr setChecked(bool c);
         CheckboxPtr onToggled(std::function<void()> cb);

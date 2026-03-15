@@ -5,7 +5,7 @@
 
 namespace mui
 {
-    ProgressBar::ProgressBar() : value(0.0f), width(-1.0f), height(0.0f) { App::assertMainThread(); }
+    ProgressBar::ProgressBar() : value(0.0f) { App::assertMainThread(); }
 
     void ProgressBar::renderControl()
     {
@@ -13,7 +13,7 @@ namespace mui
             return;
         ImGui::PushID(this);
 
-        ImVec2 size(width, height);
+        ImVec2 size(spanAvailWidth ? -FLT_MIN : 0, 0);
         const char *overlay = overlayText.empty() ? NULL : overlayText.c_str();
 
         ImGui::ProgressBar(value, size, overlay);
@@ -32,10 +32,9 @@ namespace mui
         overlayText = text;
         return self();
     }
-    ProgressBarPtr ProgressBar::setSize(float w, float h)
+    ProgressBarPtr ProgressBar::setSpanAvailWidth(bool span)
     {
-        width = w;
-        height = h;
+        spanAvailWidth = span;
         return self();
     }
 }

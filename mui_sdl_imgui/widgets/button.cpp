@@ -98,12 +98,6 @@ namespace mui
         return self();
     }
 
-    ButtonPtr Button::setSpanAvailWidth(bool span)
-    {
-        this->spanAvailWidth = span;
-        return self();
-    }
-
     ButtonPtr Button::setColor(ImVec4 c, ImVec4 hover, ImVec4 active)
     {
         color = c;

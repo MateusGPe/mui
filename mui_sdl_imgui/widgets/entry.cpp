@@ -5,7 +5,7 @@
 
 namespace mui
 {
-    Entry::Entry(const std::string &initialText, bool password, bool multiline, float w, float h) : text(initialText), readOnly(false), isPassword(password), isMultiline(multiline), width(w), height(h) { App::assertMainThread(); }
+    Entry::Entry(const std::string &initialText, bool password, bool multiline, float h) : text(initialText), readOnly(false), isPassword(password), isMultiline(multiline), height(h) { App::assertMainThread(); }
 
     void Entry::renderControl()
     {
@@ -24,13 +24,13 @@ namespace mui
         if (noSpaces)
             flags |= ImGuiInputTextFlags_CharsNoBlank;
 
-        if (width > 0)
-            ImGui::SetNextItemWidth(width);
+        if (spanAvailWidth)
+            ImGui::PushItemWidth(-FLT_MIN);
 
         bool changed = false;
         if (isMultiline)
         {
-            changed = ImGui::InputTextMultiline("##entry", &text, ImVec2(width, height), flags);
+            changed = ImGui::InputTextMultiline("##entry", &text, ImVec2(spanAvailWidth ? -FLT_MIN : 0, height), flags);
         }
         else if (!hint.empty())
         {
@@ -40,6 +40,9 @@ namespace mui
         {
             changed = ImGui::InputText("##entry", &text, flags);
         }
+        
+        if (spanAvailWidth)
+            ImGui::PopItemWidth();
 
         if (changed && onChangedCb)
             onChangedCb();
@@ -66,10 +69,9 @@ namespace mui
         readOnly = r;
         return self();
     }
-    EntryPtr Entry::setMultiline(bool m, float w, float h)
+    EntryPtr Entry::setMultiline(bool m, float h)
     {
         isMultiline = m;
-        width = w;
         height = h;
         return self();
     }
@@ -86,6 +88,12 @@ namespace mui
     EntryPtr Entry::onChanged(std::function<void()> cb)
     {
         onChangedCb = std::move(cb);
+        return self();
+    }
+
+    EntryPtr Entry::setSpanAvailWidth(bool s)
+    {
+        spanAvailWidth = s;
         return self();
     }
 

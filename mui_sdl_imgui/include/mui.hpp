@@ -1,5 +1,3 @@
-#pragma once
-
 #include "../widgets/button.hpp"
 #include "../widgets/control.hpp"
 #include "../widgets/card.hpp"
@@ -9,7 +7,6 @@
 #include "../widgets/listbox.hpp"
 #include "../widgets/image.hpp"
 #include "../widgets/label.hpp"
-#include "../widgets/radiogroup.hpp"
 #include "../widgets/combobox.hpp"
 #include "../widgets/slider.hpp"
 #include "../widgets/checkbox.hpp"
@@ -23,7 +20,7 @@
 #include "../core/theme.hpp"
 #include "../core/window.hpp"
 #include "../core/app.hpp"
-#include "../core/dialogs.hpp"
+#include "../dialogs/dialogs.hpp"
 #include "../include/IconsFontAwesome6.h"
 #include "../include/core.hpp"
 #include "../widgets/radiobutton.hpp"

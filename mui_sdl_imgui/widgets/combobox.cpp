@@ -15,9 +15,13 @@ namespace mui
 
         std::string preview = (selectedIndex >= 0 && selectedIndex < (int)items.size()) ? items[selectedIndex] : "";
         
-        if (useContainerWidth)
+        if (spanAvailWidth)
         {
-            ImGui::SetNextItemWidth(ImGui::CalcItemWidth());
+            ImGui::PushItemWidth(-FLT_MIN);
+        }
+        else if (useContainerWidth)
+        {
+            ImGui::PushItemWidth(ImGui::CalcItemWidth());
         }
 
         if (ImGui::BeginCombo("##combo", preview.c_str())) {
@@ -34,6 +38,11 @@ namespace mui
             ImGui::EndCombo();
         }
         
+        if(spanAvailWidth || useContainerWidth)
+        {
+            ImGui::PopItemWidth();
+        }
+
         renderTooltip();
 
         ImGui::EndDisabled();
@@ -75,6 +84,12 @@ namespace mui
 
     ComboBoxPtr ComboBox::setUseContainerWidth(bool use) {
         useContainerWidth = use;
+        return self();
+    }
+
+    ComboBoxPtr ComboBox::setSpanAvailWidth(bool span)
+    {
+        spanAvailWidth = span;
         return self();
     }
 } // namespace mui

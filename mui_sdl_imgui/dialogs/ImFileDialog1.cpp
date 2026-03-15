@@ -5,7 +5,6 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "ImFileDialog.h"
 #include "../core/app.hpp" // Added for mui::App::assertMainThread()
-#include "IconsFontAwesome6.h"
 
 #include <fstream>
 #include <algorithm>
@@ -27,13 +26,6 @@
 #include <pwd.h>
 #endif
 
-#ifndef ICON_FA_FOLDER
-#define ICON_FA_FOLDER "\xef\x81\xbb"
-#endif
-#ifndef ICON_FA_FILE
-#define ICON_FA_FILE "\xef\x85\x9b"
-#endif
-
 #define ICON_SIZE ImGui::GetFontSize() + 3
 #define GUI_ELEMENT_SIZE std::max(ImGui::GetFontSize() + 10.f, 24.f)
 #define DEFAULT_ICON_SIZE 32
@@ -41,6 +33,9 @@
 
 namespace ifd
 {
+	static const char *GetDefaultFolderIcon();
+	static const char *GetDefaultFileIcon();
+
 	/* UI CONTROLS */
 	bool FolderNode(const char *label, ImTextureID icon, bool &clicked)
 	{
@@ -81,16 +76,7 @@ namespace ifd
 		float icon_posX = pos.x + ImGui::GetFontSize() + ImGui::GetStyle().FramePadding.y;
 		float text_posX = icon_posX + ImGui::GetStyle().FramePadding.y + ICON_SIZE;
 		ImGui::RenderArrow(window->DrawList, ImVec2(pos.x, pos.y + ImGui::GetStyle().FramePadding.y), ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[((hovered && is_mouse_x_over_arrow) || opened) ? ImGuiCol_Text : ImGuiCol_TextDisabled]), opened ? ImGuiDir_Down : ImGuiDir_Right);
-
-		if (icon)
-		{
-			window->DrawList->AddImage(icon, ImVec2(icon_posX, pos.y), ImVec2(icon_posX + ICON_SIZE, pos.y + ICON_SIZE));
-		}
-		else
-		{
-			window->DrawList->AddText(ImGui::GetFont(), ICON_SIZE, ImVec2(icon_posX, pos.y + ImGui::GetStyle().FramePadding.y), ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[ImGuiCol_Text]), ICON_FA_FOLDER);
-		}
-
+		window->DrawList->AddImage(icon, ImVec2(icon_posX, pos.y), ImVec2(icon_posX + ICON_SIZE, pos.y + ICON_SIZE));
 		ImGui::RenderText(ImVec2(text_posX, pos.y + ImGui::GetStyle().FramePadding.y), label);
 		if (opened)
 			ImGui::TreePush(label);
@@ -110,15 +96,7 @@ namespace ifd
 			window->DrawList->AddRectFilled(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[active ? ImGuiCol_HeaderActive : ImGuiCol_HeaderHovered]));
 
 		// Icon, text
-		if (icon)
-		{
-			window->DrawList->AddImage(icon, ImVec2(pos.x, pos.y), ImVec2(pos.x + ICON_SIZE, pos.y + ICON_SIZE));
-		}
-		else
-		{
-			window->DrawList->AddText(ImGui::GetFont(), ICON_SIZE, ImVec2(pos.x, pos.y + ImGui::GetStyle().FramePadding.y), ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[ImGuiCol_Text]), ICON_FA_FILE);
-		}
-
+		window->DrawList->AddImage(icon, ImVec2(pos.x, pos.y), ImVec2(pos.x + ICON_SIZE, pos.y + ICON_SIZE));
 		ImGui::RenderText(ImVec2(pos.x + ImGui::GetStyle().FramePadding.y + ICON_SIZE, pos.y + ImGui::GetStyle().FramePadding.y), label);
 
 		return ret;
@@ -318,7 +296,7 @@ namespace ifd
 
 		return ret;
 	}
-	bool FileIcon(const char *label, bool isSelected, ImTextureID icon, bool isDirectory, ImVec2 size, bool hasPreview, int previewWidth, int previewHeight)
+	bool FileIcon(const char *label, bool isSelected, ImTextureID icon, ImVec2 size, bool hasPreview, int previewWidth, int previewHeight)
 	{
 		ImGuiStyle &style = ImGui::GetStyle();
 		ImGuiWindow *window = ImGui::GetCurrentWindow();
@@ -343,7 +321,7 @@ namespace ifd
 		if (hovered || active || isSelected)
 			window->DrawList->AddRectFilled(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[active ? ImGuiCol_HeaderActive : (isSelected ? ImGuiCol_Header : ImGuiCol_HeaderHovered)]));
 
-		if (hasPreview && icon)
+		if (hasPreview)
 		{
 			ImVec2 availSize = ImVec2(size.x, iconSize);
 
@@ -356,15 +334,8 @@ namespace ifd
 
 			window->DrawList->AddImage(icon, ImVec2(previewPosX, previewPosY), ImVec2(previewPosX + availSize.x, previewPosY + availSize.y));
 		}
-		else if (icon)
-		{
-			window->DrawList->AddImage(icon, ImVec2(iconPosX, pos.y), ImVec2(iconPosX + iconSize, pos.y + iconSize));
-		}
 		else
-		{
-			// Fallback to font awesome
-			window->DrawList->AddText(ImGui::GetFont(), iconSize, ImVec2(iconPosX, pos.y), ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[ImGuiCol_Text]), isDirectory ? ICON_FA_FOLDER : ICON_FA_FILE);
-		}
+			window->DrawList->AddImage(icon, ImVec2(iconPosX, pos.y), ImVec2(iconPosX + iconSize, pos.y + iconSize));
 
 		window->DrawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(pos.x + (size.x - textSize.x) / 2.0f, pos.y + iconSize), ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[ImGuiCol_Text]), label, 0, size.x);
 
@@ -389,9 +360,9 @@ namespace ifd
 		}
 		else
 		{
-			std::error_code ec;
-			IsDirectory = std::filesystem::is_directory(path, ec);
-			Size = std::filesystem::file_size(path, ec);
+			// Could not stat the file, maybe it has been deleted.
+			IsDirectory = false;
+			Size = 0;
 			DateModified = 0;
 		}
 
@@ -875,8 +846,62 @@ namespace ifd
 
 		return m_icons[pathU8];
 #else
-		// Naturally fall back to FontAwesome
-		return nullptr;
+		if (m_icons.count(path.u8string()) > 0)
+			return m_icons[path.u8string()];
+
+		std::string pathU8 = path.u8string();
+
+		m_icons[pathU8] = nullptr;
+
+		int iconID = isDirectory ? 0 : 1;
+
+		// check if icon is already loaded
+		auto itr = std::find(m_iconIndices.begin(), m_iconIndices.end(), iconID);
+		if (itr != m_iconIndices.end())
+		{
+			const std::string &existingIconFilepath = m_iconFilepaths[itr - m_iconIndices.begin()];
+			m_icons[pathU8] = m_icons[existingIconFilepath];
+			return m_icons[pathU8];
+		}
+
+		m_iconIndices.push_back(iconID);
+		m_iconFilepaths.push_back(pathU8);
+
+		ImVec4 wndBg = ImGui::GetStyleColorVec4(ImGuiCol_WindowBg);
+
+		// light theme - load default icons
+		if ((wndBg.x + wndBg.y + wndBg.z) / 3.0f > 0.5f)
+		{
+			uint8_t *data = (uint8_t *)ifd::GetDefaultFileIcon();
+			if (iconID == 0)
+				data = (uint8_t *)ifd::GetDefaultFolderIcon();
+			m_icons[pathU8] = this->CreateTexture(data, DEFAULT_ICON_SIZE, DEFAULT_ICON_SIZE, 0);
+		}
+		// dark theme - invert the colors
+		else
+		{
+			uint8_t *data = (uint8_t *)ifd::GetDefaultFileIcon();
+			if (iconID == 0)
+				data = (uint8_t *)ifd::GetDefaultFolderIcon();
+
+			uint8_t *invData = (uint8_t *)malloc(DEFAULT_ICON_SIZE * DEFAULT_ICON_SIZE * 4);
+			for (int y = 0; y < 32; y++)
+			{
+				for (int x = 0; x < 32; x++)
+				{
+					int index = (y * DEFAULT_ICON_SIZE + x) * 4;
+					invData[index + 0] = 255 - data[index + 0];
+					invData[index + 1] = 255 - data[index + 1];
+					invData[index + 2] = 255 - data[index + 2];
+					invData[index + 3] = data[index + 3];
+				}
+			}
+			m_icons[pathU8] = this->CreateTexture(invData, DEFAULT_ICON_SIZE, DEFAULT_ICON_SIZE, 0);
+
+			free(invData);
+		}
+
+		return m_icons[pathU8];
 #endif
 	}
 	void FileDialog::m_clearIcons()
@@ -914,7 +939,7 @@ namespace ifd
 	{
 		m_stopPreviewLoader();
 
-		std::lock_guard<std::recursive_mutex> lock(m_contentMutex);
+		std::lock_guard<std::mutex> lock(m_contentMutex);
 		for (auto &data : m_content)
 		{
 			if (!data.HasIconPreview)
@@ -945,53 +970,69 @@ namespace ifd
 	}
 	void FileDialog::m_loadPreview()
 	{
-		size_t i = 0;
-		while (m_previewLoaderRunning)
+		for (size_t i = 0; m_previewLoaderRunning; i++)
 		{
-			FileData dataCopy(std::filesystem::u8path(""));
-			bool found = false;
+			std::filesystem::path path_to_load;
 
-			// Scoped lock to safely read from m_content
+			// Scope for the lock
 			{
-				std::lock_guard<std::recursive_mutex> lock(m_contentMutex);
-				if (i < m_content.size())
+				std::lock_guard<std::mutex> lock(m_contentMutex);
+				if (i >= m_content.size())
 				{
-					dataCopy = m_content[i];
-					found = true;
+					break; // We've processed all items in the current view
+				}
+
+				// If it already has a preview, skip.
+				if (m_content[i].HasIconPreview)
+				{
+					continue;
+				}
+
+				// Copy path and continue outside lock
+				path_to_load = m_content[i].Path;
+			}
+
+			// From here on, we are not holding the lock.
+			if (!path_to_load.has_extension())
+			{
+				continue;
+			}
+
+			std::string ext = path_to_load.extension().u8string();
+			if (ext != ".png" && ext != ".jpg" && ext != ".jpeg" && ext != ".bmp" && ext != ".tga")
+			{
+				continue;
+			}
+
+			// This is the slow part.
+			int width, height, nrChannels;
+			unsigned char *image_data = stbi_load(path_to_load.u8string().c_str(), &width, &height, &nrChannels, STBI_rgb_alpha);
+
+			if (image_data == nullptr || width == 0 || height == 0)
+			{
+				continue;
+			}
+
+			// Now we need to put the result back into m_content. Lock again.
+			{
+				std::lock_guard<std::mutex> lock(m_contentMutex);
+
+				// The content list might have changed while we were loading.
+				// We must verify that the item at index 'i' is still the one we loaded the preview for.
+				if (i < m_content.size() && m_content[i].Path == path_to_load)
+				{
+					auto &data = m_content[i];
+					data.HasIconPreview = true;
+					data.IconPreviewData = image_data;
+					data.IconPreviewWidth = width;
+					data.IconPreviewHeight = height;
 				}
 				else
 				{
-					break; // Reached end of content
+					// The item is no longer there or has been replaced. Discard the loaded data.
+					stbi_image_free(image_data);
 				}
 			}
-
-			if (found && !dataCopy.HasIconPreview && dataCopy.Path.has_extension())
-			{
-				std::string ext = dataCopy.Path.extension().u8string();
-				if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".bmp" || ext == ".tga")
-				{
-					int width, height, nrChannels;
-					unsigned char *image = stbi_load(dataCopy.Path.u8string().c_str(), &width, &height, &nrChannels, STBI_rgb_alpha);
-
-					if (image != nullptr && width > 0 && height > 0)
-					{
-						// Safely write the preview back
-						std::lock_guard<std::recursive_mutex> lock(m_contentMutex);
-						if (i < m_content.size() && m_content[i].Path == dataCopy.Path)
-						{
-							m_content[i].HasIconPreview = true;
-							m_content[i].IconPreviewData = image;
-							m_content[i].IconPreviewWidth = width;
-							m_content[i].IconPreviewHeight = height;
-						}
-						else
-						{
-							stbi_image_free(image); // Content changed in main thread, discard
-						}
-					}
-				}
-			}
-			i++;
 		}
 		m_previewLoaderRunning = false;
 	}
@@ -1008,8 +1049,6 @@ namespace ifd
 	}
 	void FileDialog::m_setDirectory(const std::filesystem::path &p, bool addHistory)
 	{
-		std::lock_guard<std::recursive_mutex> lock(m_contentMutex);
-
 		bool isSameDir = m_currentDirectory == p;
 
 		if (addHistory && !isSameDir)
@@ -1023,7 +1062,10 @@ namespace ifd
 #endif
 
 		m_clearIconPreview();
-		m_content.clear(); // p == "" after this line, due to reference
+		{
+			std::lock_guard<std::mutex> lock(m_contentMutex);
+			m_content.clear(); // p == "" after this line, due to reference
+		}
 		m_selectedFileItem = -1;
 
 		if (m_type == IFD_DIALOG_DIRECTORY || m_type == IFD_DIALOG_FILE)
@@ -1036,69 +1078,72 @@ namespace ifd
 			m_clearIcons();
 		}
 
-		if (m_currentDirectory.u8string() == "Quick Access")
 		{
-			for (auto &node : m_treeCache)
+			std::lock_guard<std::mutex> lock(m_contentMutex);
+			if (m_currentDirectory.u8string() == "Quick Access")
 			{
-				if (node->Path == m_currentDirectory)
-					for (auto &c : node->Children)
-						m_content.push_back(FileData(c->Path));
-			}
-		}
-		else if (m_currentDirectory.u8string() == "This PC")
-		{
-			for (auto &node : m_treeCache)
-			{
-				if (node->Path == m_currentDirectory)
-					for (auto &c : node->Children)
-						m_content.push_back(FileData(c->Path));
-			}
-		}
-		else
-		{
-			std::error_code ec;
-			if (std::filesystem::exists(m_currentDirectory, ec))
-				for (const auto &entry : std::filesystem::directory_iterator(m_currentDirectory, ec))
+				for (auto &node : m_treeCache)
 				{
-					FileData info(entry.path());
-
-					// skip files when IFD_DIALOG_DIRECTORY
-					if (!info.IsDirectory && m_type == IFD_DIALOG_DIRECTORY)
-						continue;
-
-					// check if filename matches search query
-					if (m_searchBuffer[0])
+					if (node->Path == m_currentDirectory)
+						for (auto &c : node->Children)
+							m_content.push_back(FileData(c->Path));
+				}
+			}
+			else if (m_currentDirectory.u8string() == "This PC")
+			{
+				for (auto &node : m_treeCache)
+				{
+					if (node->Path == m_currentDirectory)
+						for (auto &c : node->Children)
+							m_content.push_back(FileData(c->Path));
+				}
+			}
+			else
+			{
+				std::error_code ec;
+				if (std::filesystem::exists(m_currentDirectory, ec))
+					for (const auto &entry : std::filesystem::directory_iterator(m_currentDirectory, ec))
 					{
-						std::string filename = info.Path.u8string();
+						FileData info(entry.path());
 
-						std::string filenameSearch = filename;
-						std::string query(m_searchBuffer);
-						std::transform(filenameSearch.begin(), filenameSearch.end(), filenameSearch.begin(), ::tolower);
-						std::transform(query.begin(), query.end(), query.begin(), ::tolower);
-
-						if (filenameSearch.find(query, 0) == std::string::npos)
+						// skip files when IFD_DIALOG_DIRECTORY
+						if (!info.IsDirectory && m_type == IFD_DIALOG_DIRECTORY)
 							continue;
-					}
 
-					// check if extension matches
-					if (!info.IsDirectory && m_type != IFD_DIALOG_DIRECTORY)
-					{
-						if (m_filterSelection < m_filterExtensions.size())
+						// check if filename matches search query
+						if (m_searchBuffer[0])
 						{
-							const auto &exts = m_filterExtensions[m_filterSelection];
-							if (exts.size() > 0)
-							{
-								std::string extension = info.Path.extension().u8string();
+							std::string filename = info.Path.u8string();
 
-								// extension not found? skip
-								if (std::count(exts.begin(), exts.end(), extension) == 0)
-									continue;
+							std::string filenameSearch = filename;
+							std::string query(m_searchBuffer);
+							std::transform(filenameSearch.begin(), filenameSearch.end(), filenameSearch.begin(), ::tolower);
+							std::transform(query.begin(), query.end(), query.begin(), ::tolower);
+
+							if (filenameSearch.find(query, 0) == std::string::npos)
+								continue;
+						}
+
+						// check if extension matches
+						if (!info.IsDirectory && m_type != IFD_DIALOG_DIRECTORY)
+						{
+							if (m_filterSelection < m_filterExtensions.size())
+							{
+								const auto &exts = m_filterExtensions[m_filterSelection];
+								if (exts.size() > 0)
+								{
+									std::string extension = info.Path.extension().u8string();
+
+									// extension not found? skip
+									if (std::count(exts.begin(), exts.end(), extension) == 0)
+										continue;
+								}
 							}
 						}
-					}
 
-					m_content.push_back(info);
-				}
+						m_content.push_back(info);
+					}
+			}
 		}
 
 		m_sortContent(m_sortColumn, m_sortDirection);
@@ -1106,11 +1151,11 @@ namespace ifd
 	}
 	void FileDialog::m_sortContent(unsigned int column, unsigned int sortDirection)
 	{
-		std::lock_guard<std::recursive_mutex> lock(m_contentMutex);
-
 		// 0 -> name, 1 -> date, 2 -> size
 		m_sortColumn = column;
 		m_sortDirection = sortDirection;
+
+		std::lock_guard<std::mutex> lock(m_contentMutex);
 
 		// split into directories and files
 		std::partition(m_content.begin(), m_content.end(), [](const FileData &data)
@@ -1205,10 +1250,10 @@ namespace ifd
 	}
 	void FileDialog::m_renderContent()
 	{
-		std::lock_guard<std::recursive_mutex> lock(m_contentMutex);
-
 		if (ImGui::IsMouseClicked(ImGuiMouseButton_Right))
 			m_selectedFileItem = -1;
+
+		std::lock_guard<std::mutex> lock(m_contentMutex);
 
 		// table view
 		if (m_zoom == 1.0f)
@@ -1246,17 +1291,8 @@ namespace ifd
 
 					// file name
 					ImGui::TableSetColumnIndex(0);
-					void *iconTex = m_getIcon(entry.Path, entry.IsDirectory);
-					if (iconTex)
-					{
-						ImGui::Image((ImTextureID)(uintptr_t)iconTex, ImVec2(ICON_SIZE, ICON_SIZE));
-					}
-					else
-					{
-						ImGui::TextColored(ImGui::GetStyle().Colors[ImGuiCol_Text], "%s", entry.IsDirectory ? ICON_FA_FOLDER : ICON_FA_FILE);
-					}
+					ImGui::Image((ImTextureID)(uintptr_t)m_getIcon(entry.Path, entry.IsDirectory), ImVec2(ICON_SIZE, ICON_SIZE));
 					ImGui::SameLine();
-
 					if (ImGui::Selectable(filename.c_str(), isSelected, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowDoubleClick))
 					{
 						std::error_code ec;
@@ -1318,7 +1354,7 @@ namespace ifd
 
 				bool isSelected = std::count(m_selections.begin(), m_selections.end(), entry.Path);
 
-				if (FileIcon(filename.c_str(), isSelected, entry.HasIconPreview ? (ImTextureID)(uintptr_t)entry.IconPreview : (ImTextureID)(uintptr_t)m_getIcon(entry.Path, entry.IsDirectory), entry.IsDirectory, ImVec2(32 + 16 * m_zoom, 32 + 16 * m_zoom), entry.HasIconPreview, entry.IconPreviewWidth, entry.IconPreviewHeight))
+				if (FileIcon(filename.c_str(), isSelected, entry.HasIconPreview ? (ImTextureID)(uintptr_t)entry.IconPreview : (ImTextureID)(uintptr_t)m_getIcon(entry.Path, entry.IsDirectory), ImVec2(32 + 16 * m_zoom, 32 + 16 * m_zoom), entry.HasIconPreview, entry.IconPreviewWidth, entry.IconPreviewHeight))
 				{
 					bool isDir = entry.IsDirectory;
 
@@ -1346,7 +1382,6 @@ namespace ifd
 	}
 	void FileDialog::m_renderPopups()
 	{
-		std::lock_guard<std::recursive_mutex> lock(m_contentMutex);
 		bool openAreYouSureDlg = false, openNewFileDlg = false, openNewDirectoryDlg = false;
 		if (ImGui::BeginPopupContextItem("##dir_context"))
 		{
@@ -1364,11 +1399,13 @@ namespace ifd
 			ImGui::OpenPopup("Enter file name##newfile");
 		if (openNewDirectoryDlg)
 			ImGui::OpenPopup("Enter directory name##newdir");
-
 		if (ImGui::BeginPopupModal("Are you sure?##delete"))
 		{
-			if (m_selectedFileItem >= static_cast<int>(m_content.size()) || m_content.size() == 0)
+			std::lock_guard<std::mutex> lock(m_contentMutex);
+			if (m_selectedFileItem < 0 || m_selectedFileItem >= static_cast<int>(m_content.size()))
+			{
 				ImGui::CloseCurrentPopup();
+			}
 			else
 			{
 				const FileData &data = m_content[m_selectedFileItem];
@@ -1386,7 +1423,6 @@ namespace ifd
 			}
 			ImGui::EndPopup();
 		}
-
 		if (ImGui::BeginPopupModal("Enter file name##newfile"))
 		{
 			ImGui::PushItemWidth(250.0f);
@@ -1401,6 +1437,7 @@ namespace ifd
 
 				m_setDirectory(m_currentDirectory, false); // refresh
 				m_newEntryBuffer[0] = 0;
+
 				ImGui::CloseCurrentPopup();
 			}
 			ImGui::SameLine();
@@ -1411,7 +1448,6 @@ namespace ifd
 			}
 			ImGui::EndPopup();
 		}
-
 		if (ImGui::BeginPopupModal("Enter directory name##newdir"))
 		{
 			ImGui::PushItemWidth(250.0f);
@@ -1422,7 +1458,6 @@ namespace ifd
 			{
 				std::error_code ec;
 				std::filesystem::create_directory(m_currentDirectory / std::string(m_newEntryBuffer), ec);
-
 				m_setDirectory(m_currentDirectory, false); // refresh
 				m_newEntryBuffer[0] = 0;
 				ImGui::CloseCurrentPopup();
@@ -1516,10 +1551,11 @@ namespace ifd
 			ImGui::EndChild();
 			if (ImGui::IsItemHovered() && ImGui::GetIO().KeyCtrl && ImGui::GetIO().MouseWheel != 0.0f)
 			{
-				m_zoom += ImGui::GetIO().MouseWheel;
-				m_zoom = std::min<float>(25.0f, std::max<float>(1.0f, m_zoom));
+				m_zoom = std::min<float>(25.0f, std::max<float>(1.0f, m_zoom + ImGui::GetIO().MouseWheel));
 				m_refreshIconPreview();
 			}
+
+			// New file, New directory and Delete popups
 			m_renderPopups();
 
 			ImGui::EndTable();
@@ -1528,27 +1564,2116 @@ namespace ifd
 		/***** BOTTOM BAR *****/
 		ImGui::Text("File name:");
 		ImGui::SameLine();
-		if (ImGui::InputTextEx("##file_input", "", m_inputTextbox, 1024, ImVec2(m_type != IFD_DIALOG_DIRECTORY ? -250.0f : -FLT_MIN, 0), ImGuiInputTextFlags_EnterReturnsTrue))
-			m_finalize(m_inputTextbox);
+		if (ImGui::InputTextEx("##file_input", "Filename", m_inputTextbox, 1024, ImVec2((m_type != IFD_DIALOG_DIRECTORY) ? -250.0f : -FLT_MIN, 0), ImGuiInputTextFlags_EnterReturnsTrue))
+		{
+			bool success = m_finalize(std::string(m_inputTextbox));
+#ifdef _WIN32
+			if (!success)
+				MessageBeep(MB_ICONERROR);
+#else
+			(void)success;
+#endif
+		}
 		if (m_type != IFD_DIALOG_DIRECTORY)
 		{
 			ImGui::SameLine();
 			ImGui::SetNextItemWidth(-FLT_MIN);
-
-			int sel = m_filterSelection;
+			int sel = static_cast<int>(m_filterSelection);
 			if (ImGui::Combo("##ext_combo", &sel, m_filter.c_str()))
 			{
-				m_filterSelection = sel;
+				m_filterSelection = static_cast<size_t>(sel);
 				m_setDirectory(m_currentDirectory, false); // refresh
 			}
 		}
 
-		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().ItemSpacing.y);
-		ImGui::SetCursorPosX(ImGui::GetWindowWidth() - ImGui::CalcTextSize("Cancel").x - ImGui::CalcTextSize("OK").x - ImGui::GetStyle().ItemSpacing.x * 4.0f - ImGui::GetStyle().FramePadding.x * 4.0f);
-		if (ImGui::Button("OK"))
-			m_finalize(m_inputTextbox);
+		// buttons
+		float ok_cancel_width = GUI_ELEMENT_SIZE * 7;
+		ImGui::SetCursorPosX(ImGui::GetWindowWidth() - ok_cancel_width);
+		if (ImGui::Button(m_type == IFD_DIALOG_SAVE ? "Save" : "Open", ImVec2(ok_cancel_width / 2 - ImGui::GetStyle().ItemSpacing.x, 0.0f)))
+		{
+			std::string filename(m_inputTextbox);
+			bool success = false;
+			if (!filename.empty() || m_type == IFD_DIALOG_DIRECTORY)
+				success = m_finalize(filename);
+#ifdef _WIN32
+			if (!success)
+				MessageBeep(MB_ICONERROR);
+#else
+			(void)success;
+#endif
+		}
 		ImGui::SameLine();
-		if (ImGui::Button("Cancel"))
+		if (ImGui::Button("Cancel", ImVec2(-FLT_MIN, 0.0f)))
+		{
+			if (m_type == IFD_DIALOG_DIRECTORY)
+				m_isOpen = false;
+			else
+				m_finalize();
+		}
+
+		if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) &&
+			ImGuiKey_Escape >= 0 && ImGui::IsKeyPressed(ImGuiKey_Escape))
 			m_isOpen = false;
 	}
+}
+
+static const unsigned int file_icon[] = {
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x4c000000,
+	0xf5000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xdd000000,
+	0x2d000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0xff000000,
+	0xd1000000,
+	0x6b000000,
+	0x6b000000,
+	0x6b000000,
+	0x6b000000,
+	0x6b000000,
+	0x6b000000,
+	0x6b000000,
+	0x6b000000,
+	0x6b000000,
+	0x6b000000,
+	0x6b000000,
+	0x6a000000,
+	0xa1000000,
+	0xff000000,
+	0xff000000,
+	0x2e000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0xff000000,
+	0x54000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x46000000,
+	0xf5000000,
+	0xe0000000,
+	0xff000000,
+	0x30000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0xff000000,
+	0x6a000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x6e000000,
+	0xf8000000,
+	0x01000000,
+	0xc3000000,
+	0xff000000,
+	0x30000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0xff000000,
+	0x6b000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x6b000000,
+	0xff000000,
+	0x00000000,
+	0x00000000,
+	0xd2000000,
+	0xff000000,
+	0x30000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0xff000000,
+	0x6b000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x6b000000,
+	0xff000000,
+	0x13000000,
+	0x00000000,
+	0x00000000,
+	0xd2000000,
+	0xff000000,
+	0x30000000,
+	0x00000000,
+	0x00000000,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0xff000000,
+	0x6b000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x73000000,
+	0xff000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0xbe000000,
+	0xff000000,
+	0x30000000,
+	0x00000000,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0xff000000,
+	0x6b000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x65000000,
+	0xff000000,
+	0x34000000,
+	0x10000000,
+	0x10000000,
+	0x03000000,
+	0x0a000000,
+	0xdb000000,
+	0xff000000,
+	0x2f000000,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0xff000000,
+	0x6b000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x0f000000,
+	0xd9000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xed000000,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0xff000000,
+	0x6b000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x06000000,
+	0x5e000000,
+	0x6c000000,
+	0x6b000000,
+	0x6b000000,
+	0x6b000000,
+	0x60000000,
+	0x9e000000,
+	0xff000000,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0xff000000,
+	0x6b000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x52000000,
+	0xff000000,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0xff000000,
+	0x6b000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x6b000000,
+	0xff000000,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0xff000000,
+	0x6b000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x6b000000,
+	0xff000000,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0xff000000,
+	0x6b000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x6b000000,
+	0xff000000,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0xff000000,
+	0x6b000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x6b000000,
+	0xff000000,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0xff000000,
+	0x6b000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x6b000000,
+	0xff000000,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0xff000000,
+	0x6b000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x6b000000,
+	0xff000000,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0xff000000,
+	0x6b000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x6b000000,
+	0xff000000,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0xff000000,
+	0x6b000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x6b000000,
+	0xff000000,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0xff000000,
+	0x6b000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x6b000000,
+	0xff000000,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0xff000000,
+	0x6b000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x6b000000,
+	0xff000000,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0xff000000,
+	0x6b000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x6b000000,
+	0xff000000,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0xff000000,
+	0x6b000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x6b000000,
+	0xff000000,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0xff000000,
+	0x6b000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x6b000000,
+	0xff000000,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0xff000000,
+	0x6b000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x6b000000,
+	0xff000000,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0xff000000,
+	0x6b000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x6b000000,
+	0xff000000,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0xff000000,
+	0x6b000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x6b000000,
+	0xff000000,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0xff000000,
+	0x6b000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x6b000000,
+	0xff000000,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0xff000000,
+	0x6a000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x6a000000,
+	0xff000000,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0xff000000,
+	0x54000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x54000000,
+	0xff000000,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0xff000000,
+	0xd2000000,
+	0x6b000000,
+	0x6b000000,
+	0x6b000000,
+	0x6b000000,
+	0x6b000000,
+	0x6b000000,
+	0x6b000000,
+	0x6b000000,
+	0x6b000000,
+	0x6b000000,
+	0x6b000000,
+	0x6b000000,
+	0x6b000000,
+	0x6b000000,
+	0x6b000000,
+	0x6b000000,
+	0x6b000000,
+	0x6b000000,
+	0x6b000000,
+	0x6b000000,
+	0xd2000000,
+	0xff000000,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x4c000000,
+	0xf5000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xf5000000,
+	0x4b000000,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+};
+static const unsigned int folder_icon[] = {
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00000000,
+	0x00000000,
+	0x45000000,
+	0x8a000000,
+	0x99000000,
+	0x97000000,
+	0x97000000,
+	0x97000000,
+	0x97000000,
+	0x97000000,
+	0x98000000,
+	0x81000000,
+	0x35000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x9e000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0x80000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x76000000,
+	0xff000000,
+	0xff000000,
+	0xf6000000,
+	0xe2000000,
+	0xe2000000,
+	0xe2000000,
+	0xe2000000,
+	0xe2000000,
+	0xe2000000,
+	0xe2000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0x80000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0xe7000000,
+	0xff000000,
+	0xbe000000,
+	0x11000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x1e000000,
+	0xd1000000,
+	0xff000000,
+	0xff000000,
+	0x75000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0xfa000000,
+	0xff000000,
+	0x5a000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x06000000,
+	0xe0000000,
+	0xff000000,
+	0xff000000,
+	0x68000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0xf4000000,
+	0xff000000,
+	0x67000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x11000000,
+	0xe4000000,
+	0xff000000,
+	0xff000000,
+	0xad000000,
+	0x94000000,
+	0x94000000,
+	0x94000000,
+	0x94000000,
+	0x94000000,
+	0x94000000,
+	0x94000000,
+	0x94000000,
+	0x94000000,
+	0x96000000,
+	0x8b000000,
+	0x4f000000,
+	0x00000000,
+	0x00000000,
+	0xf3000000,
+	0xff000000,
+	0x6a000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x17000000,
+	0xe8000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xaf000000,
+	0x00000000,
+	0xf3000000,
+	0xff000000,
+	0x6a000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x0e000000,
+	0x88000000,
+	0xc3000000,
+	0xcd000000,
+	0xcc000000,
+	0xcc000000,
+	0xcc000000,
+	0xcc000000,
+	0xcc000000,
+	0xcc000000,
+	0xcc000000,
+	0xcb000000,
+	0xcc000000,
+	0xe2000000,
+	0xff000000,
+	0xff000000,
+	0x81000000,
+	0xf3000000,
+	0xff000000,
+	0x6a000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0xb6000000,
+	0xff000000,
+	0xec000000,
+	0xf3000000,
+	0xff000000,
+	0x6a000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x5b000000,
+	0xff000000,
+	0xf9000000,
+	0xf3000000,
+	0xff000000,
+	0x6a000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x68000000,
+	0xff000000,
+	0xf4000000,
+	0xf3000000,
+	0xff000000,
+	0x6a000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x6a000000,
+	0xff000000,
+	0xf3000000,
+	0xf3000000,
+	0xff000000,
+	0x6a000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x6a000000,
+	0xff000000,
+	0xf3000000,
+	0xf3000000,
+	0xff000000,
+	0x6a000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x6a000000,
+	0xff000000,
+	0xf3000000,
+	0xf3000000,
+	0xff000000,
+	0x6a000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x6a000000,
+	0xff000000,
+	0xf3000000,
+	0xf3000000,
+	0xff000000,
+	0x6a000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x6a000000,
+	0xff000000,
+	0xf3000000,
+	0xf3000000,
+	0xff000000,
+	0x6a000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x6a000000,
+	0xff000000,
+	0xf3000000,
+	0xf3000000,
+	0xff000000,
+	0x6a000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x6a000000,
+	0xff000000,
+	0xf3000000,
+	0xf3000000,
+	0xff000000,
+	0x6a000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x6a000000,
+	0xff000000,
+	0xf3000000,
+	0xf3000000,
+	0xff000000,
+	0x6a000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x6a000000,
+	0xff000000,
+	0xf3000000,
+	0xf3000000,
+	0xff000000,
+	0x6a000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x6a000000,
+	0xff000000,
+	0xf3000000,
+	0xf3000000,
+	0xff000000,
+	0x6a000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x6a000000,
+	0xff000000,
+	0xf3000000,
+	0xf4000000,
+	0xff000000,
+	0x68000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x68000000,
+	0xff000000,
+	0xf4000000,
+	0xfa000000,
+	0xff000000,
+	0x5a000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x5a000000,
+	0xff000000,
+	0xf9000000,
+	0xea000000,
+	0xff000000,
+	0xb5000000,
+	0x05000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x05000000,
+	0xb5000000,
+	0xff000000,
+	0xea000000,
+	0x7e000000,
+	0xff000000,
+	0xff000000,
+	0xeb000000,
+	0xd6000000,
+	0xd6000000,
+	0xd6000000,
+	0xd6000000,
+	0xd6000000,
+	0xd6000000,
+	0xd6000000,
+	0xd6000000,
+	0xd6000000,
+	0xd6000000,
+	0xd6000000,
+	0xd6000000,
+	0xd6000000,
+	0xd6000000,
+	0xd6000000,
+	0xd6000000,
+	0xd6000000,
+	0xd6000000,
+	0xd6000000,
+	0xd6000000,
+	0xd6000000,
+	0xd6000000,
+	0xd6000000,
+	0xd6000000,
+	0xeb000000,
+	0xff000000,
+	0xff000000,
+	0x7f000000,
+	0x00000000,
+	0xac000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xff000000,
+	0xac000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x53000000,
+	0x8f000000,
+	0x9a000000,
+	0x99000000,
+	0x99000000,
+	0x99000000,
+	0x99000000,
+	0x99000000,
+	0x99000000,
+	0x99000000,
+	0x99000000,
+	0x99000000,
+	0x99000000,
+	0x99000000,
+	0x99000000,
+	0x99000000,
+	0x99000000,
+	0x99000000,
+	0x99000000,
+	0x99000000,
+	0x99000000,
+	0x99000000,
+	0x99000000,
+	0x99000000,
+	0x99000000,
+	0x9a000000,
+	0x8f000000,
+	0x53000000,
+	0x00000000,
+	0x00000000,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+	0x00ffffff,
+};
+const char *ifd::GetDefaultFolderIcon()
+{
+	return (const char *)&folder_icon[0];
+}
+const char *ifd::GetDefaultFileIcon()
+{
+	return (const char *)&file_icon[0];
 }

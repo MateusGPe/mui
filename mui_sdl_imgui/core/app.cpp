@@ -8,6 +8,7 @@
 #include <backends/imgui_impl_sdlrenderer3.h>
 #include <stdexcept>
 #include <algorithm>
+#include "../dialogs/ImFileDialog.h"
 
 namespace mui
 {
@@ -17,6 +18,8 @@ namespace mui
     static SDL_Renderer *g_renderer = nullptr;
     static bool g_running = false;
     std::vector<Window *> App::activeWindows;
+    std::vector<ActiveDialog> App::activeDialogs;
+    std::vector<ActiveMessageBox> App::activeMessageBoxes;
 
     std::function<void(ImGuiID)> App::layoutBuilderCb = nullptr;
     bool App::layoutNeedsInit = true;
@@ -73,6 +76,24 @@ namespace mui
 
         ImGui_ImplSDL3_InitForSDLRenderer(g_window, g_renderer);
         ImGui_ImplSDLRenderer3_Init(g_renderer);
+
+        // Initialize ImFileDialog
+        ifd::FileDialog::Instance().CreateTexture = [](uint8_t *data, int w, int h, char fmt) -> void *
+        {
+            if (!g_renderer)
+                return nullptr;
+            SDL_Texture *texture = SDL_CreateTexture(g_renderer, fmt == 0 ? SDL_PIXELFORMAT_BGRA8888 : SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, w, h);
+            if (!texture)
+                return nullptr;
+            SDL_UpdateTexture(texture, nullptr, data, w * 4);
+            SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
+            return (void *)texture;
+        };
+        ifd::FileDialog::Instance().DeleteTexture = [](void *texture)
+        {
+            if (texture)
+                SDL_DestroyTexture(static_cast<SDL_Texture *>(texture));
+        };
     }
 
     void App::run()
@@ -148,6 +169,9 @@ namespace mui
 
             ImGui::DockSpaceOverViewport(dockspace_id, viewport, ImGuiDockNodeFlags_PassthruCentralNode);
 
+            processDialogs();
+            processMessageBoxes();
+
             for (auto *win : activeWindows)
             {
                 win->render();
@@ -185,6 +209,80 @@ namespace mui
     void App::queueMain(std::function<void()> callback)
     {
         callback();
+    }
+
+    void App::addDialog(ActiveDialog &&dialog)
+    {
+        activeDialogs.push_back(std::move(dialog));
+    }
+
+    void App::addMessageBox(ActiveMessageBox &&mb)
+    {
+        activeMessageBoxes.push_back(std::move(mb));
+    }
+
+    void App::processDialogs()
+    {
+        for (auto it = activeDialogs.begin(); it != activeDialogs.end();)
+        {
+            if (ifd::FileDialog::Instance().IsDone(it->key))
+            {
+                if (ifd::FileDialog::Instance().HasResult())
+                {
+                    if (it->on_ok)
+                    {
+                        it->on_ok(ifd::FileDialog::Instance().GetResults());
+                    }
+                }
+                else
+                {
+                    if (it->on_cancel)
+                    {
+                        it->on_cancel();
+                    }
+                }
+                ifd::FileDialog::Instance().Close();
+                it = activeDialogs.erase(it);
+            }
+            else
+            {
+                ++it;
+            }
+        }
+    }
+
+    void App::processMessageBoxes()
+    {
+        for (auto it = activeMessageBoxes.begin(); it != activeMessageBoxes.end();)
+        {
+            std::string popup_id = it->title + "##msgbox";
+            if (it->open_popup)
+            {
+                ImGui::OpenPopup(popup_id.c_str());
+                it->open_popup = false;
+            }
+
+            bool isOpen = true;
+            if (ImGui::BeginPopupModal(popup_id.c_str(), &isOpen))
+            {
+                ImGui::TextWrapped("%s", it->message.c_str());
+                if (ImGui::Button("OK", ImVec2(120, 0)))
+                {
+                    ImGui::CloseCurrentPopup();
+                    isOpen = false;
+                }
+                ImGui::EndPopup();
+            }
+
+            if (!isOpen)
+            {
+                it = activeMessageBoxes.erase(it);
+            }
+            else
+            {
+                ++it;
+            }
+        }
     }
 
     void App::setTheme(ThemeType type)

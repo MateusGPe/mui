@@ -1,7 +1,8 @@
 #include "box.hpp"
 #include "app.hpp"
 #include <imgui.h>
-#include <cfloat> // For FLT_MIN
+#include <imgui_internal.h>
+#include <numeric>
 
 namespace mui
 {
@@ -60,27 +61,31 @@ namespace mui
             return;
         ImGui::PushID(this);
 
-        if (scrollable)
-        {
-            // ImVec2(0,0) uses remaining available space.
-            // Use the modern BeginChild API: the third argument is for ImGuiChildFlags.
-            // We pass 0 for no special child flags, replacing the deprecated boolean `border` argument.
-            ImGui::BeginChild("##vbox_scroll", ImVec2(0, 0), 0, ImGuiWindowFlags_HorizontalScrollbar);
+        ImGuiTableFlags table_flags = ImGuiTableFlags_SizingStretchSame;
+        if(scrollable) {
+            table_flags |= ImGuiTableFlags_ScrollY;
         }
 
-        for (auto &child : children)
+        if (ImGui::BeginTable("##vbox_layout", 1, table_flags))
         {
-            if (child.stretchy)
+            for (auto &child : children)
             {
-                ImGui::PushItemWidth(-1.0f);
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                if (child.stretchy)
+                {
+                    ImGui::PushItemWidth(-1);
+                }
+                child.control->render();
+                if (child.stretchy)
+                {
+                    ImGui::PopItemWidth();
+                }
+                if(padded) {
+                    ImGui::Spacing();
+                }
             }
-            child.control->render();
-            if (child.stretchy)
-            {
-                ImGui::PopItemWidth();
-            }
-            if (padded)
-                ImGui::Spacing();
+            ImGui::EndTable();
         }
 
         if (scrollable)
@@ -89,7 +94,6 @@ namespace mui
             {
                 ImGui::SetScrollHereY(1.0f);
             }
-            ImGui::EndChild();
         }
 
         ImGui::PopID();
@@ -102,16 +106,13 @@ namespace mui
             return;
         ImGui::PushID(this);
 
-        if (scrollable)
-        {
-            // Use the modern BeginChild API, replacing the deprecated boolean `border` argument.
-            ImGui::BeginChild("##hbox_scroll", ImVec2(0, 0), 0, ImGuiWindowFlags_HorizontalScrollbar);
+        ImGuiTableFlags table_flags = 0;
+        if(scrollable) {
+            table_flags |= ImGuiTableFlags_ScrollX;
         }
 
-        // Using a table is the most robust way to handle horizontal layouts with stretching.
-        if (ImGui::BeginTable("##hbox_layout", (int)children.size()))
+        if (ImGui::BeginTable("##hbox_layout", (int)children.size(), table_flags))
         {
-            // Define column properties based on the 'stretchy' flag.
             for (size_t i = 0; i < children.size(); ++i)
             {
                 ImGuiTableColumnFlags flags = children[i].stretchy ? ImGuiTableColumnFlags_WidthStretch : ImGuiTableColumnFlags_WidthFixed;
@@ -123,10 +124,8 @@ namespace mui
             for (size_t i = 0; i < children.size(); ++i)
             {
                 ImGui::TableNextColumn();
-                // For stretchy items, we need to tell the widget to fill the column.
                 if (children[i].stretchy)
                 {
-                    // Using -FLT_MIN is a common ImGui trick to fill the cell width.
                     ImGui::PushItemWidth(-FLT_MIN);
                 }
                 children[i].control->render();
@@ -136,15 +135,6 @@ namespace mui
                 }
             }
             ImGui::EndTable();
-        }
-
-        if (scrollable)
-        {
-            if (autoScroll && ImGui::GetScrollX() >= ImGui::GetScrollMaxX())
-            {
-                ImGui::SetScrollHereX(1.0f);
-            }
-            ImGui::EndChild();
         }
 
         ImGui::PopID();
