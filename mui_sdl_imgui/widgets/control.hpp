@@ -35,6 +35,7 @@ namespace mui
         bool visible = true;
         bool enabled = true;
         bool ownsHandle = true;
+        bool spanAvailWidth = false;
         std::string tooltip;
 
         // Shadow Properties
@@ -68,6 +69,7 @@ namespace mui
         void acquireOwnership();
 
         ControlPtr setTooltip(const std::string &t);
+        ControlPtr setSpanAvailWidth(bool span);
 
         // Shadow Configuration
         ControlPtr setShadow(bool enable, ImVec2 offset = ImVec2(2, 2), float blur = 4.0f, ImVec4 col = ImVec4(0, 0, 0, 0.25f), float rounding = -1.0f);

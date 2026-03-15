@@ -17,7 +17,20 @@ namespace mui
                         selectedIndex = i;
                         if (onSelectedCb) onSelectedCb();
                     }
-                    pages[i].control->render();
+
+                    if (pages[i].margined)
+                    {
+                        ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+                        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+                        ImGui::BeginChild("##margined_tab_content", ImVec2(0, 0), ImGuiChildFlags_FrameStyle);
+                        ImGui::PopStyleColor(2);
+                        pages[i].control->render();
+                        ImGui::EndChild();
+                    }
+                    else
+                    {
+                        pages[i].control->render();
+                    }
                     ImGui::EndTabItem();
                 }
             }
@@ -28,7 +41,7 @@ namespace mui
 
     TabPtr Tab::append(const std::string &name, ControlPtr child)
     {
-        pages.push_back({name, child});
+        pages.push_back({name, child, false});
         return self();
     }
     

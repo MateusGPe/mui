@@ -19,8 +19,11 @@ namespace mui
         ColorEditPtr self() { return std::static_pointer_cast<ColorEdit>(shared_from_this()); }
 
     public:
-        ColorEdit();
-        static ColorEditPtr create() { return std::make_shared<ColorEdit>(); }
+        ColorEdit(float r = 1.0f, float g = 1.0f, float b = 1.0f, float a = 1.0f);
+        static ColorEditPtr create(float r = 1.0f, float g = 1.0f, float b = 1.0f, float a = 1.0f)
+        {
+            return std::make_shared<ColorEdit>(r, g, b, a);
+        }
 
         void renderControl() override;
 

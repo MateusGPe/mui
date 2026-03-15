@@ -17,6 +17,7 @@ namespace mui
         {
             std::string name;
             ControlPtr control;
+            bool margined = false;
         };
         std::vector<TabPage> pages;
         int selectedIndex = 0;
@@ -31,7 +32,14 @@ namespace mui
         void renderControl() override;
 
         TabPtr append(const std::string &name, ControlPtr child);
-        TabPtr setMargined(int page, bool margined) { return self(); } // Stub
+        TabPtr setMargined(int page, bool margined)
+        {
+            if (page >= 0 && page < pages.size())
+            {
+                pages[page].margined = margined;
+            }
+            return self();
+        }
         TabPtr onSelected(std::function<void()> cb);
         int getNumPages() const;
         int getSelected() const;

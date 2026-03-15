@@ -50,6 +50,7 @@ namespace mui
         
         ButtonPtr onClick(std::function<void()> cb);
         ButtonPtr setUseContainerWidth(bool use);
+        ButtonPtr setSpanAvailWidth(bool span);
         ButtonPtr setColor(ImVec4 c, ImVec4 hover, ImVec4 active);
     };
 } // namespace mui

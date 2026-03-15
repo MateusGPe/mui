@@ -27,8 +27,11 @@ namespace mui
         EntryPtr self() { return std::static_pointer_cast<Entry>(shared_from_this()); }
 
     public:
-        Entry();
-        static EntryPtr create() { return std::make_shared<Entry>(); }
+        Entry(const std::string &initialText = "", bool password = false, bool multiline = false, float w = 0.0f, float h = 0.0f);
+        static EntryPtr create(const std::string &initialText = "", bool password = false, bool multiline = false, float w = 0.0f, float h = 0.0f)
+        {
+            return std::make_shared<Entry>(initialText, password, multiline, w, h);
+        }
 
         void renderControl() override;
 

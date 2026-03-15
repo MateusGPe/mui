@@ -63,7 +63,9 @@ namespace mui
         if (scrollable)
         {
             // ImVec2(0,0) uses remaining available space.
-            ImGui::BeginChild("##vbox_scroll", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
+            // Use the modern BeginChild API: the third argument is for ImGuiChildFlags.
+            // We pass 0 for no special child flags, replacing the deprecated boolean `border` argument.
+            ImGui::BeginChild("##vbox_scroll", ImVec2(0, 0), 0, ImGuiWindowFlags_HorizontalScrollbar);
         }
 
         for (auto &child : children)
@@ -102,7 +104,8 @@ namespace mui
 
         if (scrollable)
         {
-            ImGui::BeginChild("##hbox_scroll", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
+            // Use the modern BeginChild API, replacing the deprecated boolean `border` argument.
+            ImGui::BeginChild("##hbox_scroll", ImVec2(0, 0), 0, ImGuiWindowFlags_HorizontalScrollbar);
         }
 
         // Using a table is the most robust way to handle horizontal layouts with stretching.

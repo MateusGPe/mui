@@ -5,7 +5,7 @@
 
 namespace mui
 {
-    Entry::Entry() : readOnly(false), isPassword(false), isMultiline(false), width(0), height(0) { App::assertMainThread(); }
+    Entry::Entry(const std::string &initialText, bool password, bool multiline, float w, float h) : text(initialText), readOnly(false), isPassword(password), isMultiline(multiline), width(w), height(h) { App::assertMainThread(); }
 
     void Entry::renderControl()
     {

@@ -26,3 +26,4 @@
 #include "../core/dialogs.hpp"
 #include "../include/IconsFontAwesome6.h"
 #include "../include/core.hpp"
+#include "../widgets/radiobutton.hpp"

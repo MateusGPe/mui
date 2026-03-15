@@ -8,25 +8,19 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(SDL3 REQUIRED)
 
 if(UNIX AND NOT APPLE)
-    find_package(Fontconfig) 
+  find_package(Fontconfig)
 endif()
 
 include(FetchContent)
 FetchContent_Declare(
-    imgui
-    GIT_REPOSITORY https://github.com/ocornut/imgui.git
-    GIT_TAG docking
-)
+  imgui
+  GIT_REPOSITORY https://github.com/ocornut/imgui.git
+  GIT_TAG docking)
 FetchContent_MakeAvailable(imgui)
 
 # --- Source Definitions ---
 
-set(CORE_SOURCES
-    core/app.cpp
-    core/window.cpp
-    core/theme.cpp
-    core/dialogs.cpp
-)
+set(CORE_SOURCES core/app.cpp core/window.cpp core/theme.cpp core/dialogs.cpp)
 
 set(WIDGET_SOURCES
     widgets/button.cpp
@@ -43,15 +37,10 @@ set(WIDGET_SOURCES
     widgets/combobox.cpp
     widgets/radiogroup.cpp
     widgets/separator.cpp
-)
+    widgets/radiobutton.cpp)
 
-set(LAYOUT_SOURCES
-    layouts/box.cpp
-    layouts/grid.cpp
-    layouts/group.cpp
-    layouts/tab.cpp
-    layouts/treenode.cpp
-)
+set(LAYOUT_SOURCES layouts/box.cpp layouts/grid.cpp layouts/group.cpp
+                   layouts/tab.cpp layouts/treenode.cpp)
 
 set(IMGUI_SOURCES
     ${imgui_SOURCE_DIR}/imgui.cpp
@@ -60,34 +49,26 @@ set(IMGUI_SOURCES
     ${imgui_SOURCE_DIR}/imgui_widgets.cpp
     ${imgui_SOURCE_DIR}/backends/imgui_impl_sdl3.cpp
     ${imgui_SOURCE_DIR}/backends/imgui_impl_sdlrenderer3.cpp
-    ${imgui_SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp
-)
+    ${imgui_SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp)
 
 # --- Target Configuration ---
 
-add_library(mui STATIC
-    ${CORE_SOURCES}
-    ${WIDGET_SOURCES}
-    ${LAYOUT_SOURCES}
-    ${IMGUI_SOURCES}
-)
+add_library(mui STATIC ${CORE_SOURCES} ${WIDGET_SOURCES} ${LAYOUT_SOURCES}
+                       ${IMGUI_SOURCES})
 
 # Include paths for your code and ImGui
-target_include_directories(mui PUBLIC 
-    ${CMAKE_CURRENT_SOURCE_DIR}/core
-    ${CMAKE_CURRENT_SOURCE_DIR}/widgets
-    ${CMAKE_CURRENT_SOURCE_DIR}/layouts
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-)
+target_include_directories(
+  mui
+  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/core ${CMAKE_CURRENT_SOURCE_DIR}/widgets
+         ${CMAKE_CURRENT_SOURCE_DIR}/layouts
+         ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-target_include_directories(mui PRIVATE 
-    ${imgui_SOURCE_DIR}
-    ${imgui_SOURCE_DIR}/backends
-)
+target_include_directories(mui PRIVATE ${imgui_SOURCE_DIR}
+                                       ${imgui_SOURCE_DIR}/backends)
 
 # --- Linking ---
 target_link_libraries(mui PUBLIC SDL3::SDL3)
 
 if(Fontconfig_FOUND)
-    target_link_libraries(mui PRIVATE Fontconfig::Fontconfig)
+  target_link_libraries(mui PRIVATE Fontconfig::Fontconfig)
 endif()

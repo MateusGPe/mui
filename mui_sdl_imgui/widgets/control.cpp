@@ -31,6 +31,12 @@ namespace mui
         }
     }
 
+    ControlPtr Control::setSpanAvailWidth(bool span)
+    {
+        spanAvailWidth = span;
+        return shared_from_this();
+    }
+
     ControlPtr Control::setShadow(bool enable, ImVec2 offset, float blur, ImVec4 col, float rounding)
     {
         hasShadow = enable;

@@ -21,7 +21,20 @@ namespace mui
         }
 
         bool clicked = false;
-        ImVec2 buttonSize(width > 0 ? width : (useContainerWidth ? ImGui::CalcItemWidth() : 0), height);
+        ImVec2 buttonSize(0, height);
+        if (width > 0)
+        {
+            buttonSize.x = width;
+        }
+        else if (spanAvailWidth)
+        {
+            // Using -FLT_MIN is a common ImGui trick to fill available width.
+            buttonSize.x = -FLT_MIN;
+        }
+        else if (useContainerWidth)
+        {
+            buttonSize.x = ImGui::CalcItemWidth();
+        }
 
         switch (type)
         {
@@ -82,6 +95,12 @@ namespace mui
     ButtonPtr Button::setUseContainerWidth(bool use)
     {
         useContainerWidth = use;
+        return self();
+    }
+
+    ButtonPtr Button::setSpanAvailWidth(bool span)
+    {
+        this->spanAvailWidth = span;
         return self();
     }
 

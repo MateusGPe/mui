@@ -12,6 +12,8 @@ namespace mui
     protected:
         ControlPtr child;
         float padding = 8.0f;
+        bool fillWidth = false;
+        bool fillHeight = false;
         float shadowBlur = 0.0f;
         float shadowOffset = 0.0f;
         int shadowAlpha = 0;
@@ -26,6 +28,8 @@ namespace mui
 
         CardPtr setChild(ControlPtr c);
         CardPtr setPadding(float p);
+        CardPtr setFillWidth(bool fill);
+        CardPtr setFillHeight(bool fill);
         CardPtr setShadow(float blur, float offset, int alpha);
     };
 } // namespace mui

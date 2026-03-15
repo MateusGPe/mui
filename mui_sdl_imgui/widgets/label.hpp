@@ -39,6 +39,7 @@ namespace mui
         LabelPtr setText(const std::string &t);
         LabelPtr setFormat(LabelFormat f);
         LabelPtr setWrapped(bool w);
+        LabelPtr setSpanAvailWidth(bool span);
         LabelPtr setColor(ImVec4 c);
     };
 } // namespace mui

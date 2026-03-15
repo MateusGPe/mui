@@ -25,7 +25,7 @@ namespace mui
                 const bool isSelected = (selectedIndex == i);
                 if (ImGui::Selectable(items[i].c_str(), isSelected)) {
                     selectedIndex = i;
-                    if (onSelectedCb) onSelectedCb();
+                    if (onChangedCb) onChangedCb();
                 }
                 if (isSelected) {
                     ImGui::SetItemDefaultFocus();
@@ -52,17 +52,24 @@ namespace mui
         return self();
     }
 
-    int ComboBox::getSelected() const { return selectedIndex; }
+    int ComboBox::getSelectedIndex() const { return selectedIndex; }
     
-    ComboBoxPtr ComboBox::setSelected(int index) {
+    std::string ComboBox::getText() const {
+        if (selectedIndex >= 0 && selectedIndex < (int)items.size()) {
+            return items[selectedIndex];
+        }
+        return "";
+    }
+
+    ComboBoxPtr ComboBox::setSelectedIndex(int index) {
         if (index >= -1 && index < (int)items.size()) {
             selectedIndex = index;
         }
         return self();
     }
 
-    ComboBoxPtr ComboBox::onSelected(std::function<void()> cb) {
-        onSelectedCb = std::move(cb);
+    ComboBoxPtr ComboBox::onChanged(std::function<void()> cb) {
+        onChangedCb = std::move(cb);
         return self();
     }
 

@@ -17,6 +17,7 @@ namespace mui
         std::vector<ControlPtr> children;
         bool defaultOpen = false;
         bool framed = false;
+        bool spanAvailWidth = false;
 
         TreeNodePtr self() { return std::static_pointer_cast<TreeNode>(shared_from_this()); }
 
@@ -30,5 +31,6 @@ namespace mui
         TreeNodePtr append(ControlPtr child);
         TreeNodePtr setDefaultOpen(bool open);
         TreeNodePtr setFramed(bool f);
+        TreeNodePtr setSpanAvailWidth(bool span);
     };
 } // namespace mui

@@ -24,6 +24,7 @@ namespace mui
         ImGuiTreeNodeFlags flags = 0;
         if (defaultOpen) flags |= ImGuiTreeNodeFlags_DefaultOpen;
         if (framed) flags |= ImGuiTreeNodeFlags_Framed;
+        if (spanAvailWidth) flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
 
         bool nodeOpen = ImGui::TreeNodeEx(label.c_str(), flags);
         
@@ -48,4 +49,5 @@ namespace mui
 
     TreeNodePtr TreeNode::setDefaultOpen(bool open) { defaultOpen = open; return self(); }
     TreeNodePtr TreeNode::setFramed(bool f) { framed = f; return self(); }
+    TreeNodePtr TreeNode::setSpanAvailWidth(bool span) { spanAvailWidth = span; return self(); }
 } // namespace mui

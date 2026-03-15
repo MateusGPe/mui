@@ -17,7 +17,7 @@ namespace mui
         std::vector<std::string> items;
         int selectedIndex;
         bool useContainerWidth = false;
-        std::function<void()> onSelectedCb;
+        std::function<void()> onChangedCb;
 
         ComboBoxPtr self() { return std::static_pointer_cast<ComboBox>(shared_from_this()); }
 
@@ -30,9 +30,10 @@ namespace mui
         ComboBoxPtr append(const std::string &item);
         ComboBoxPtr clear();
         
-        int getSelected() const;
-        ComboBoxPtr setSelected(int index);
-        ComboBoxPtr onSelected(std::function<void()> cb);
+        int getSelectedIndex() const;
+        std::string getText() const;
+        ComboBoxPtr setSelectedIndex(int index);
+        ComboBoxPtr onChanged(std::function<void()> cb);
         ComboBoxPtr setUseContainerWidth(bool use);
     };
 } // namespace mui

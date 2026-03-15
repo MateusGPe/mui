@@ -16,21 +16,31 @@ namespace mui
         if (useCustomColor)
             ImGui::PushStyleColor(ImGuiCol_Text, color);
 
-        switch (format)
+        if (spanAvailWidth)
         {
-        case LabelFormat::Wrapped:
+            // To make a simple text label span, we can use TextWrapped and push the item width.
+            ImGui::PushItemWidth(-FLT_MIN);
             ImGui::TextWrapped("%s", text.c_str());
-            break;
-        case LabelFormat::Bullet:
-            ImGui::BulletText("%s", text.c_str());
-            break;
-        case LabelFormat::Disabled:
-            ImGui::TextDisabled("%s", text.c_str());
-            break;
-        case LabelFormat::Normal:
-        default:
-            ImGui::TextUnformatted(text.c_str());
-            break;
+            ImGui::PopItemWidth();
+        }
+        else
+        {
+            switch (format)
+            {
+            case LabelFormat::Wrapped:
+                ImGui::TextWrapped("%s", text.c_str());
+                break;
+            case LabelFormat::Bullet:
+                ImGui::BulletText("%s", text.c_str());
+                break;
+            case LabelFormat::Disabled:
+                ImGui::TextDisabled("%s", text.c_str());
+                break;
+            case LabelFormat::Normal:
+            default:
+                ImGui::TextUnformatted(text.c_str());
+                break;
+            }
         }
 
         renderTooltip();
@@ -51,6 +61,15 @@ namespace mui
     LabelPtr Label::setFormat(LabelFormat f)
     {
         format = f;
+        return self();
+    }
+    LabelPtr Label::setWrapped(bool w)
+    {
+        return LabelPtr();
+    }
+    LabelPtr Label::setSpanAvailWidth(bool span)
+    {
+        this->spanAvailWidth = span;
         return self();
     }
     LabelPtr Label::setColor(ImVec4 c)
