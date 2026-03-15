@@ -25,7 +25,7 @@ namespace mui
         static TreeNodePtr create(const std::string& label) { return std::make_shared<TreeNode>(label); }
 
         void onHandleDestroyed() override;
-        void render() override;
+        void renderControl() override;
 
         TreeNodePtr append(ControlPtr child);
         TreeNodePtr setDefaultOpen(bool open);

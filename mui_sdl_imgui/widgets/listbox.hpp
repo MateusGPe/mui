@@ -27,7 +27,7 @@ namespace mui
         ListBox();
         static ListBoxPtr create() { return std::make_shared<ListBox>(); }
 
-        void render() override;
+        void renderControl() override;
 
         ListBoxPtr append(const std::string &item);
         ListBoxPtr clear();

@@ -33,7 +33,7 @@ namespace mui
         explicit Label(const std::string &text);
         static LabelPtr create(const std::string &text) { return std::make_shared<Label>(text); }
 
-        void render() override;
+        void renderControl() override;
 
         std::string getText() const;
         LabelPtr setText(const std::string &t);

@@ -2,6 +2,7 @@
 #include <string>
 #include <memory>
 #include <stdexcept>
+#include <imgui.h>
 
 namespace mui
 {
@@ -36,12 +37,24 @@ namespace mui
         bool ownsHandle = true;
         std::string tooltip;
 
+        // Shadow Properties
+        bool hasShadow = false;
+        ImVec2 shadowOffset = ImVec2(2.0f, 2.0f);
+        float shadowBlur = 4.0f;
+        ImVec4 shadowColor = ImVec4(0.0f, 0.0f, 0.0f, 0.25f);
+        float shadowRounding = -1.0f; // -1 means use ImGui style default
+
         void renderTooltip();
+
+        // ALL WIDGETS MUST NOW IMPLEMENT THIS INSTEAD OF render()
+        virtual void renderControl() = 0;
 
     public:
         virtual ~Control();
 
-        virtual void render() = 0;
+        // This is now final/non-virtual. It handles the shadow wrapper.
+        void render();
+
         virtual void onHandleDestroyed();
         void verifyState() const;
 
@@ -55,5 +68,8 @@ namespace mui
         void acquireOwnership();
 
         ControlPtr setTooltip(const std::string &t);
+
+        // Shadow Configuration
+        ControlPtr setShadow(bool enable, ImVec2 offset = ImVec2(2, 2), float blur = 4.0f, ImVec4 col = ImVec4(0, 0, 0, 0.25f), float rounding = -1.0f);
     };
 } // namespace mui

@@ -22,7 +22,7 @@ namespace mui
         ProgressBar();
         static ProgressBarPtr create() { return std::make_shared<ProgressBar>(); }
 
-        void render() override;
+        void renderControl() override;
 
         ProgressBarPtr setValue(float v);
         ProgressBarPtr setOverlayText(const std::string &text);

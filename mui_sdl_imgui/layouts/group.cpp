@@ -6,7 +6,7 @@ namespace mui
 {
     Group::Group(const std::string &title) : title(title) { App::assertMainThread(); }
 
-    void Group::render()
+    void Group::renderControl()
     {
         if (!visible) return;
         ImGui::PushID(this);

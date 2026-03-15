@@ -6,7 +6,7 @@ namespace mui
 {
     // Slider Int
     SliderInt::SliderInt(int min, int max) : minVal(min), maxVal(max), value(min), format("%d") { App::assertMainThread(); }
-    void SliderInt::render()
+    void SliderInt::renderControl()
     {
         if (!visible)
             return;
@@ -48,7 +48,7 @@ namespace mui
 
     // Slider Float
     SliderFloat::SliderFloat(float min, float max) : minVal(min), maxVal(max), value(min), format("%.3f") { App::assertMainThread(); }
-    void SliderFloat::render()
+    void SliderFloat::renderControl()
     {
         if (!visible)
             return;

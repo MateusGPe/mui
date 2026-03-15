@@ -7,7 +7,7 @@ namespace mui
 {
     RadioGroup::RadioGroup() : selectedIndex(-1), horizontal(false) { App::assertMainThread(); }
 
-    void RadioGroup::render()
+    void RadioGroup::renderControl()
     {
         if (!visible || options.empty()) return;
         ImGui::PushID(this);

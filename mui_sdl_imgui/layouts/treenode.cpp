@@ -15,7 +15,7 @@ namespace mui
         }
     }
 
-    void TreeNode::render()
+    void TreeNode::renderControl()
     {
         if (!visible) return;
         ImGui::PushID(this);

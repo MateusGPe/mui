@@ -22,7 +22,7 @@ namespace mui
         Spinbox(int min, int max);
         static SpinboxPtr create(int min, int max) { return std::make_shared<Spinbox>(min, max); }
 
-        void render() override;
+        void renderControl() override;
 
         int getValue() const;
         SpinboxPtr setValue(int v);

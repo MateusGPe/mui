@@ -6,7 +6,7 @@ namespace mui
 {
     Checkbox::Checkbox(const std::string &text) : text(text), checked(false) { App::assertMainThread(); }
 
-    void Checkbox::render()
+    void Checkbox::renderControl()
     {
         if (!visible) return;
         ImGui::PushID(this);

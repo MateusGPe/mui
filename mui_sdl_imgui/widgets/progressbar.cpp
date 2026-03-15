@@ -7,7 +7,7 @@ namespace mui
 {
     ProgressBar::ProgressBar() : value(0.0f), width(-1.0f), height(0.0f) { App::assertMainThread(); }
 
-    void ProgressBar::render()
+    void ProgressBar::renderControl()
     {
         if (!visible)
             return;

@@ -54,7 +54,7 @@ namespace mui
     bool Box::getAutoScroll() const { return autoScroll; }
 
     VBox::VBox() : Box() {}
-    void VBox::render()
+    void VBox::renderControl()
     {
         if (!visible)
             return;
@@ -94,7 +94,7 @@ namespace mui
     }
 
     HBox::HBox() : Box() {}
-    void HBox::render()
+    void HBox::renderControl()
     {
         if (!visible)
             return;

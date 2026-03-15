@@ -22,7 +22,7 @@ namespace mui
         Card();
         static CardPtr create() { return std::make_shared<Card>(); }
 
-        void render() override;
+        void renderControl() override;
 
         CardPtr setChild(ControlPtr c);
         CardPtr setPadding(float p);

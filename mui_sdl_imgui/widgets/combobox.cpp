@@ -7,7 +7,7 @@ namespace mui
 {
     ComboBox::ComboBox() : selectedIndex(-1) { App::assertMainThread(); }
 
-    void ComboBox::render()
+    void ComboBox::renderControl()
     {
         if (!visible) return;
         ImGui::PushID(this);

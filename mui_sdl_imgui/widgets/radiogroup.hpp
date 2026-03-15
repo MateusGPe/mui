@@ -25,7 +25,7 @@ namespace mui
         RadioGroup();
         static RadioGroupPtr create() { return std::make_shared<RadioGroup>(); }
 
-        void render() override;
+        void renderControl() override;
 
         RadioGroupPtr append(const std::string &option);
 

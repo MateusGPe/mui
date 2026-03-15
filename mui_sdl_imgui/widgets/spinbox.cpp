@@ -4,7 +4,7 @@
 
 namespace mui {
     Spinbox::Spinbox(int min, int max) : minVal(min), maxVal(max), value(min) {}
-    void Spinbox::render() {
+    void Spinbox::renderControl() {
         if (!visible) return;
         ImGui::PushID(this);
         ImGui::BeginDisabled(!enabled);

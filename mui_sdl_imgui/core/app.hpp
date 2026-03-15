@@ -7,6 +7,12 @@
 namespace mui
 {
     using Identifier = unsigned int;
+
+    enum class ThemeType
+    {
+        Light,
+        Dark
+    };
     class Window;
     class App
     {
@@ -20,11 +26,13 @@ namespace mui
         static void assertMainThread();
         static void queueMain(std::function<void()> callback);
         static void setLayoutBuilder(std::function<void(Identifier)> cb);
+        static void setTheme(ThemeType type);
 
     private:
         static std::function<void(Identifier)> layoutBuilderCb;
         static bool layoutNeedsInit;
         static float currentDpiScale;
         static bool dpiNeedsUpdate;
+        static ThemeType currentTheme;
     };
 } // namespace mui

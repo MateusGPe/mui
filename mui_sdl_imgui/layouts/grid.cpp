@@ -17,7 +17,7 @@ namespace mui
         return self();
     }
 
-    void Grid::render()
+    void Grid::renderControl()
     {
         if (!visible || cells.empty()) return;
         ImGui::PushID(this);

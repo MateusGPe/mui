@@ -26,7 +26,7 @@ namespace mui
         Image(ImTextureID tex, float w, float h);
         static ImagePtr create(ImTextureID tex, float w, float h) { return std::make_shared<Image>(tex, w, h); }
 
-        void render() override;
+        void renderControl() override;
 
         ImagePtr setTexture(ImTextureID tex);
         ImagePtr setSize(float w, float h);

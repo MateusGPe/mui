@@ -9,7 +9,7 @@ namespace mui
         App::assertMainThread();
     }
 
-    void Card::render()
+    void Card::renderControl()
     {
         if (!visible) return;
 

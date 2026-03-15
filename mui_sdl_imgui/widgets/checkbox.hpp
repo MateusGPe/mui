@@ -22,7 +22,7 @@ namespace mui
         explicit Checkbox(const std::string &text);
         static CheckboxPtr create(const std::string &text) { return std::make_shared<Checkbox>(text); }
 
-        void render() override;
+        void renderControl() override;
 
         bool isChecked() const;
         std::string getText() const;

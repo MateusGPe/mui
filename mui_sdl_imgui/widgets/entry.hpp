@@ -30,7 +30,7 @@ namespace mui
         Entry();
         static EntryPtr create() { return std::make_shared<Entry>(); }
 
-        void render() override;
+        void renderControl() override;
 
         std::string getText() const;
         EntryPtr setText(const std::string &t);

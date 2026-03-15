@@ -20,7 +20,7 @@ namespace mui
         }
     }
 
-    void Window::render()
+    void Window::renderControl()
     {
         if (!isOpen) return;
 

@@ -6,7 +6,7 @@ namespace mui
 {
     Label::Label(const std::string &text) : text(text), format(LabelFormat::Normal) { App::assertMainThread(); }
 
-    void Label::render()
+    void Label::renderControl()
     {
         if (!visible)
             return;

@@ -24,7 +24,7 @@ namespace mui
         static GridPtr create() { return std::make_shared<Grid>(); }
         GridPtr self() { return std::static_pointer_cast<Grid>(shared_from_this()); }
 
-        void render() override;
+        void renderControl() override;
         GridPtr append(ControlPtr child, int row, int col, int colSpan = 1);
     };
 } // namespace mui

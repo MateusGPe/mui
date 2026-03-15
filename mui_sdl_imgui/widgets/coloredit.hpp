@@ -22,7 +22,7 @@ namespace mui
         ColorEdit();
         static ColorEditPtr create() { return std::make_shared<ColorEdit>(); }
 
-        void render() override;
+        void renderControl() override;
 
         std::array<float, 4> getColor() const;
         ColorEditPtr setColor(float r, float g, float b, float a = 1.0f);

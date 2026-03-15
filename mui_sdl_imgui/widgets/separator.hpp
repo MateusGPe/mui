@@ -15,6 +15,6 @@ namespace mui
 
     public:
         static SeparatorPtr create() { return std::make_shared<Separator>(); }
-        void render() override;
+        void renderControl() override;
     };
 } // namespace mui

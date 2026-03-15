@@ -6,7 +6,7 @@ namespace mui
 {
     Button::Button(const std::string &text) : text(text), type(ButtonType::Normal) { App::assertMainThread(); }
 
-    void Button::render()
+    void Button::renderControl()
     {
         if (!visible)
             return;

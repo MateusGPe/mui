@@ -7,7 +7,7 @@ namespace mui
 {
     Entry::Entry() : readOnly(false), isPassword(false), isMultiline(false), width(0), height(0) { App::assertMainThread(); }
 
-    void Entry::render()
+    void Entry::renderControl()
     {
         if (!visible)
             return;

@@ -25,7 +25,7 @@ namespace mui
         ComboBox();
         static ComboBoxPtr create() { return std::make_shared<ComboBox>(); }
 
-        void render() override;
+        void renderControl() override;
 
         ComboBoxPtr append(const std::string &item);
         ComboBoxPtr clear();

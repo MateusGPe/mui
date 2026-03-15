@@ -10,7 +10,7 @@ namespace mui
         App::assertMainThread(); 
     }
 
-    void ColorEdit::render()
+    void ColorEdit::renderControl()
     {
         if (!visible) return;
         ImGui::PushID(this);

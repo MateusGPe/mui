@@ -14,6 +14,7 @@ int main()
         App::init();
 
         // 1. Main Window
+        App::setTheme(ThemeType::Dark);
         auto win = Window::create("MUI Control Gallery", 640, 480, true);
         win->setMargined(true);
         win->onClosing([]() {
@@ -63,7 +64,9 @@ int main()
         auto syncFunc = [spinBox, slider, progressBar](int value) {
             spinBox->setValue(value);
             slider->setValue(value);
-            progressBar->setValue(value);
+            // Progress bars typically expect a normalized value from 0.0 to 1.0.
+            // We need to convert the integer range [0, 100] to the float range [0.0, 1.0].
+            progressBar->setValue(static_cast<float>(value) / 100.0f);
         };
 
         spinBox->onChanged([spinBox, syncFunc]() { syncFunc(spinBox->getValue()); });
@@ -124,18 +127,18 @@ int main()
 
         btnInfo->setUseContainerWidth(true)->onClick([win]() {
             Dialogs::msgBox(*win, "Information", "This is a standard message box testing the C++ wrapper.");
-        });
+        })->setShadow(true, ImVec2(.0f, .0f), 3.0f, ImVec4(0.5f, 0.5f, 0.5f, 0.1f), -1.0f);
 
         btnError->setUseContainerWidth(true)->onClick([win]() {
             Dialogs::msgBoxError(*win, "Critical Error", "Failed to load imaginary resources.");
-        });
+        })->setShadow(true, ImVec2(.0f, .0f), 3.0f, ImVec4(0.5f, 0.5f, 0.5f, 0.1f), -1.0f);
 
         btnFile->setUseContainerWidth(true)->onClick([win]() {
             std::string path = Dialogs::openFile(*win);
             if (!path.empty()) {
                 Dialogs::msgBox(*win, "File Selected", "Path: " + path);
             }
-        });
+        })->setShadow(true, ImVec2(.0f, .0f), 3.0f, ImVec4(0.5f, 0.5f, 0.5f, 0.1f), -1.0f);
 
         append_all(hboxButtons, {
             {btnInfo, true},

@@ -8,7 +8,7 @@ namespace mui
     Image::Image(ImTextureID tex, float w, float h) 
         : textureId(tex), width(w), height(h) { App::assertMainThread(); }
 
-    void Image::render()
+    void Image::renderControl()
     {
         if (!visible || !textureId) return;
         ImGui::PushID(this);

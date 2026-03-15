@@ -28,7 +28,7 @@ namespace mui
         Tab();
         static TabPtr create() { return std::make_shared<Tab>(); }
 
-        void render() override;
+        void renderControl() override;
 
         TabPtr append(const std::string &name, ControlPtr child);
         TabPtr setMargined(int page, bool margined) { return self(); } // Stub

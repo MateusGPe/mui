@@ -52,7 +52,7 @@ namespace mui
     public:
         VBox();
         static VBoxPtr create() { return std::make_shared<VBox>(); }
-        void render() override;
+        void renderControl() override;
     };
 
     class HBox;
@@ -66,6 +66,6 @@ namespace mui
     public:
         HBox();
         static HBoxPtr create() { return std::make_shared<HBox>(); }
-        void render() override;
+        void renderControl() override;
     };
 } // namespace mui

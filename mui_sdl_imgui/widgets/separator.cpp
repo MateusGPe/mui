@@ -4,7 +4,7 @@
 
 namespace mui
 {
-    void Separator::render()
+    void Separator::renderControl()
     {
         if (!visible) return;
         ImGui::Separator();

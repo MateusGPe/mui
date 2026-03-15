@@ -6,7 +6,7 @@ namespace mui
 {
     Tab::Tab() { App::assertMainThread(); }
 
-    void Tab::render()
+    void Tab::renderControl()
     {
         if (!visible) return;
         ImGui::PushID(this);

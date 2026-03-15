@@ -25,7 +25,7 @@ namespace mui
         SliderInt(int min, int max);
         static SliderIntPtr create(int min, int max) { return std::make_shared<SliderInt>(min, max); }
 
-        void render() override;
+        void renderControl() override;
 
         int getValue() const;
         SliderIntPtr setValue(int v);
@@ -53,7 +53,7 @@ namespace mui
         SliderFloat(float min, float max);
         static SliderFloatPtr create(float min, float max) { return std::make_shared<SliderFloat>(min, max); }
 
-        void render() override;
+        void renderControl() override;
 
         float getValue() const;
         SliderFloatPtr setValue(float v);

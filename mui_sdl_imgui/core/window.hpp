@@ -27,7 +27,7 @@ namespace mui
     Window(const std::string &title, int width, int height, bool hasMenubar = false);
     ~Window();
 
-    void render() override;
+    void renderControl() override;
     WindowPtr setChild(ControlPtr child);
     WindowPtr setMargined(bool margined);
     WindowPtr onClosing(std::function<bool()> cb);

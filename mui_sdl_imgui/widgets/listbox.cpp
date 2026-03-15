@@ -7,7 +7,7 @@ namespace mui
 {
     ListBox::ListBox() : selectedIndex(-1), visibleItemsCount(5) { App::assertMainThread(); }
 
-    void ListBox::render()
+    void ListBox::renderControl()
     {
         if (!visible) return;
         ImGui::PushID(this);

@@ -24,6 +24,7 @@ namespace mui
     // Initialize DPI variables
     float App::currentDpiScale = 1.0f;
     bool App::dpiNeedsUpdate = false;
+    ThemeType App::currentTheme = ThemeType::Light;
 
     void App::setLayoutBuilder(std::function<void(Identifier)> cb)
     {
@@ -64,9 +65,11 @@ namespace mui
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
         io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
-
-        mui::Theme::applyStyle(currentDpiScale);
-        mui::Theme::loadSystemFont(18.0f * currentDpiScale);
+        
+        // Apply initial theme and load fonts directly for the first frame
+        if (currentTheme == ThemeType::Dark) mui::Theme::applyDarkStyle(currentDpiScale);
+        else mui::Theme::applyStyle(currentDpiScale);
+        mui::Theme::loadSystemFont(16.0f * currentDpiScale); // Default font size
 
         ImGui_ImplSDL3_InitForSDLRenderer(g_window, g_renderer);
         ImGui_ImplSDLRenderer3_Init(g_renderer);
@@ -104,16 +107,17 @@ namespace mui
                 }
             }
 
-            // --- REBUILD FONTS & STYLE BEFORE NEW FRAME ---
-            if (dpiNeedsUpdate)
-            {
+            // --- REBUILD FONTS & STYLE IF DPI CHANGED OR THEME SWITCHED ---
+            if (dpiNeedsUpdate) {
                 ImGui_ImplSDLRenderer3_DestroyDeviceObjects();
                 io.Fonts->Clear();
 
                 // Reset ImGui style to defaults before reapplying multipliers
                 ImGui::GetStyle() = ImGuiStyle();
 
-                mui::Theme::applyStyle(currentDpiScale);
+                // Apply the current theme
+                if (currentTheme == ThemeType::Dark) mui::Theme::applyDarkStyle(currentDpiScale);
+                else mui::Theme::applyStyle(currentDpiScale);
                 mui::Theme::loadSystemFont(18.0f * currentDpiScale);
 
                 io.Fonts->Build();
@@ -181,5 +185,12 @@ namespace mui
     void App::queueMain(std::function<void()> callback)
     {
         callback();
+    }
+
+    void App::setTheme(ThemeType type)
+    {
+        if (currentTheme == type) return; // No change needed
+        currentTheme = type;
+        dpiNeedsUpdate = true; // Signal the main loop to reapply theme and rebuild fonts
     }
 } // namespace mui

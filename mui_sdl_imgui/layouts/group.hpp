@@ -19,7 +19,7 @@ namespace mui
 
         GroupPtr self() { return std::static_pointer_cast<Group>(shared_from_this()); }
 
-        void render() override;
+        void renderControl() override;
         GroupPtr setChild(ControlPtr c);
         GroupPtr setMargined(bool margined);
         std::string getTitle() const;
