@@ -138,11 +138,10 @@ namespace mui
         // such as the 1-pixel-wide text input cursor, causing it to appear white.
         style.AntiAliasedLinesUseTex = true;
 
-        // Geometry & Rounding (Base unscaled values)
-        style.WindowRounding = 12.0f;
-        style.ChildRounding = 18.0f;
+        style.WindowRounding = 8.0f;
+        style.ChildRounding = 8.0f;
         style.FrameRounding = 6.0f;
-        style.PopupRounding = 8.0f;
+        style.PopupRounding = 6.0f;
         style.ScrollbarRounding = 12.0f;
         style.GrabRounding = 6.0f;
         style.TabRounding = 6.0f;

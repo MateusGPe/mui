@@ -6,9 +6,16 @@
 #include <imgui_internal.h>
 #include <backends/imgui_impl_sdl3.h>
 #include <backends/imgui_impl_sdlrenderer3.h>
+#include <backends/imgui_impl_opengl3.h>
 #include <stdexcept>
 #include <algorithm>
 #include "../dialogs/ImFileDialog.h"
+
+#if defined(IMGUI_IMPL_OPENGL_LOADER_GLAD)
+#include <glad/glad.h>
+#else
+#include <SDL3/SDL_opengl.h>
+#endif
 
 namespace mui
 {
@@ -16,6 +23,8 @@ namespace mui
 
     static SDL_Window *g_window = nullptr;
     static SDL_Renderer *g_renderer = nullptr;
+    SDL_GLContext App::glContext = nullptr;
+    static bool g_use_opengl = false;
     static bool g_running = false;
     std::vector<Window *> App::activeWindows;
     std::vector<ActiveDialog> App::activeDialogs;
@@ -34,26 +43,55 @@ namespace mui
         layoutBuilderCb = std::move(cb);
     }
 
-    void App::init()
+    void App::init(bool useOpenGL)
     {
         mainThreadId = std::this_thread::get_id();
+        g_use_opengl = useOpenGL;
 
         if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS))
         {
             throw std::runtime_error(std::string("SDL_Init Error: ") + SDL_GetError());
         }
 
-        Uint32 window_flags = SDL_WINDOW_HIDDEN | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY;
+        Uint32 window_flags = SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY;
+        if (g_use_opengl)
+        {
+            window_flags |= SDL_WINDOW_OPENGL;
+
+            // GL 3.3 Core
+            SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
+            SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+            SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+            SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+
+            SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+            SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+            SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+        }
+
         g_window = SDL_CreateWindow("MUI Master", 1280, 720, window_flags);
         if (!g_window)
         {
             throw std::runtime_error("SDL_CreateWindow Error");
         }
 
-        g_renderer = SDL_CreateRenderer(g_window, nullptr);
-        if (!g_renderer)
+        if (g_use_opengl)
         {
-            throw std::runtime_error("SDL_CreateRenderer Error");
+            glContext = SDL_GL_CreateContext(g_window);
+            if (!glContext)
+            {
+                throw std::runtime_error(std::string("SDL_GL_CreateContext Error: ") + SDL_GetError());
+            }
+            SDL_GL_MakeCurrent(g_window, glContext);
+            SDL_GL_SetSwapInterval(1); // Enable vsync
+        }
+        else
+        {
+            g_renderer = SDL_CreateRenderer(g_window, nullptr);
+            if (!g_renderer)
+            {
+                throw std::runtime_error("SDL_CreateRenderer Error");
+            }
         }
 
         // Fetch initial DPI
@@ -74,26 +112,58 @@ namespace mui
         else mui::Theme::applyStyle(currentDpiScale);
         mui::Theme::loadSystemFont(16.0f * currentDpiScale); // Default font size
 
-        ImGui_ImplSDL3_InitForSDLRenderer(g_window, g_renderer);
-        ImGui_ImplSDLRenderer3_Init(g_renderer);
+        if (g_use_opengl)
+        {
+            ImGui_ImplSDL3_InitForOpenGL(g_window, glContext);
+            ImGui_ImplOpenGL3_Init("#version 330");
+        }
+        else
+        {
+            ImGui_ImplSDL3_InitForSDLRenderer(g_window, g_renderer);
+            ImGui_ImplSDLRenderer3_Init(g_renderer);
+        }
 
         // Initialize ImFileDialog
-        ifd::FileDialog::Instance().CreateTexture = [](uint8_t *data, int w, int h, char fmt) -> void *
+        if (g_use_opengl)
         {
-            if (!g_renderer)
-                return nullptr;
-            SDL_Texture *texture = SDL_CreateTexture(g_renderer, fmt == 0 ? SDL_PIXELFORMAT_BGRA8888 : SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, w, h);
-            if (!texture)
-                return nullptr;
-            SDL_UpdateTexture(texture, nullptr, data, w * 4);
-            SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
-            return (void *)texture;
-        };
-        ifd::FileDialog::Instance().DeleteTexture = [](void *texture)
+            ifd::FileDialog::Instance().CreateTexture = [](uint8_t *data, int w, int h, char fmt) -> void *
+            {
+                GLuint texture;
+                glGenTextures(1, &texture);
+                glBindTexture(GL_TEXTURE_2D, texture);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, fmt == 0 ? GL_BGRA : GL_RGBA, GL_UNSIGNED_BYTE, data);
+                glBindTexture(GL_TEXTURE_2D, 0);
+                return (void *)(intptr_t)texture;
+            };
+            ifd::FileDialog::Instance().DeleteTexture = [](void *texture)
+            {
+                GLuint texID = (GLuint)(intptr_t)texture;
+                glDeleteTextures(1, &texID);
+            };
+        }
+        else
         {
-            if (texture)
-                SDL_DestroyTexture(static_cast<SDL_Texture *>(texture));
-        };
+            ifd::FileDialog::Instance().CreateTexture = [](uint8_t *data, int w, int h, char fmt) -> void *
+            {
+                if (!g_renderer)
+                    return nullptr;
+                SDL_Texture *texture = SDL_CreateTexture(g_renderer, fmt == 0 ? SDL_PIXELFORMAT_BGRA32 : SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, w, h);
+                if (!texture)
+                    return nullptr;
+                SDL_UpdateTexture(texture, nullptr, data, w * 4);
+                SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
+                return (void *)texture;
+            };
+            ifd::FileDialog::Instance().DeleteTexture = [](void *texture)
+            {
+                if (texture)
+                    SDL_DestroyTexture(static_cast<SDL_Texture *>(texture));
+            };
+        }
     }
 
     void App::run()
@@ -130,7 +200,14 @@ namespace mui
 
             // --- REBUILD FONTS & STYLE IF DPI CHANGED OR THEME SWITCHED ---
             if (dpiNeedsUpdate) {
-                ImGui_ImplSDLRenderer3_DestroyDeviceObjects();
+                if (g_use_opengl)
+                {
+                    ImGui_ImplOpenGL3_DestroyDeviceObjects();
+                }
+                else
+                {
+                    ImGui_ImplSDLRenderer3_DestroyDeviceObjects();
+                }
                 io.Fonts->Clear();
 
                 // Reset ImGui style to defaults before reapplying multipliers
@@ -143,12 +220,26 @@ namespace mui
 
                 io.Fonts->Build();
 
-                ImGui_ImplSDLRenderer3_CreateDeviceObjects();
+                if (g_use_opengl)
+                {
+                    ImGui_ImplOpenGL3_CreateDeviceObjects();
+                }
+                else
+                {
+                    ImGui_ImplSDLRenderer3_CreateDeviceObjects();
+                }
 
                 dpiNeedsUpdate = false;
             }
 
-            ImGui_ImplSDLRenderer3_NewFrame();
+            if (g_use_opengl)
+            {
+                ImGui_ImplOpenGL3_NewFrame();
+            }
+            else
+            {
+                ImGui_ImplSDLRenderer3_NewFrame();
+            }
             ImGui_ImplSDL3_NewFrame();
             ImGui::NewFrame();
 
@@ -183,15 +274,37 @@ namespace mui
                                 activeWindows.end());
 
             ImGui::Render();
-            SDL_SetRenderDrawColor(g_renderer, 45, 45, 45, 255);
-            SDL_RenderClear(g_renderer);
-            ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), g_renderer);
-            SDL_RenderPresent(g_renderer);
+            if (g_use_opengl)
+            {
+                glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
+                glClearColor(45 / 255.0f, 45 / 255.0f, 45 / 255.0f, 1.0f);
+                glClear(GL_COLOR_BUFFER_BIT);
+                ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+                SDL_GL_SwapWindow(g_window);
+            }
+            else
+            {
+                SDL_SetRenderDrawColor(g_renderer, 45, 45, 45, 255);
+                SDL_RenderClear(g_renderer);
+                ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), g_renderer);
+                SDL_RenderPresent(g_renderer);
+            }
 
             if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
             {
-                ImGui::UpdatePlatformWindows();
-                ImGui::RenderPlatformWindowsDefault();
+                if (g_use_opengl)
+                {
+                    SDL_Window* backup_current_window = SDL_GL_GetCurrentWindow();
+                    SDL_GLContext backup_current_context = SDL_GL_GetCurrentContext();
+                    ImGui::UpdatePlatformWindows();
+                    ImGui::RenderPlatformWindowsDefault();
+                    SDL_GL_MakeCurrent(backup_current_window, backup_current_context);
+                }
+                else
+                {
+                    ImGui::UpdatePlatformWindows();
+                    ImGui::RenderPlatformWindowsDefault();
+                }
             }
         }
     }
@@ -290,5 +403,10 @@ namespace mui
         if (currentTheme == type) return; // No change needed
         currentTheme = type;
         dpiNeedsUpdate = true; // Signal the main loop to reapply theme and rebuild fonts
+    }
+
+    SDL_GLContext App::getGLContext()
+    {
+        return glContext;
     }
 } // namespace mui

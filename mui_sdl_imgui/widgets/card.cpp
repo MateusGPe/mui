@@ -17,55 +17,40 @@ namespace mui
 
         ImGui::PushID(this);
 
-        // We can't know the size of the child ahead of time.
-        // So, we first render the child content off-screen to determine its size.
-        // This is a common pattern in ImGui for complex layouts.
-        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.0f);
-        ImGui::BeginGroup();
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(padding, padding));
+        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, ImGui::GetStyle().ChildRounding);
+        ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 1.0f);
+
+        // Explicitly set the next window size.
+        // Passing 0.0f forces an auto-fit on that axis.
+        // Passing GetContentRegionAvail() forces it to fill available space.
+        ImVec2 avail = ImGui::GetContentRegionAvail();
+        ImGui::SetNextWindowSize(ImVec2(
+            spanAvailWidth ? avail.x : 0.0f,
+            fillHeight ? avail.y : 0.0f));
+
+        ImGuiChildFlags child_flags = ImGuiChildFlags_Borders;
+        ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoScrollbar;
+
+        // Apply auto-resize flags for the axes designated as 0.0f
+        if (!spanAvailWidth)
+        {
+            child_flags |= ImGuiChildFlags_AutoResizeX;
+        }
+        if (!fillHeight)
+        {
+            child_flags |= ImGuiChildFlags_AutoResizeY;
+        }
+
+        // Size parameter is ImVec2(0,0) because SetNextWindowSize dictates the dimensions
+        ImGui::BeginChild("##card_content_host", ImVec2(0.0f, 0.0f), child_flags, window_flags);
+
         if (child)
-        {
             child->render();
-        }
-        ImGui::EndGroup();
-        ImGui::PopStyleVar();
 
-        ImVec2 content_size = ImGui::GetItemRectSize();
-        ImVec2 avail_size = ImGui::GetContentRegionAvail();
+        ImGui::EndChild();
 
-        // Determine final card dimensions
-        float final_width = fillWidth ? avail_size.x : (content_size.x + padding * 2);
-        float final_height = fillHeight ? avail_size.y : (content_size.y + padding * 2);
-        ImVec2 final_size(final_width, final_height);
-
-        ImVec2 cursor_pos = ImGui::GetCursorScreenPos();
-        const ImRect bb(cursor_pos, ImVec2(cursor_pos.x + final_size.x, cursor_pos.y + final_size.y));
-
-        ImGui::ItemSize(bb.GetSize());
-        if(ImGui::ItemAdd(bb, 0))
-        {
-            ImDrawList* draw_list = ImGui::GetWindowDrawList();
-            draw_list->AddRectFilled(bb.Min, bb.Max, ImGui::GetColorU32(ImGuiCol_ChildBg), 4.0f);
-            draw_list->AddRect(bb.Min, bb.Max, ImGui::GetColorU32(ImGuiCol_Border), 4.0f);
-
-            // Now render the child for real
-            ImGui::SetCursorScreenPos(ImVec2(bb.Min.x + padding, bb.Min.y + padding));
-            if (fillWidth)
-            {
-                ImGui::PushItemWidth(final_width - padding * 2);
-            }
-            ImGui::BeginGroup();
-            if (child)
-            {
-                child->render();
-            }
-            ImGui::EndGroup();
-            if (fillWidth)
-            {
-                ImGui::PopItemWidth();
-            }
-        }
-
-
+        ImGui::PopStyleVar(3);
         ImGui::PopID();
     }
 
@@ -80,13 +65,6 @@ namespace mui
     {
         verifyState();
         padding = p;
-        return self();
-    }
-
-    CardPtr Card::setFillWidth(bool fill)
-    {
-        verifyState();
-        fillWidth = fill;
         return self();
     }
 

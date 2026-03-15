@@ -6,6 +6,9 @@
 #include <imgui.h>
 #include <filesystem>
 
+// Forward declare SDL_GLContext to avoid including SDL.h in the header
+typedef struct SDL_GLContextState* SDL_GLContext;
+
 namespace mui
 {
     class Window;
@@ -47,10 +50,11 @@ namespace mui
         static ThemeType currentTheme;
         static void processDialogs();
         static void processMessageBoxes();
+        static SDL_GLContext glContext;
 
     public:
         static void setLayoutBuilder(std::function<void(Identifier)> cb);
-        static void init();
+        static void init(bool useOpenGL = false);
         static void run();
         static void quit();
         static void assertMainThread();
@@ -59,5 +63,6 @@ namespace mui
         static ThemeType getTheme() { return currentTheme; }
         static void addDialog(ActiveDialog &&dialog);
         static void addMessageBox(ActiveMessageBox &&mb);
+        static SDL_GLContext getGLContext();
     };
 } // namespace mui

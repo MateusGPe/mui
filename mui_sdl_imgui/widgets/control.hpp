@@ -38,12 +38,19 @@ namespace mui
         bool spanAvailWidth = false;
         std::string tooltip;
 
+        // Static Global Shadow Defaults
+        static bool s_defaultHasShadow;
+        static ImVec2 s_defaultShadowOffset;
+        static float s_defaultShadowBlur;
+        static ImVec4 s_defaultShadowColor;
+        static float s_defaultShadowRounding;
+
         // Shadow Properties
-        bool hasShadow = false;
-        ImVec2 shadowOffset = ImVec2(2.0f, 2.0f);
-        float shadowBlur = 4.0f;
-        ImVec4 shadowColor = ImVec4(0.0f, 0.0f, 0.0f, 0.25f);
-        float shadowRounding = -1.0f; // -1 means use ImGui style default
+        bool hasShadow = s_defaultHasShadow;
+        ImVec2 shadowOffset = s_defaultShadowOffset;
+        float shadowBlur = s_defaultShadowBlur;
+        ImVec4 shadowColor = s_defaultShadowColor;
+        float shadowRounding = s_defaultShadowRounding; // -1 means use ImGui style default
 
         void renderTooltip();
 
@@ -73,5 +80,9 @@ namespace mui
 
         // Shadow Configuration
         ControlPtr setShadow(bool enable, ImVec2 offset = ImVec2(2, 2), float blur = 4.0f, ImVec4 col = ImVec4(0, 0, 0, 0.25f), float rounding = -1.0f);
+        ControlPtr defaultShadow(bool enable = true);
+        
+        // Global defaults setter
+        static void setGlobalShadowDefaults(bool enable, ImVec2 offset = ImVec2(2, 2), float blur = 4.0f, ImVec4 col = ImVec4(0, 0, 0, 0.25f), float rounding = -1.0f);
     };
 } // namespace mui

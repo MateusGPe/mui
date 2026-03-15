@@ -72,3 +72,5 @@ Testing/
 .DS_Store
 merged_code.md
 merger.sh
+merged_header.md
+merger_headers.sh

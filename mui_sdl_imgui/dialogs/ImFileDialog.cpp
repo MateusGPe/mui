@@ -346,14 +346,15 @@ namespace ifd
 		if (hasPreview && icon)
 		{
 			ImVec2 availSize = ImVec2(size.x, iconSize);
-
+			const float padx(4), pady(4);
 			float scale = std::min<float>(availSize.x / previewWidth, availSize.y / previewHeight);
 			availSize.x = previewWidth * scale;
 			availSize.y = previewHeight * scale;
 
-			float previewPosX = pos.x + (size.x - availSize.x) / 2.0f;
-			float previewPosY = pos.y + (iconSize - availSize.y) / 2.0f;
-
+			float previewPosX = pos.x + (size.x - availSize.x) / 2.0f + padx;
+			float previewPosY = pos.y + (iconSize - availSize.y) / 2.0f + padx;
+			availSize.x -= padx * 2;
+			availSize.y -= pady * 2;
 			window->DrawList->AddImage(icon, ImVec2(previewPosX, previewPosY), ImVec2(previewPosX + availSize.x, previewPosY + availSize.y));
 		}
 		else if (icon)
@@ -363,7 +364,33 @@ namespace ifd
 		else
 		{
 			// Fallback to font awesome
-			window->DrawList->AddText(ImGui::GetFont(), iconSize, ImVec2(iconPosX, pos.y), ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[ImGuiCol_Text]), isDirectory ? ICON_FA_FOLDER : ICON_FA_FILE);
+			static struct {
+				float lastIconSize = -1.0f;
+				float lastSizeX = -1.0f;
+				ImFont* lastFont = nullptr;
+				float finalIconSize = 0.0f;
+				ImVec2 textSize = ImVec2(0, 0);
+			} iconCache[2];
+
+			int cacheIdx = isDirectory ? 1 : 0;
+			const char* icon_text = isDirectory ? ICON_FA_FOLDER : ICON_FA_FILE;
+			ImFont* currentFont = ImGui::GetFont();
+
+			if (iconCache[cacheIdx].lastIconSize != iconSize || iconCache[cacheIdx].lastSizeX != size.x || iconCache[cacheIdx].lastFont != currentFont) {
+				ImVec2 text_size = currentFont->CalcTextSizeA(iconSize, FLT_MAX, 0.0f, icon_text);
+				float scale = 1.0f;
+				if (text_size.x > 0.0f) scale = std::min<float>(scale, size.x / text_size.x);
+				if (text_size.y > 0.0f) scale = std::min<float>(scale, iconSize / text_size.y);
+				iconCache[cacheIdx].finalIconSize = iconSize * scale * 0.8f;
+				iconCache[cacheIdx].textSize = currentFont->CalcTextSizeA(iconCache[cacheIdx].finalIconSize, FLT_MAX, 0.0f, icon_text);
+				iconCache[cacheIdx].lastIconSize = iconSize;
+				iconCache[cacheIdx].lastSizeX = size.x;
+				iconCache[cacheIdx].lastFont = currentFont;
+			}
+			
+			float textPosX = pos.x + (size.x - iconCache[cacheIdx].textSize.x) / 2.0f;
+			float textPosY = pos.y + (iconSize - iconCache[cacheIdx].textSize.y) / 2.0f;
+			window->DrawList->AddText(currentFont, iconCache[cacheIdx].finalIconSize, ImVec2(textPosX, textPosY), ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[ImGuiCol_Text]), icon_text);
 		}
 
 		window->DrawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(pos.x + (size.x - textSize.x) / 2.0f, pos.y + iconSize), ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[ImGuiCol_Text]), label, 0, size.x);
@@ -975,6 +1002,7 @@ namespace ifd
 
 					if (image != nullptr && width > 0 && height > 0)
 					{
+
 						// Safely write the preview back
 						std::lock_guard<std::recursive_mutex> lock(m_contentMutex);
 						if (i < m_content.size() && m_content[i].Path == dataCopy.Path)
@@ -1089,9 +1117,11 @@ namespace ifd
 							if (exts.size() > 0)
 							{
 								std::string extension = info.Path.extension().u8string();
+								bool isWildcard = (std::count(exts.begin(), exts.end(), "*.*") > 0);
 
 								// extension not found? skip
-								if (std::count(exts.begin(), exts.end(), extension) == 0)
+								// if it's not a wildcard filter and the extension doesn't match, skip it
+								if (!isWildcard && std::count(exts.begin(), exts.end(), extension) == 0)
 									continue;
 							}
 						}
@@ -1307,7 +1337,7 @@ namespace ifd
 			{
 				if (entry.HasIconPreview && entry.IconPreviewData != nullptr)
 				{
-					entry.IconPreview = this->CreateTexture(entry.IconPreviewData, entry.IconPreviewWidth, entry.IconPreviewHeight, 1);
+					entry.IconPreview = this->CreateTexture(entry.IconPreviewData, entry.IconPreviewWidth, entry.IconPreviewHeight, 1u);
 					stbi_image_free(entry.IconPreviewData);
 					entry.IconPreviewData = nullptr;
 				}

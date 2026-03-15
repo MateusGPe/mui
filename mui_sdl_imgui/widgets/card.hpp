@@ -12,7 +12,6 @@ namespace mui
     protected:
         ControlPtr child;
         float padding = 8.0f;
-        bool fillWidth = false;
         bool fillHeight = false;
 
         CardPtr self() { return std::static_pointer_cast<Card>(shared_from_this()); }
@@ -25,7 +24,6 @@ namespace mui
 
         CardPtr setChild(ControlPtr c);
         CardPtr setPadding(float p);
-        CardPtr setFillWidth(bool fill);
         CardPtr setFillHeight(bool fill);
     };
 } // namespace mui

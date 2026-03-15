@@ -5,6 +5,12 @@
 
 namespace mui
 {
+    bool Control::s_defaultHasShadow = false;
+    ImVec2 Control::s_defaultShadowOffset = ImVec2(2.0f, 2.0f);
+    float Control::s_defaultShadowBlur = 4.0f;
+    ImVec4 Control::s_defaultShadowColor = ImVec4(0.0f, 0.0f, 0.0f, 0.25f);
+    float Control::s_defaultShadowRounding = -1.0f;
+
     Control::~Control() {}
 
     void Control::onHandleDestroyed() { ownsHandle = false; }
@@ -25,8 +31,10 @@ namespace mui
         return shared_from_this();
     }
 
-    void Control::renderTooltip() {
-        if (!tooltip.empty() && ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal)) {
+    void Control::renderTooltip()
+    {
+        if (!tooltip.empty() && ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
+        {
             ImGui::SetTooltip("%s", tooltip.c_str());
         }
     }
@@ -47,15 +55,37 @@ namespace mui
         return shared_from_this();
     }
 
-    void Control::render() {
-        if (!visible) return;
+    void Control::setGlobalShadowDefaults(bool enable, ImVec2 offset, float blur, ImVec4 col, float rounding)
+    {
+        s_defaultHasShadow = enable;
+        s_defaultShadowOffset = offset;
+        s_defaultShadowBlur = blur;
+        s_defaultShadowColor = col;
+        s_defaultShadowRounding = rounding;
+    }
 
-        if (!hasShadow) {
+    ControlPtr Control::defaultShadow(bool enable)
+    {
+        hasShadow = s_defaultHasShadow || enable;
+        shadowOffset = s_defaultShadowOffset;
+        shadowBlur = s_defaultShadowBlur;
+        shadowColor = s_defaultShadowColor;
+        shadowRounding = s_defaultShadowRounding;
+        return shared_from_this();
+    }
+
+    void Control::render()
+    {
+        if (!visible)
+            return;
+
+        if (!hasShadow)
+        {
             renderControl();
             return;
         }
 
-        ImDrawList* draw_list = ImGui::GetWindowDrawList();
+        ImDrawList *draw_list = ImGui::GetWindowDrawList();
 
         // 1. Split channels
         draw_list->ChannelsSplit(2);
@@ -74,30 +104,32 @@ namespace mui
 
         float rounding = shadowRounding < 0.0f ? ImGui::GetStyle().FrameRounding : shadowRounding;
 
-        if (shadowBlur <= 0.0f) {
+        if (shadowBlur <= 0.0f)
+        {
             // Hard/Flat Retro Shadow
             draw_list->AddRectFilled(
                 ImVec2(p_min.x + shadowOffset.x, p_min.y + shadowOffset.y),
                 ImVec2(p_max.x + shadowOffset.x, p_max.y + shadowOffset.y),
                 ImGui::GetColorU32(shadowColor),
-                rounding
-            );
-        } else {
+                rounding);
+        }
+        else
+        {
             // Simulated Soft Shadow (Hack)
             // Warning: High iterations will spike draw calls. Keep between 3 and 5.
-            const int iterations = 4; 
-            for (int i = 1; i <= iterations; ++i) {
+            const int iterations = 4;
+            for (int i = 1; i <= iterations; ++i)
+            {
                 float step = (shadowBlur / iterations) * i;
                 // Fade alpha outwards
                 float alpha = shadowColor.w * (1.0f - ((float)i / iterations));
                 ImU32 col = ImGui::GetColorU32(ImVec4(shadowColor.x, shadowColor.y, shadowColor.z, alpha));
-                
+
                 draw_list->AddRectFilled(
                     ImVec2(p_min.x + shadowOffset.x - step, p_min.y + shadowOffset.y - step),
                     ImVec2(p_max.x + shadowOffset.x + step, p_max.y + shadowOffset.y + step),
-                    col, 
-                    rounding + step
-                );
+                    col,
+                    rounding + step);
             }
         }
 

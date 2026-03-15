@@ -23,6 +23,7 @@ int main()
     {
         App::init();
         App::setTheme(ThemeType::Light);
+        Control::setGlobalShadowDefaults(false, {0.0f, 0.0f}, 4.0f, {0.12f, 0.53f, 0.90f, 0.08f}, 8.0f);
 
         // Create and show the main window with the control gallery
         auto mainWin = createMainGalleryWindow();
@@ -115,7 +116,8 @@ WindowPtr createInspectorWindow()
     auto cardContent = VBox::create();
     cardContent->setPadded(true);
     card->setChild(cardContent);
-    card->setShadow(true, {4.0f, 4.0f}, 0.0f, {0.0f, 0.0f, 0.0f, 0.5f})
+    card->setFillHeight(false);
+    card->defaultShadow() //setShadow(true, {0.0f, 0.0f}, 18.0f, {0.12f, 0.53f, 0.90f, 0.1f}, 8.0f)
         ->setSpanAvailWidth(true); // Card will fill the width of the parent
 
     append_all(cardContent, {{Label::create("This is a Card")},
@@ -152,7 +154,7 @@ ControlPtr createBasicsTab(const LabelPtr &lblStatus)
 
     auto btnClick = Button::create(ICON_FA_FLOPPY_DISK " Click Me");
     btnClick->onClick([lblStatus]()
-                      { lblStatus->setText("Button was clicked!"); });
+                      { lblStatus->setText("Button was clicked!"); })->defaultShadow();
 
     auto chkToggle = Checkbox::create("Enable Feature X");
     chkToggle->onToggled([lblStatus, chkToggle]()
@@ -182,9 +184,9 @@ ControlPtr createNumbersTab(const LabelPtr &lblStatus)
     };
 
     spinBox->onChanged([spinBox, syncFunc]()
-                       { syncFunc(spinBox->getValue()); });
+                       { syncFunc(spinBox->getValue()); })->defaultShadow();
     slider->onChanged([slider, syncFunc]()
-                      { syncFunc(slider->getValue()); });
+                      { syncFunc(slider->getValue()); })->defaultShadow();
 
     syncFunc(50); // Initialize to 50
 
@@ -246,7 +248,7 @@ ControlPtr createDialogsTab(const WindowPtr &win, const LabelPtr &lblStatus)
         {
             Dialogs::msgBox("Information", "This is a standard message box.");
             lblStatus->setText("Info dialog shown.");
-        });
+        })->defaultShadow();
 
     btnError->onClick(
         [win, lblStatus]()
@@ -288,11 +290,11 @@ ControlPtr createLayoutsTab(const LabelPtr &lblStatus)
 
     grid->append(Label::create("First Name:"), 0, 0);
     auto firstNameEntry = Entry::create("John");
-    grid->append(firstNameEntry, 0, 1);
+    grid->append(firstNameEntry, 0, 1, 2);
 
     grid->append(Label::create("Last Name:"), 1, 0);
     auto lastNameEntry = Entry::create("Doe");
-    grid->append(lastNameEntry, 1, 1);
+    grid->append(lastNameEntry, 1, 2, 1);
 
     grid->append(Label::create("Address:"), 2, 0);
     auto addressEntry = Entry::create("123 Main St, Anytown");

@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # --- Dependencies ---
 find_package(SDL3 REQUIRED)
+find_package(OpenGL REQUIRED)
 
 if(UNIX AND NOT APPLE)
   find_package(Fontconfig)
@@ -50,6 +51,7 @@ set(IMGUI_SOURCES
     ${imgui_SOURCE_DIR}/imgui_widgets.cpp
     ${imgui_SOURCE_DIR}/backends/imgui_impl_sdl3.cpp
     ${imgui_SOURCE_DIR}/backends/imgui_impl_sdlrenderer3.cpp
+    ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
     ${imgui_SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp)
 
 # --- Target Configuration ---
@@ -71,7 +73,7 @@ target_include_directories(mui PRIVATE ${imgui_SOURCE_DIR}
                                        ${imgui_SOURCE_DIR}/backends)
 
 # --- Linking ---
-target_link_libraries(mui PUBLIC SDL3::SDL3)
+target_link_libraries(mui PUBLIC SDL3::SDL3 OpenGL::GL)
 
 if(Fontconfig_FOUND)
   target_link_libraries(mui PRIVATE Fontconfig::Fontconfig)
