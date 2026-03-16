@@ -49,6 +49,7 @@ set(DIALOG_SOURCES
     dialogs/mui_file_dialog.cpp
     dialogs/mui_file_dialog_layouts.cpp
     dialogs/mui_icon_grid.cpp
+    dialogs/stb_image.cpp
     dialogs/mui_tree_view.cpp)
 
 set(IMGUI_SOURCES

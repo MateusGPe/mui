@@ -6,6 +6,7 @@
 #include "ImFileDialog.h"
 #include "../core/app.hpp" // Added for mui::App::assertMainThread()
 #include "IconsFontAwesome6.h"
+#include "stb_image.h"
 
 #include <fstream>
 #include <algorithm>
@@ -13,8 +14,7 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+
 
 #ifdef _WIN32
 #define NOMINMAX

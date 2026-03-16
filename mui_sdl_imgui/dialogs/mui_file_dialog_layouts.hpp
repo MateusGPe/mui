@@ -10,6 +10,7 @@ namespace mui {
 
 class FileDialogTopBar : public Control {
 public:
+    float zoomLevel = 1.0f; // Add zoomLevel member
     std::string searchInput;
 
     // Callbacks
@@ -17,6 +18,7 @@ public:
     std::function<void()> onForwardClicked;
     std::function<void()> onUpClicked;
     std::function<void(const std::string& query)> onSearchChanged;
+    std::function<void(float newZoom)> onZoomChanged; // Add onZoomChanged callback
 
     void renderControl() override;
 };
@@ -38,4 +40,3 @@ public:
 };
 
 } // namespace mui
-

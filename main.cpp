@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <cstdio>
+#include "mui_sdl_imgui/dialogs/mui_file_dialog.hpp"
 using namespace mui;
 
 // Forward declarations for UI creation functions
@@ -23,6 +24,11 @@ int main()
     {
         App::init();
         App::setTheme(ThemeType::Light);
+        App::setMainLoopCallback(
+            []()
+            {
+                FileDialog::Instance().render();
+            });
         Control::setGlobalShadowDefaults(false, {0.0f, 0.0f}, 4.0f, {0.12f, 0.53f, 0.90f, 0.08f}, 8.0f);
 
         // Create and show the main window with the control gallery
@@ -117,7 +123,7 @@ WindowPtr createInspectorWindow()
     cardContent->setPadded(true);
     card->setChild(cardContent);
     card->setFillHeight(false);
-    card->defaultShadow() //setShadow(true, {0.0f, 0.0f}, 18.0f, {0.12f, 0.53f, 0.90f, 0.1f}, 8.0f)
+    card->defaultShadow()          // setShadow(true, {0.0f, 0.0f}, 18.0f, {0.12f, 0.53f, 0.90f, 0.1f}, 8.0f)
         ->setSpanAvailWidth(true); // Card will fill the width of the parent
 
     append_all(cardContent, {{Label::create("This is a Card")},
@@ -154,7 +160,8 @@ ControlPtr createBasicsTab(const LabelPtr &lblStatus)
 
     auto btnClick = Button::create(ICON_FA_FLOPPY_DISK " Click Me");
     btnClick->onClick([lblStatus]()
-                      { lblStatus->setText("Button was clicked!"); })->defaultShadow();
+                      { lblStatus->setText("Button was clicked!"); })
+        ->defaultShadow();
 
     auto chkToggle = Checkbox::create("Enable Feature X");
     chkToggle->onToggled([lblStatus, chkToggle]()
@@ -184,9 +191,11 @@ ControlPtr createNumbersTab(const LabelPtr &lblStatus)
     };
 
     spinBox->onChanged([spinBox, syncFunc]()
-                       { syncFunc(spinBox->getValue()); })->defaultShadow();
+                       { syncFunc(spinBox->getValue()); })
+        ->defaultShadow();
     slider->onChanged([slider, syncFunc]()
-                      { syncFunc(slider->getValue()); })->defaultShadow();
+                      { syncFunc(slider->getValue()); })
+        ->defaultShadow();
 
     syncFunc(50); // Initialize to 50
 
@@ -244,11 +253,12 @@ ControlPtr createDialogsTab(const WindowPtr &win, const LabelPtr &lblStatus)
     auto btnFile = Button::create("Open File");
 
     btnInfo->onClick(
-        [win, lblStatus]()
-        {
-            Dialogs::msgBox("Information", "This is a standard message box.");
-            lblStatus->setText("Info dialog shown.");
-        })->defaultShadow();
+               [win, lblStatus]()
+               {
+                   Dialogs::msgBox("Information", "This is a standard message box.");
+                   lblStatus->setText("Info dialog shown.");
+               })
+        ->defaultShadow();
 
     btnError->onClick(
         [win, lblStatus]()

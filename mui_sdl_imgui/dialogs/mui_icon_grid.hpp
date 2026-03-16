@@ -11,7 +11,7 @@ namespace mui {
 class IconGrid : public Control {
 public:
     std::vector<FileInfo> items;
-    float zoomLevel = 1.0f;
+    float zoomLevel = 1.0f; // Scale base size (32px) by zoom
     std::vector<std::string> selectedIds;
 
     // Callbacks
@@ -20,7 +20,10 @@ public:
     std::function<void(float newZoom)> onZoomChanged;
 
     void renderControl() override;
+
+private:
+    void renderTableView();
+    void renderGridView();
 };
 
 } // namespace mui
-

@@ -19,58 +19,28 @@ namespace mui
     {
         std::string key = "openfile##" + title;
         
-        // Changed to mui::FileDialog
-        mui::FileDialog::Instance().Open(key, title, filter, false, startingDir);
-
-        App::addDialog({key,
-                        [on_ok](const std::vector<std::filesystem::path> &paths)
-                        {
-                            if (on_ok && !paths.empty())
-                            {
-                                on_ok(paths[0].u8string());
-                            }
-                        },
-                        on_cancel});
+        mui::FileDialog::Instance().Open(FileDialogType::OpenFile, key, title, [on_ok](const std::vector<std::string>& paths) {
+            if (on_ok && !paths.empty()) {
+                on_ok(paths[0]);
+            }
+        }, startingDir);
     }
 
     void Dialogs::openFiles(const std::string &title, const std::string &filter, std::function<void(const std::vector<std::string> &)> on_ok, std::function<void()> on_cancel, const std::string &startingDir)
     {
         std::string key = "openfiles##" + title;
         
-        // Changed to mui::FileDialog
-        mui::FileDialog::Instance().Open(key, title, filter, true, startingDir);
-
-        App::addDialog({key,
-                        [on_ok](const std::vector<std::filesystem::path> &paths)
-                        {
-                            if (on_ok && !paths.empty())
-                            {
-                                std::vector<std::string> result_paths;
-                                for (const auto &p : paths)
-                                {
-                                    result_paths.push_back(p.u8string());
-                                }
-                                on_ok(result_paths);
-                            }
-                        },
-                        on_cancel});
+        mui::FileDialog::Instance().Open(FileDialogType::OpenFiles, key, title, on_ok, startingDir);
     }
 
     void Dialogs::saveFile(const std::string &title, const std::string &filter, std::function<void(const std::string &)> on_ok, std::function<void()> on_cancel, const std::string &startingDir)
     {
         std::string key = "savefile##" + title;
         
-        // Changed to mui::FileDialog
-        mui::FileDialog::Instance().Save(key, title, filter, startingDir);
-
-        App::addDialog({key,
-                        [on_ok](const std::vector<std::filesystem::path> &paths)
-                        {
-                            if (on_ok && !paths.empty())
-                            {
-                                on_ok(paths[0].u8string());
-                            }
-                        },
-                        on_cancel});
+        mui::FileDialog::Instance().Open(FileDialogType::SaveFile, key, title, [on_ok](const std::vector<std::string>& paths) {
+            if (on_ok && !paths.empty()) {
+                on_ok(paths[0]);
+            }
+        }, startingDir);
     }
 } // namespace mui

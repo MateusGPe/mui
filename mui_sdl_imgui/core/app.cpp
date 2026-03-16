@@ -22,9 +22,9 @@ namespace mui
     std::thread::id App::mainThreadId;
 
     static SDL_Window *g_window = nullptr;
-    static SDL_Renderer *g_renderer = nullptr;
+    SDL_Renderer *g_renderer = nullptr;
     SDL_GLContext App::glContext = nullptr;
-    static bool g_use_opengl = false;
+    bool g_use_opengl = false;
     static bool g_running = false;
     std::vector<Window *> App::activeWindows;
     std::vector<ActiveDialog> App::activeDialogs;
@@ -106,10 +106,12 @@ namespace mui
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
         io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
-        
+
         // Apply initial theme and load fonts directly for the first frame
-        if (currentTheme == ThemeType::Dark) mui::Theme::applyDarkStyle(currentDpiScale);
-        else mui::Theme::applyStyle(currentDpiScale);
+        if (currentTheme == ThemeType::Dark)
+            mui::Theme::applyDarkStyle(currentDpiScale);
+        else
+            mui::Theme::applyStyle(currentDpiScale);
         mui::Theme::loadSystemFont(16.0f * currentDpiScale); // Default font size
 
         if (g_use_opengl)
@@ -166,6 +168,13 @@ namespace mui
         }
     }
 
+    std::function<void()> App::mainLoopCallback = nullptr;
+
+    void App::setMainLoopCallback(std::function<void()> cb)
+    {
+        mainLoopCallback = std::move(cb);
+    }
+
     void App::run()
     {
         SDL_ShowWindow(g_window);
@@ -199,7 +208,8 @@ namespace mui
             }
 
             // --- REBUILD FONTS & STYLE IF DPI CHANGED OR THEME SWITCHED ---
-            if (dpiNeedsUpdate) {
+            if (dpiNeedsUpdate)
+            {
                 if (g_use_opengl)
                 {
                     ImGui_ImplOpenGL3_DestroyDeviceObjects();
@@ -214,8 +224,10 @@ namespace mui
                 ImGui::GetStyle() = ImGuiStyle();
 
                 // Apply the current theme
-                if (currentTheme == ThemeType::Dark) mui::Theme::applyDarkStyle(currentDpiScale);
-                else mui::Theme::applyStyle(currentDpiScale);
+                if (currentTheme == ThemeType::Dark)
+                    mui::Theme::applyDarkStyle(currentDpiScale);
+                else
+                    mui::Theme::applyStyle(currentDpiScale);
                 mui::Theme::loadSystemFont(18.0f * currentDpiScale);
 
                 io.Fonts->Build();
@@ -273,6 +285,11 @@ namespace mui
                                                { return !win->isWindowOpen(); }),
                                 activeWindows.end());
 
+            if (mainLoopCallback)
+            {
+                mainLoopCallback();
+            }
+
             ImGui::Render();
             if (g_use_opengl)
             {
@@ -294,7 +311,7 @@ namespace mui
             {
                 if (g_use_opengl)
                 {
-                    SDL_Window* backup_current_window = SDL_GL_GetCurrentWindow();
+                    SDL_Window *backup_current_window = SDL_GL_GetCurrentWindow();
                     SDL_GLContext backup_current_context = SDL_GL_GetCurrentContext();
                     ImGui::UpdatePlatformWindows();
                     ImGui::RenderPlatformWindowsDefault();
@@ -336,6 +353,7 @@ namespace mui
 
     void App::processDialogs()
     {
+
         for (auto it = activeDialogs.begin(); it != activeDialogs.end();)
         {
             if (ifd::FileDialog::Instance().IsDone(it->key))
@@ -400,7 +418,8 @@ namespace mui
 
     void App::setTheme(ThemeType type)
     {
-        if (currentTheme == type) return; // No change needed
+        if (currentTheme == type)
+            return; // No change needed
         currentTheme = type;
         dpiNeedsUpdate = true; // Signal the main loop to reapply theme and rebuild fonts
     }

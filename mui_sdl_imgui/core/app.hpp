@@ -7,13 +7,14 @@
 #include <filesystem>
 
 // Forward declare SDL_GLContext to avoid including SDL.h in the header
-typedef struct SDL_GLContextState* SDL_GLContext;
-
+typedef struct SDL_GLContextState *SDL_GLContext;
+struct SDL_Renderer;
 namespace mui
 {
     class Window;
     using Identifier = ImGuiID;
-
+    extern bool g_use_opengl;
+    extern SDL_Renderer *g_renderer;
     struct ActiveDialog
     {
         std::string key;
@@ -48,11 +49,13 @@ namespace mui
         static float currentDpiScale;
         static bool dpiNeedsUpdate;
         static ThemeType currentTheme;
+        static std::function<void()> mainLoopCallback;
         static void processDialogs();
         static void processMessageBoxes();
         static SDL_GLContext glContext;
 
     public:
+        static void setMainLoopCallback(std::function<void()> cb);
         static void setLayoutBuilder(std::function<void(Identifier)> cb);
         static void init(bool useOpenGL = false);
         static void run();

@@ -73,7 +73,7 @@ private:
     std::unordered_map<std::string, void*> loadedTextures;
 
     // --- Core Logic Methods ---
-    void bindCallbacks();
+    void bindCallbacks(FileDialogState& dialog);
     void loadDirectory(const std::filesystem::path& path);
     void populateDrives();
     
