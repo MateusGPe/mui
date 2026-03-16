@@ -1,5 +1,5 @@
 #include "dialogs.hpp"
-#include "ImFileDialog.h"
+#include "mui_file_dialog.hpp" // Changed from ImFileDialog.h
 #include "../core/app.hpp"
 
 namespace mui
@@ -18,7 +18,9 @@ namespace mui
     void Dialogs::openFile(const std::string &title, const std::string &filter, std::function<void(const std::string &)> on_ok, std::function<void()> on_cancel, const std::string &startingDir)
     {
         std::string key = "openfile##" + title;
-        ifd::FileDialog::Instance().Open(key, title, filter, false, startingDir);
+        
+        // Changed to mui::FileDialog
+        mui::FileDialog::Instance().Open(key, title, filter, false, startingDir);
 
         App::addDialog({key,
                         [on_ok](const std::vector<std::filesystem::path> &paths)
@@ -34,7 +36,9 @@ namespace mui
     void Dialogs::openFiles(const std::string &title, const std::string &filter, std::function<void(const std::vector<std::string> &)> on_ok, std::function<void()> on_cancel, const std::string &startingDir)
     {
         std::string key = "openfiles##" + title;
-        ifd::FileDialog::Instance().Open(key, title, filter, true, startingDir);
+        
+        // Changed to mui::FileDialog
+        mui::FileDialog::Instance().Open(key, title, filter, true, startingDir);
 
         App::addDialog({key,
                         [on_ok](const std::vector<std::filesystem::path> &paths)
@@ -55,7 +59,9 @@ namespace mui
     void Dialogs::saveFile(const std::string &title, const std::string &filter, std::function<void(const std::string &)> on_ok, std::function<void()> on_cancel, const std::string &startingDir)
     {
         std::string key = "savefile##" + title;
-        ifd::FileDialog::Instance().Save(key, title, filter, startingDir);
+        
+        // Changed to mui::FileDialog
+        mui::FileDialog::Instance().Save(key, title, filter, startingDir);
 
         App::addDialog({key,
                         [on_ok](const std::vector<std::filesystem::path> &paths)

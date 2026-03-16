@@ -153,7 +153,7 @@ namespace ifd
 			window->DrawList->AddRectFilled(pos, pos + size, ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[(*state & 0b10) ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg]));
 
 			// fetch the buttons (so that we can throw some away if needed)
-			std::vector<std::string> btnList;
+			std::vector<std::pair<std::string, float>> btnList;
 			float totalWidth = 0.0f;
 			for (auto comp : path)
 			{
@@ -161,8 +161,9 @@ namespace ifd
 				if (section.size() == 1 && (section[0] == '\\' || section[0] == '/'))
 					continue;
 
-				totalWidth += ImGui::CalcTextSize(section.c_str()).x + style.FramePadding.x * 2.0f + GUI_ELEMENT_SIZE;
-				btnList.push_back(section);
+				float elSize = ImGui::CalcTextSize(section.c_str()).x + style.FramePadding.x * 2.0f + GUI_ELEMENT_SIZE;
+				totalWidth += elSize;
+				btnList.push_back({section, elSize});
 			}
 			totalWidth -= GUI_ELEMENT_SIZE;
 
@@ -174,8 +175,7 @@ namespace ifd
 			{
 				if (totalWidth > size.x - 30 && i != btnList.size() - 1)
 				{ // trim some buttons if there's not enough space
-					float elSize = ImGui::CalcTextSize(btnList[i].c_str()).x + style.FramePadding.x * 2.0f + GUI_ELEMENT_SIZE;
-					totalWidth -= elSize;
+					totalWidth -= btnList[i].second;
 					continue;
 				}
 
@@ -186,7 +186,7 @@ namespace ifd
 					anyOtherHC |= ImGui::IsItemHovered() | ImGui::IsItemClicked();
 					ImGui::SameLine();
 				}
-				if (ImGui::Button(btnList[i].c_str(), ImVec2(0, GUI_ELEMENT_SIZE)))
+				if (ImGui::Button(btnList[i].first.c_str(), ImVec2(0, GUI_ELEMENT_SIZE)))
 				{
 #ifdef _WIN32
 					std::string newPath = "";
@@ -195,7 +195,7 @@ namespace ifd
 #endif
 					for (size_t j = 0; j <= i; j++)
 					{
-						newPath += btnList[j];
+						newPath += btnList[j].first;
 #ifdef _WIN32
 						if (j != i)
 							newPath += "\\";
@@ -271,50 +271,34 @@ namespace ifd
 		bool hovered = ImGui::IsItemHovered();
 		bool active = ImGui::IsItemActive();
 
-		float size = ImGui::GetItemRectSize().x;
-
-		int numPoints = 5;
-		float innerRadius = size / 4;
-		float outerRadius = size / 2;
-		float angle = PI / numPoints;
-		ImVec2 center = ImVec2(pos.x + size / 2, pos.y + size / 2);
-
-		// fill
-		if (isFavorite || hovered || active)
+		ImU32 color;
+		if (isFavorite)
 		{
-			ImU32 fillColor = 0xff00ffff; // ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[ImGuiCol_Text]);
-			if (hovered || active)
-				fillColor = ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[active ? ImGuiCol_HeaderActive : ImGuiCol_HeaderHovered]);
-
-			// since there is no PathFillConcave, fill first the inner part, then the triangles
-			// inner
-			window->DrawList->PathClear();
-			for (int i = 1; i < numPoints * 2; i += 2)
-				window->DrawList->PathLineTo(ImVec2(center.x + innerRadius * sin(i * angle), center.y - innerRadius * cos(i * angle)));
-			window->DrawList->PathFillConvex(fillColor);
-
-			// triangles
-			for (int i = 0; i < numPoints; i++)
-			{
-				window->DrawList->PathClear();
-
-				int pIndex = i * 2;
-				window->DrawList->PathLineTo(ImVec2(center.x + outerRadius * sin(pIndex * angle), center.y - outerRadius * cos(pIndex * angle)));
-				window->DrawList->PathLineTo(ImVec2(center.x + innerRadius * sin((pIndex + 1) * angle), center.y - innerRadius * cos((pIndex + 1) * angle)));
-				window->DrawList->PathLineTo(ImVec2(center.x + innerRadius * sin((pIndex - 1) * angle), center.y - innerRadius * cos((pIndex - 1) * angle)));
-
-				window->DrawList->PathFillConvex(fillColor);
-			}
+			color = 0xEE0E89BB; // Yellowish
+		}
+		else if (hovered || active)
+		{
+			color = ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[active ? ImGuiCol_HeaderActive : ImGuiCol_HeaderHovered]);
+		}
+		else
+		{
+			color = ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[ImGuiCol_TextDisabled]);
 		}
 
-		// outline
-		window->DrawList->PathClear();
-		for (int i = 0; i < numPoints * 2; i++)
-		{
-			float radius = i & 1 ? innerRadius : outerRadius;
-			window->DrawList->PathLineTo(ImVec2(center.x + radius * sin(i * angle), center.y - radius * cos(i * angle)));
+		ImFont* font = ImGui::GetFont();
+		float fontSize = ImGui::GetFontSize();
+
+		static ImVec2 textSize = {0,0};
+		static ImFont* lastFont = nullptr;
+		static float lastFontSize = 0.0f;
+		if (lastFont != font || lastFontSize != fontSize) {
+			textSize = font->CalcTextSizeA(fontSize, FLT_MAX, 0.0f, ICON_FA_STAR);
+			lastFont = font;
+			lastFontSize = fontSize;
 		}
-		window->DrawList->PathStroke(ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[ImGuiCol_Text]), true, 2.0f);
+		ImVec2 textPos = ImVec2(pos.x + (GUI_ELEMENT_SIZE - textSize.x) / 2.0f, pos.y + (GUI_ELEMENT_SIZE - textSize.y) / 2.0f);
+		
+		window->DrawList->AddText(font, fontSize, textPos, color, ICON_FA_STAR);
 
 		return ret;
 	}
@@ -1202,6 +1186,9 @@ namespace ifd
 
 	void FileDialog::m_renderTree(FileTreeNode *node)
 	{
+		if (node == nullptr)
+			return;
+
 		// directory
 		std::error_code ec;
 		ImGui::PushID(node);

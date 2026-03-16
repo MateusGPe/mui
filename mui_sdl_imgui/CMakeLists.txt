@@ -42,7 +42,14 @@ set(WIDGET_SOURCES
 set(LAYOUT_SOURCES layouts/box.cpp layouts/grid.cpp layouts/group.cpp
                    layouts/tab.cpp layouts/treenode.cpp)
 
-set(DIALOG_SOURCES dialogs/ImFileDialog.cpp dialogs/dialogs.cpp)
+set(DIALOG_SOURCES
+    dialogs/ImFileDialog.cpp
+    dialogs/dialogs.cpp
+    dialogs/mui_breadcrumb_bar.cpp
+    dialogs/mui_file_dialog.cpp
+    dialogs/mui_file_dialog_layouts.cpp
+    dialogs/mui_icon_grid.cpp
+    dialogs/mui_tree_view.cpp)
 
 set(IMGUI_SOURCES
     ${imgui_SOURCE_DIR}/imgui.cpp
