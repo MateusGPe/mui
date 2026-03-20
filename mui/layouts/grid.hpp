@@ -1,5 +1,5 @@
 #pragma once
-#include "control.hpp"
+#include "../widgets/control.hpp"
 #include <map>
 #include <utility>
 
@@ -8,11 +8,11 @@ namespace mui
     class Grid;
     using GridPtr = std::shared_ptr<Grid>;
 
-    class Grid : public Control
+    class Grid : public Control<Grid>
     {
         struct Cell
         {
-            ControlPtr control;
+            IControlPtr control;
             int colSpan = 1;
         };
         std::map<std::pair<int, int>, Cell> m_cells;
@@ -23,10 +23,9 @@ namespace mui
     public:
         Grid();
         static GridPtr create() { return std::make_shared<Grid>(); }
-        GridPtr self() { return std::static_pointer_cast<Grid>(shared_from_this()); }
 
         GridPtr setColumnWeight(int col, float weight);
         void renderControl() override;
-        GridPtr append(ControlPtr child, int row, int col, int colSpan = 1);
+        GridPtr append(IControlPtr child, int row, int col, int colSpan = 1);
     };
 } // namespace mui

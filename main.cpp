@@ -20,14 +20,14 @@
 using namespace mui;
 
 // Forward declarations for UI creation functions
-ControlPtr createBasicsTab(const LabelPtr &statusLabel);
-ControlPtr createNumbersTab(const LabelPtr &statusLabel);
-ControlPtr createTextEntriesTab(const LabelPtr &statusLabel);
-ControlPtr createDialogsTab(const WindowPtr &parentWindow, const LabelPtr &statusLabel);
-ControlPtr createLayoutsTab(const LabelPtr &statusLabel);
-ControlPtr createMoreControlsTab(const LabelPtr &statusLabel);
-ControlPtr createAdvancedTab(const LabelPtr &statusLabel);
-ControlPtr createThemesTab();
+IControlPtr createBasicsTab(const LabelPtr &statusLabel);
+IControlPtr createNumbersTab(const LabelPtr &statusLabel);
+IControlPtr createTextEntriesTab(const LabelPtr &statusLabel);
+IControlPtr createDialogsTab(const WindowPtr &parentWindow, const LabelPtr &statusLabel);
+IControlPtr createLayoutsTab(const LabelPtr &statusLabel);
+IControlPtr createMoreControlsTab(const LabelPtr &statusLabel);
+IControlPtr createAdvancedTab(const LabelPtr &statusLabel);
+IControlPtr createThemesTab();
 WindowPtr createMainGalleryWindow();
 WindowPtr createInspectorWindow();
 
@@ -72,7 +72,7 @@ int main()
         {
             mui::Dialogs::processDialogs();
         });
-    Control::setGlobalShadowDefaults(false, {0.0f, 0.0f}, 4.0f, {0.12f, 0.53f, 0.90f, 0.08f}, 8.0f);
+    Control<Button>::setGlobalShadowDefaults(false, ImVec2(0.0f, 0.0f), 4.0f, ImVec4(0.12f, 0.53f, 0.90f, 0.08f), 8.0f);
 
     // Create and show the main window with the control gallery
     auto mainWin = createMainGalleryWindow();
@@ -177,7 +177,7 @@ WindowPtr createInspectorWindow()
 
 // --- TAB CREATION FUNCTIONS ---
 
-ControlPtr createBasicsTab(const LabelPtr &lblStatus)
+IControlPtr createBasicsTab(const LabelPtr &lblStatus)
 {
     auto vbox = VBox::create();
 
@@ -238,7 +238,7 @@ ControlPtr createBasicsTab(const LabelPtr &lblStatus)
     return vbox;
 }
 
-ControlPtr createNumbersTab(const LabelPtr &lblStatus)
+IControlPtr createNumbersTab(const LabelPtr &lblStatus)
 {
     auto vbox = VBox::create();
 
@@ -284,7 +284,7 @@ ControlPtr createNumbersTab(const LabelPtr &lblStatus)
     return vbox;
 }
 
-ControlPtr createTextEntriesTab(const LabelPtr &lblStatus)
+IControlPtr createTextEntriesTab(const LabelPtr &lblStatus)
 {
     auto vbox = VBox::create();
 
@@ -314,7 +314,7 @@ ControlPtr createTextEntriesTab(const LabelPtr &lblStatus)
     return vbox;
 }
 
-ControlPtr createDialogsTab(const WindowPtr &win, const LabelPtr &lblStatus)
+IControlPtr createDialogsTab(const WindowPtr &win, const LabelPtr &lblStatus)
 {
     auto vbox = VBox::create();
 
@@ -363,7 +363,7 @@ ControlPtr createDialogsTab(const WindowPtr &win, const LabelPtr &lblStatus)
     return vbox;
 }
 
-ControlPtr createLayoutsTab(const LabelPtr &lblStatus)
+IControlPtr createLayoutsTab(const LabelPtr &lblStatus)
 {
     auto vbox = VBox::create();
 
@@ -399,7 +399,7 @@ ControlPtr createLayoutsTab(const LabelPtr &lblStatus)
     return vbox;
 }
 
-ControlPtr createAdvancedTab(const LabelPtr &lblStatus)
+IControlPtr createAdvancedTab(const LabelPtr &lblStatus)
 {
     // This tab demonstrates a complex File Explorer UI built with the new widgets.
     auto vbox = VBox::create();
@@ -480,7 +480,7 @@ ControlPtr createAdvancedTab(const LabelPtr &lblStatus)
     return vbox;
 }
 
-ControlPtr createMoreControlsTab(const LabelPtr &lblStatus)
+IControlPtr createMoreControlsTab(const LabelPtr &lblStatus)
 {
     auto vbox = VBox::create();
 
@@ -567,7 +567,7 @@ ControlPtr createMoreControlsTab(const LabelPtr &lblStatus)
     return vbox;
 }
 
-ControlPtr createThemesTab()
+IControlPtr createThemesTab()
 {
     auto vbox = VBox::create();
 

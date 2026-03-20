@@ -39,7 +39,7 @@ namespace mui
         ImGui::PopID();
     }
 
-    TabPtr Tab::append(const std::string &name, ControlPtr child)
+    TabPtr Tab::append(const std::string &name, IControlPtr child)
     {
         pages.push_back({name, child, false});
         return self();

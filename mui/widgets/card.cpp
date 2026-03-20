@@ -54,7 +54,7 @@ namespace mui
         ImGui::PopID();
     }
 
-    CardPtr Card::setChild(ControlPtr c)
+    CardPtr Card::setChild(IControlPtr c)
     {
         verifyState();
         child = c;

@@ -19,7 +19,7 @@ namespace mui
         ArrowRight
     };
 
-    class Button : public Control
+    class Button : public Control<Button>
     {
     protected:
         std::string text;
@@ -34,8 +34,6 @@ namespace mui
         ImVec4 colorActive;
 
         std::function<void()> onClickCb;
-
-        ButtonPtr self() { return std::static_pointer_cast<Button>(shared_from_this()); }
 
     public:
         explicit Button(const std::string &text);

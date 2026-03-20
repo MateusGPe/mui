@@ -83,7 +83,7 @@ namespace mui
         }
     }
 
-    WindowPtr Window::setChild(ControlPtr c)
+    WindowPtr Window::setChild(IControlPtr c)
     {
         verifyState();
         child = c;

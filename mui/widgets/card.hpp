@@ -7,14 +7,12 @@ namespace mui
     class Card;
     using CardPtr = std::shared_ptr<Card>;
 
-    class Card : public Control
+    class Card : public Control<Card>
     {
     protected:
-        ControlPtr child;
+        IControlPtr child;
         float padding = 8.0f;
         bool fillHeight = false;
-
-        CardPtr self() { return std::static_pointer_cast<Card>(shared_from_this()); }
 
     public:
         Card();
@@ -22,7 +20,7 @@ namespace mui
 
         void renderControl() override;
 
-        CardPtr setChild(ControlPtr c);
+        CardPtr setChild(IControlPtr c);
         CardPtr setPadding(float p);
         CardPtr setFillHeight(bool fill);
     };

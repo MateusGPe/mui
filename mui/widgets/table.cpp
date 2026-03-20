@@ -54,9 +54,13 @@ namespace mui
                         std::string selId = "##row_sel_" + std::to_string(r);
                         
                         // FIX: Changed ImGuiSelectableFlags_AllowItemOverlap to ImGuiSelectableFlags_AllowOverlap
-                        if (ImGui::Selectable(selId.c_str(), selectedRow == (int)r, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap)) {
+                        if (ImGui::Selectable(selId.c_str(), selectedRow == (int)r, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap))
+                        {
                             selectedRow = (int)r;
                             if (onRowSelectedCb) onRowSelectedCb(selectedRow);
+                            if (ImGui::IsMouseDoubleClicked(0) && onRowDoubleClickedCb) {
+                                onRowDoubleClickedCb(selectedRow);
+                            }
                         }
                         ImGui::SameLine();
                     }
@@ -76,11 +80,12 @@ namespace mui
     }
 
     TablePtr Table::addColumn(const std::string &name, float weight, bool fixedWidth) { columns.push_back({name, weight, fixedWidth}); return self(); }
-    TablePtr Table::addRow(const std::vector<ControlPtr> &rowItems) { rows.push_back(rowItems); return self(); }
+    TablePtr Table::addRow(const std::vector<IControlPtr> &rowItems) { rows.push_back(rowItems); return self(); }
     TablePtr Table::clearRows() { rows.clear(); selectedRow = -1; return self(); }
     int Table::getSelectedRow() const { return selectedRow; }
     TablePtr Table::setSelectedRow(int index) { selectedRow = index; return self(); }
     TablePtr Table::setSortable(bool s) { sortable = s; return self(); }
     TablePtr Table::onRowSelected(std::function<void(int)> cb) { onRowSelectedCb = std::move(cb); return self(); }
+    TablePtr Table::onRowDoubleClicked(std::function<void(int)> cb) { onRowDoubleClickedCb = std::move(cb); return self(); }
     TablePtr Table::onSortRequested(std::function<void(int, bool)> cb) { onSortRequestedCb = std::move(cb); return self(); }
 } // namespace mui

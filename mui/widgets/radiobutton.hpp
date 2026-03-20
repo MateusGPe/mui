@@ -10,7 +10,7 @@ namespace mui
     class RadioButton;
     using RadioButtonPtr = std::shared_ptr<RadioButton>;
 
-    class RadioButton : public Control
+    class RadioButton : public Control<RadioButton>
     {
     protected:
         std::string text;
@@ -22,8 +22,6 @@ namespace mui
 
         // Standalone state
         bool m_checked = false;
-
-        RadioButtonPtr self() { return std::static_pointer_cast<RadioButton>(shared_from_this()); }
 
     public:
         explicit RadioButton(const std::string &text);

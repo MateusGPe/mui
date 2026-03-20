@@ -10,15 +10,13 @@ namespace mui
     class ToggleSwitch;
     using ToggleSwitchPtr = std::shared_ptr<ToggleSwitch>;
 
-    class ToggleSwitch : public Control
+    class ToggleSwitch : public Control<ToggleSwitch>
     {
     protected:
         std::string label;
         bool checked;
         float scale = 1.0f;
         std::function<void(bool)> onToggledCb;
-
-        ToggleSwitchPtr self() { return std::static_pointer_cast<ToggleSwitch>(shared_from_this()); }
 
     public:
         explicit ToggleSwitch(const std::string &label);

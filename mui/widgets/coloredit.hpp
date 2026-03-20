@@ -10,13 +10,11 @@ namespace mui
     class ColorEdit;
     using ColorEditPtr = std::shared_ptr<ColorEdit>;
 
-    class ColorEdit : public Control
+    class ColorEdit : public Control<ColorEdit>
     {
     protected:
         float color[4];
         std::function<void()> onChangedCb;
-
-        ColorEditPtr self() { return std::static_pointer_cast<ColorEdit>(shared_from_this()); }
 
     public:
         ColorEdit(float r = 1.0f, float g = 1.0f, float b = 1.0f, float a = 1.0f);

@@ -9,15 +9,13 @@ namespace mui
     class Checkbox;
     using CheckboxPtr = std::shared_ptr<Checkbox>;
 
-    class Checkbox : public Control
+    class Checkbox : public Control<Checkbox>
     {
     protected:
         std::string text;
         bool checked;
         float scale = 1.0f;
         std::function<void()> onToggledCb;
-
-        CheckboxPtr self() { return std::static_pointer_cast<Checkbox>(shared_from_this()); }
 
     public:
         explicit Checkbox(const std::string &text);

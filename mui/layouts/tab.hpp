@@ -10,20 +10,18 @@ namespace mui
     class Tab;
     using TabPtr = std::shared_ptr<Tab>;
 
-    class Tab : public Control
+    class Tab : public Control<Tab>
     {
     protected:
         struct TabPage
         {
             std::string name;
-            ControlPtr control;
+            IControlPtr control;
             bool margined = false;
         };
         std::vector<TabPage> pages;
         int selectedIndex = 0;
         std::function<void()> onSelectedCb;
-
-        TabPtr self() { return std::static_pointer_cast<Tab>(shared_from_this()); }
 
     public:
         Tab();
@@ -31,7 +29,7 @@ namespace mui
 
         void renderControl() override;
 
-        TabPtr append(const std::string &name, ControlPtr child);
+        TabPtr append(const std::string &name, IControlPtr child);
         TabPtr setMargined(int page, bool margined)
         {
             if (page >= 0 && page < pages.size())

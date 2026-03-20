@@ -1,59 +1,9 @@
 #include "box.hpp"
-#include "app.hpp"
 #include <imgui.h>
 #include <imgui_internal.h>
-#include <numeric>
 
 namespace mui
 {
-    Box::Box() { App::assertMainThread(); }
-
-    void Box::onHandleDestroyed()
-    {
-        Control::onHandleDestroyed();
-        for (auto &child : children)
-            child.control->onHandleDestroyed();
-    }
-
-    BoxPtr Box::append(ControlPtr child, bool stretchy)
-    {
-        verifyState();
-        children.push_back({child, stretchy});
-        return self();
-    }
-
-    BoxPtr Box::deleteChild(int index)
-    {
-        verifyState();
-        if (index >= 0 && index < (int)children.size())
-        {
-            children.erase(children.begin() + index);
-        }
-        return self();
-    }
-
-    BoxPtr Box::setPadded(bool p)
-    {
-        padded = p;
-        return self();
-    }
-
-    BoxPtr Box::setScrollable(bool s)
-    {
-        scrollable = s;
-        return self();
-    }
-    BoxPtr Box::setAutoScroll(bool a)
-    {
-        autoScroll = a;
-        return self();
-    }
-
-    int Box::getNumChildren() const { return children.size(); }
-    bool Box::getPadded() const { return padded; }
-    bool Box::getScrollable() const { return scrollable; }
-    bool Box::getAutoScroll() const { return autoScroll; }
-
     VBox::VBox() : Box() {}
     void VBox::renderControl()
     {

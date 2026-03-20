@@ -11,15 +11,13 @@ namespace mui
     class ComboBox;
     using ComboBoxPtr = std::shared_ptr<ComboBox>;
 
-    class ComboBox : public Control
+    class ComboBox : public Control<ComboBox>
     {
     protected:
         std::vector<std::string> items;
         int selectedIndex;
         bool useContainerWidth = false;
         std::function<void()> onChangedCb;
-
-        ComboBoxPtr self() { return std::static_pointer_cast<ComboBox>(shared_from_this()); }
 
     public:
         ComboBox();

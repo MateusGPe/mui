@@ -14,14 +14,14 @@ namespace mui
   using ImGuiWindowFlags = int;
 
   using Identifier = unsigned int;
-  class Window : public Control, public Chainable<Window>
+  class Window : public Control<Window>
   {
   private:
     std::string title;
     int width, height;
     bool isOpen = true;
     bool margined = true;
-    ControlPtr child;
+    IControlPtr child;
     std::function<bool()> onClosingCb;
     bool _needs_focus;
     Identifier dockId;
@@ -32,7 +32,7 @@ namespace mui
     ~Window();
 
     void renderControl() override;
-    WindowPtr setChild(ControlPtr child);
+    WindowPtr setChild(IControlPtr child);
     WindowPtr setMargined(bool margined);
     WindowPtr onClosing(std::function<bool()> cb);
     std::string getTitle() const;

@@ -18,7 +18,7 @@ namespace mui
         ImGui::PopID();
     }
 
-    GroupPtr Group::setChild(ControlPtr c) { child = c; return self(); }
+    GroupPtr Group::setChild(IControlPtr c) { child = c; return self(); }
     GroupPtr Group::setMargined(bool m) { margined = m; return self(); }
     std::string Group::getTitle() const { return title; }
     GroupPtr Group::setTitle(const std::string &t) { title = t; return self(); }

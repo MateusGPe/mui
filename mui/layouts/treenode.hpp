@@ -10,16 +10,14 @@ namespace mui
     class TreeNode;
     using TreeNodePtr = std::shared_ptr<TreeNode>;
 
-    class TreeNode : public Control
+    class TreeNode : public Control<TreeNode>
     {
     protected:
         std::string label;
-        std::vector<ControlPtr> children;
+        std::vector<IControlPtr> children;
         bool defaultOpen = false;
         bool framed = false;
         bool spanAvailWidth = false;
-
-        TreeNodePtr self() { return std::static_pointer_cast<TreeNode>(shared_from_this()); }
 
     public:
         explicit TreeNode(const std::string& label);
@@ -28,7 +26,7 @@ namespace mui
         void onHandleDestroyed() override;
         void renderControl() override;
 
-        TreeNodePtr append(ControlPtr child);
+        TreeNodePtr append(IControlPtr child);
         TreeNodePtr setDefaultOpen(bool open);
         TreeNodePtr setFramed(bool f);
         TreeNodePtr setSpanAvailWidth(bool span);

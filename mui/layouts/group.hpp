@@ -1,5 +1,5 @@
 #pragma once
-#include "control.hpp"
+#include "../widgets/control.hpp"
 #include <string>
 
 namespace mui
@@ -7,20 +7,18 @@ namespace mui
     class Group;
     using GroupPtr = std::shared_ptr<Group>;
 
-    class Group : public Control
+    class Group : public Control<Group>
     {
         std::string title;
-        ControlPtr child;
+        IControlPtr child;
         bool margined = false;
 
     public:
         Group(const std::string &title);
         static GroupPtr create(const std::string &title) { return std::make_shared<Group>(title); }
 
-        GroupPtr self() { return std::static_pointer_cast<Group>(shared_from_this()); }
-
         void renderControl() override;
-        GroupPtr setChild(ControlPtr c);
+        GroupPtr setChild(IControlPtr c);
         GroupPtr setMargined(bool margined);
         std::string getTitle() const;
         GroupPtr setTitle(const std::string &title);

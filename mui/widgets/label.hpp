@@ -17,7 +17,7 @@ namespace mui
         Disabled
     };
 
-    class Label : public Control
+    class Label : public Control<Label>
     {
     protected:
         std::string text;
@@ -25,8 +25,6 @@ namespace mui
 
         bool useCustomColor = false;
         ImVec4 color;
-
-        LabelPtr self() { return std::static_pointer_cast<Label>(shared_from_this()); }
 
     public:
         explicit Label(const std::string &text);

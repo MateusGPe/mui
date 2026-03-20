@@ -73,8 +73,8 @@ namespace mui
         ImGui::PopID();
     }
 
-    SplitterViewPtr SplitterView::setPanel1(ControlPtr c) { panel1 = c; return self(); }
-    SplitterViewPtr SplitterView::setPanel2(ControlPtr c) { panel2 = c; return self(); }
+    SplitterViewPtr SplitterView::setPanel1(IControlPtr c) { panel1 = c; return self(); }
+    SplitterViewPtr SplitterView::setPanel2(IControlPtr c) { panel2 = c; return self(); }
     SplitterViewPtr SplitterView::setSplitRatio(float ratio) { splitRatio = std::clamp(ratio, 0.05f, 0.95f); return self(); }
     SplitterViewPtr SplitterView::setThickness(float t) { thickness = t; return self(); }
 } // namespace mui

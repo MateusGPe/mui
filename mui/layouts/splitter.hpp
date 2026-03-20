@@ -14,16 +14,14 @@ namespace mui
         Vertical
     };
 
-    class SplitterView : public Control
+    class SplitterView : public Control<SplitterView>
     {
     protected:
-        ControlPtr panel1;
-        ControlPtr panel2;
+        IControlPtr panel1;
+        IControlPtr panel2;
         SplitterOrientation orientation;
         float splitRatio = 0.25f; // Default 25% / 75%
         float thickness = 4.0f;
-
-        SplitterViewPtr self() { return std::static_pointer_cast<SplitterView>(shared_from_this()); }
 
     public:
         SplitterView(SplitterOrientation o = SplitterOrientation::Horizontal);
@@ -31,8 +29,8 @@ namespace mui
 
         void renderControl() override;
 
-        SplitterViewPtr setPanel1(ControlPtr c);
-        SplitterViewPtr setPanel2(ControlPtr c);
+        SplitterViewPtr setPanel1(IControlPtr c);
+        SplitterViewPtr setPanel2(IControlPtr c);
         SplitterViewPtr setSplitRatio(float ratio);
         SplitterViewPtr setThickness(float t);
     };

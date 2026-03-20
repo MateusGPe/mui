@@ -10,14 +10,12 @@ namespace mui
     class RangeSlider;
     using RangeSliderPtr = std::shared_ptr<RangeSlider>;
 
-    class RangeSlider : public Control
+    class RangeSlider : public Control<RangeSlider>
     {
     protected:
         float minBound, maxBound;
         float currentMin, currentMax;
         std::function<void(float, float)> onChangedCb;
-
-        RangeSliderPtr self() { return std::static_pointer_cast<RangeSlider>(shared_from_this()); }
 
     public:
         RangeSlider(float min, float max);

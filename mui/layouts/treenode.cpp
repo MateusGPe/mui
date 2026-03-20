@@ -41,7 +41,7 @@ namespace mui
         ImGui::PopID();
     }
 
-    TreeNodePtr TreeNode::append(ControlPtr child) {
+    TreeNodePtr TreeNode::append(IControlPtr child) {
         verifyState();
         children.push_back(child);
         return self();

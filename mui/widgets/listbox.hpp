@@ -11,7 +11,7 @@ namespace mui
     class ListBox;
     using ListBoxPtr = std::shared_ptr<ListBox>;
 
-    class ListBox : public Control
+    class ListBox : public Control<ListBox>
     {
     protected:
         std::vector<std::string> items;
@@ -19,8 +19,6 @@ namespace mui
         int visibleItemsCount;
         std::function<void()> onSelectedCb;
         std::function<void()> onDoubleClickCb;
-
-        ListBoxPtr self() { return std::static_pointer_cast<ListBox>(shared_from_this()); }
 
     public:
         ListBox();

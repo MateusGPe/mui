@@ -8,7 +8,7 @@ namespace mui
 {
     Grid::Grid() { App::assertMainThread(); }
 
-    GridPtr Grid::append(ControlPtr child, int row, int col, int colSpan)
+    GridPtr Grid::append(IControlPtr child, int row, int col, int colSpan)
     {
         verifyState();
         m_cells[{row, col}] = {child, colSpan};

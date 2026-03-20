@@ -9,7 +9,7 @@ namespace mui
     class Image;
     using ImagePtr = std::shared_ptr<Image>;
 
-    class Image : public Control
+    class Image : public Control<Image>
     {
     protected:
         ImTextureID textureId;
@@ -19,8 +19,6 @@ namespace mui
         ImVec2 uv1 = ImVec2(1, 1);
         ImVec4 tintColor = ImVec4(1, 1, 1, 1);
         ImVec4 borderColor = ImVec4(0, 0, 0, 0);
-
-        ImagePtr self() { return std::static_pointer_cast<Image>(shared_from_this()); }
 
     public:
         Image(ImTextureID tex, float w, float h);

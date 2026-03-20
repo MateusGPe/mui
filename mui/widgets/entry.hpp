@@ -9,7 +9,7 @@ namespace mui
     class Entry;
     using EntryPtr = std::shared_ptr<Entry>;
 
-    class Entry : public Control
+    class Entry : public Control<Entry>
     {
     protected:
         std::string text;
@@ -22,8 +22,6 @@ namespace mui
         float height;
 
         std::function<void()> onChangedCb;
-
-        EntryPtr self() { return std::static_pointer_cast<Entry>(shared_from_this()); }
 
     public:
         Entry(const std::string &initialText = "", bool password = false, bool multiline = false, float h = 0.0f);

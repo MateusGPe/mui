@@ -11,7 +11,7 @@ namespace mui
     class BreadcrumbBar;
     using BreadcrumbBarPtr = std::shared_ptr<BreadcrumbBar>;
 
-    class BreadcrumbBar : public Control
+    class BreadcrumbBar : public Control<BreadcrumbBar>
     {
     protected:
         std::string currentPath;
@@ -22,7 +22,6 @@ namespace mui
         std::function<void(const std::string&)> onPathNavigatedCb;
 
         void parsePath();
-        BreadcrumbBarPtr self() { return std::static_pointer_cast<BreadcrumbBar>(shared_from_this()); }
 
     public:
         BreadcrumbBar(const std::string& path = "");

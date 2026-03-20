@@ -22,7 +22,7 @@ namespace mui
         Text    // Uses ImGui::SeparatorText
     };
 
-    class Separator : public Control
+    class Separator : public Control<Separator>
     {
     protected:
         void renderCustomSeparator();
@@ -33,8 +33,6 @@ namespace mui
         bool isRect = false;
         bool useCustomColor = false;
         ImVec4 color;
-
-        SeparatorPtr self() { return std::static_pointer_cast<Separator>(shared_from_this()); }
 
     public:
         static SeparatorPtr create() { return std::make_shared<Separator>(); }

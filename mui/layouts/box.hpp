@@ -5,15 +5,13 @@
 
 namespace mui
 {
-    class Box;
-    using BoxPtr = std::shared_ptr<Box>;
-
-    class Box : public Control
+    template <class Derived>
+    class Box : public Control<Derived>
     {
     protected:
         struct BoxChild
         {
-            ControlPtr control;
+            IControlPtr control;
             bool stretchy;
         };
         std::vector<BoxChild> children;
@@ -21,34 +19,62 @@ namespace mui
         bool scrollable = false;
         bool autoScroll = false;
 
-        BoxPtr self() { return std::static_pointer_cast<Box>(shared_from_this()); }
-
     public:
-        Box();
+        Box() { this->verifyState(); }
 
-        void onHandleDestroyed() override;
+        void onHandleDestroyed() override
+        {
+            Control<Derived>::onHandleDestroyed();
+            for (auto &child : children)
+                child.control->onHandleDestroyed();
+        }
 
-        BoxPtr append(ControlPtr child, bool stretchy = false);
-        BoxPtr deleteChild(int index);
+        std::shared_ptr<Derived> append(IControlPtr child, bool stretchy = false)
+        {
+            this->verifyState();
+            children.push_back({child, stretchy});
+            return this->self();
+        }
 
-        BoxPtr setPadded(bool p);
-        BoxPtr setScrollable(bool s);
-        BoxPtr setAutoScroll(bool a);
+        std::shared_ptr<Derived> deleteChild(int index)
+        {
+            this->verifyState();
+            if (index >= 0 && index < (int)children.size())
+            {
+                children.erase(this->children.begin() + index);
+            }
+            return this->self();
+        }
 
-        int getNumChildren() const;
-        bool getPadded() const;
-        bool getScrollable() const;
-        bool getAutoScroll() const;
+        std::shared_ptr<Derived> setPadded(bool p)
+        {
+            padded = p;
+            return this->self();
+        }
+
+        std::shared_ptr<Derived> setScrollable(bool s)
+        {
+            scrollable = s;
+            return this->self();
+        }
+
+        std::shared_ptr<Derived> setAutoScroll(bool a)
+        {
+            autoScroll = a;
+            return this->self();
+        }
+
+        int getNumChildren() const { return this->children.size(); }
+        bool getPadded() const { return padded; }
+        bool getScrollable() const { return scrollable; }
+        bool getAutoScroll() const { return autoScroll; }
     };
 
     class VBox;
     using VBoxPtr = std::shared_ptr<VBox>;
 
-    class VBox : public Box
+    class VBox : public Box<VBox>
     {
-    protected:
-        VBoxPtr self() { return std::static_pointer_cast<VBox>(shared_from_this()); }
-
     public:
         VBox();
         static VBoxPtr create() { return std::make_shared<VBox>(); }
@@ -58,14 +84,12 @@ namespace mui
     class HBox;
     using HBoxPtr = std::shared_ptr<HBox>;
 
-    class HBox : public Box
+    class HBox : public Box<HBox>
     {
-    protected:
-        HBoxPtr self() { return std::static_pointer_cast<HBox>(shared_from_this()); }
-
     public:
         HBox();
         static HBoxPtr create() { return std::make_shared<HBox>(); }
         void renderControl() override;
     };
 } // namespace mui
+

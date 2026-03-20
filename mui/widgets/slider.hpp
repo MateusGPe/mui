@@ -9,7 +9,7 @@ namespace mui
     class SliderInt;
     using SliderIntPtr = std::shared_ptr<SliderInt>;
 
-    class SliderInt : public Control
+    class SliderInt : public Control<SliderInt>
     {
     protected:
         int minVal;
@@ -18,8 +18,6 @@ namespace mui
         std::string format;
         bool logarithmic = false;
         std::function<void()> onChangedCb;
-
-        SliderIntPtr self() { return std::static_pointer_cast<SliderInt>(shared_from_this()); }
 
     public:
         SliderInt(int min, int max);
@@ -37,7 +35,7 @@ namespace mui
     class SliderFloat;
     using SliderFloatPtr = std::shared_ptr<SliderFloat>;
 
-    class SliderFloat : public Control
+    class SliderFloat : public Control<SliderFloat>
     {
     protected:
         float minVal;
@@ -46,8 +44,6 @@ namespace mui
         std::string format;
         bool logarithmic = false;
         std::function<void()> onChangedCb;
-
-        SliderFloatPtr self() { return std::static_pointer_cast<SliderFloat>(shared_from_this()); }
 
     public:
         SliderFloat(float min, float max);

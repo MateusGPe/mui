@@ -10,7 +10,7 @@ namespace mui
     class IconStack;
     using IconStackPtr = std::shared_ptr<IconStack>;
 
-    class IconStack : public Control
+    class IconStack : public Control<IconStack>
     {
     protected:
         struct IconBtn {
@@ -19,8 +19,6 @@ namespace mui
             std::function<void()> cb;
         };
         std::vector<IconBtn> icons;
-
-        IconStackPtr self() { return std::static_pointer_cast<IconStack>(shared_from_this()); }
 
     public:
         IconStack();

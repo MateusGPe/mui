@@ -6,6 +6,7 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "UIControls.h"
 #include "IconsFontAwesome6.h"
+#include "../../widgets/button.hpp" // Integrated mui::Button
 #include <imgui_internal.h>
 #include <algorithm>
 #include <vector>
@@ -26,7 +27,8 @@
 #define ICON_FA_ANGLE_RIGHT "\xef\x84\x85"
 #endif
 
-namespace {
+namespace
+{
 	inline float GetIconSize() { return ImGui::GetFontSize() + 3.0f; }
 	inline float GetGuiElementSize() { return ImGui::GetFrameHeight(); }
 	constexpr int DEFAULT_ICON_SIZE = 32;
@@ -35,12 +37,14 @@ namespace {
 
 namespace ifd
 {
-	enum PathBoxStateFlags_ {
+	enum PathBoxStateFlags_
+	{
 		PathBoxStateFlags_Inactive = 0,
 		PathBoxStateFlags_Editing = 1 << 0,
 		PathBoxStateFlags_Hovered = 1 << 1,
 		PathBoxStateFlags_Focus = 1 << 2,
 	};
+
 	bool FolderNode(const char *label, ImTextureID icon, bool &clicked)
 	{
 		ImGuiContext &g = *GImGui;
@@ -52,7 +56,17 @@ namespace ifd
 		int opened = window->StateStorage.GetInt(id, 0);
 		ImVec2 pos = ImGui::GetCursorScreenPos();
 		const bool is_mouse_x_over_arrow = (ImGui::GetIO().MousePos.x >= pos.x && ImGui::GetIO().MousePos.x < pos.x + ImGui::GetFontSize());
-		if (ImGui::InvisibleButton(label, ImVec2(-FLT_MIN, ImGui::GetFontSize() + ImGui::GetStyle().FramePadding.y * 2)))
+
+		bool btnClicked = false;
+		auto invBtn = mui::Button::create(label)
+						  ->setType(mui::ButtonType::Invisible)
+						  ->setSize(0, ImGui::GetFontSize() + ImGui::GetStyle().FramePadding.y * 2)
+						  ->onClick([&]()
+									{ btnClicked = true; });
+		invBtn->setSpanAvailWidth(true);
+		invBtn->render();
+
+		if (btnClicked)
 		{
 			if (is_mouse_x_over_arrow)
 			{
@@ -64,6 +78,7 @@ namespace ifd
 				clicked = true;
 			}
 		}
+
 		bool hovered = ImGui::IsItemHovered();
 		bool active = ImGui::IsItemActive();
 		bool doubleClick = ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
@@ -102,13 +117,20 @@ namespace ifd
 			ImGui::TreePush(label);
 		return opened != 0;
 	}
+
 	bool FileNode(const char *label, ImTextureID icon)
 	{
 		ImGuiWindow *window = ImGui::GetCurrentWindow();
-
-		// ImU32 id = window->GetID(label);
 		ImVec2 pos = ImGui::GetCursorScreenPos();
-		bool ret = ImGui::InvisibleButton(label, ImVec2(-FLT_MIN, ImGui::GetFontSize() + ImGui::GetStyle().FramePadding.y * 2));
+
+		bool ret = false;
+		auto invBtn = mui::Button::create(label)
+						  ->setType(mui::ButtonType::Invisible)
+						  ->setSize(0, ImGui::GetFontSize() + ImGui::GetStyle().FramePadding.y * 2)
+						  ->onClick([&]()
+									{ ret = true; });
+		invBtn->setSpanAvailWidth(true);
+		invBtn->render();
 
 		bool hovered = ImGui::IsItemHovered();
 		bool active = ImGui::IsItemActive();
@@ -131,6 +153,7 @@ namespace ifd
 
 		return ret;
 	}
+
 	bool PathBox(const char *label, std::filesystem::path &path, char *pathBuffer, ImVec2 size_arg)
 	{
 		ImGuiWindow *window = ImGui::GetCurrentWindow();
@@ -141,7 +164,7 @@ namespace ifd
 		const ImGuiID id = window->GetID(label);
 		int *state = window->StateStorage.GetIntRef(id, 0);
 
- 		ImGui::SameLine();
+		ImGui::SameLine();
 
 		const ImGuiStyle &style = ImGui::GetStyle();
 		ImVec2 pos = ImGui::GetCursorScreenPos();
@@ -190,39 +213,45 @@ namespace ifd
 				ImGui::PushID(static_cast<int>(i));
 				if (!isFirstElement)
 				{
-					ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-					ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
-					ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
-					ImGui::Button(ICON_FA_ANGLE_RIGHT, ImVec2(GetGuiElementSize(), size.y)); // Keep size.y here
-					ImGui::PopStyleColor(3);
+					auto arrowBtn = mui::Button::create(ICON_FA_ANGLE_RIGHT)
+										->setSize(GetGuiElementSize(), size.y)
+										->setColor(ImVec4(0, 0, 0, 0), ImVec4(0, 0, 0, 0), ImVec4(0, 0, 0, 0));
+					arrowBtn->render();
+
 					anyOtherHC |= ImGui::IsItemHovered() | ImGui::IsItemClicked();
 					ImGui::SameLine();
 				}
-				
-				// FIX: Replace ImGui::Button with InvisibleButton to take perfect control of text positioning
+
 				ImVec2 textSize = ImGui::CalcTextSize(btnList[i].first.c_str());
 				ImVec2 btnSize(textSize.x + style.FramePadding.x * 2.0f, size.y);
 				ImVec2 currentPos = ImGui::GetCursorScreenPos();
-				
-				bool clicked = ImGui::InvisibleButton(btnList[i].first.c_str(), btnSize);
+
+				bool btnClicked = false;
+				auto textBtn = mui::Button::create(btnList[i].first)
+								   ->setType(mui::ButtonType::Invisible)
+								   ->setSize(btnSize.x, btnSize.y)
+								   ->onClick([&]()
+											 { btnClicked = true; });
+				textBtn->render();
+
 				bool btnHovered = ImGui::IsItemHovered();
 				bool btnActive = ImGui::IsItemActive();
-				
+
 				// Draw hover/active background if needed
-				if (btnHovered || btnActive) 
+				if (btnHovered || btnActive)
 				{
 					window->DrawList->AddRectFilled(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(),
-						ImGui::ColorConvertFloat4ToU32(style.Colors[btnActive ? ImGuiCol_ButtonActive : ImGuiCol_ButtonHovered]));
+													ImGui::ColorConvertFloat4ToU32(style.Colors[btnActive ? ImGuiCol_ButtonActive : ImGuiCol_ButtonHovered]));
 				}
-				
+
 				// Mathematically force the pure text to be perfectly centered vertically
 				float text_y = currentPos.y + (size.y - textSize.y) / 2.0f;
-				window->DrawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), 
-					ImVec2(currentPos.x + style.FramePadding.x, text_y), 
-					ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]), 
-					btnList[i].first.c_str());
+				window->DrawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(),
+										  ImVec2(currentPos.x + style.FramePadding.x, text_y),
+										  ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]),
+										  btnList[i].first.c_str());
 
-				if (clicked)
+				if (btnClicked)
 				{
 #ifdef _WIN32
 					std::string newPath = "";
@@ -243,7 +272,7 @@ namespace ifd
 					path = std::filesystem::u8path(newPath);
 					ret = true;
 				}
-				anyOtherHC |= btnHovered | clicked;
+				anyOtherHC |= btnHovered | btnClicked;
 				ImGui::SameLine();
 				ImGui::PopID();
 
@@ -285,17 +314,18 @@ namespace ifd
 					*state |= PathBoxStateFlags_Focus;
 			}
 
-			// FIX: Dynamically calculate padding to force InputText to center the text vertically
+			// Dynamically calculate padding to force InputText to center the text vertically
 			float expectedPaddingY = (size_arg.y - ImGui::GetFontSize()) / 2.0f;
 			float currentPaddingY = ImGui::GetStyle().FramePadding.y;
 			bool pushedPadding = false;
-			
+
 			if (expectedPaddingY > currentPaddingY)
 			{
 				ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(ImGui::GetStyle().FramePadding.x, expectedPaddingY));
 				pushedPadding = true;
 			}
 
+			// Left raw ImGui here as requested - mui::Entry does not natively support return-on-enter procedurally
 			if (ImGui::InputTextEx("##pathbox_input", "", pathBuffer, 1024, size_arg, ImGuiInputTextFlags_EnterReturnsTrue))
 			{
 				std::string tempStr(pathBuffer);
@@ -314,12 +344,19 @@ namespace ifd
 
 		return ret;
 	}
+
 	bool FavoriteButton(const char *label, bool isFavorite)
 	{
 		ImGuiWindow *window = ImGui::GetCurrentWindow();
-
 		ImVec2 pos = ImGui::GetCursorScreenPos();
-		bool ret = ImGui::InvisibleButton(label, ImVec2(GetGuiElementSize(), GetGuiElementSize()));
+
+		bool ret = false;
+		auto favBtn = mui::Button::create(label)
+						  ->setType(mui::ButtonType::Invisible)
+						  ->setSize(GetGuiElementSize(), GetGuiElementSize())
+						  ->onClick([&]()
+									{ ret = true; });
+		favBtn->render();
 
 		bool hovered = ImGui::IsItemHovered();
 		bool active = ImGui::IsItemActive();
@@ -338,23 +375,25 @@ namespace ifd
 			color = ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[ImGuiCol_TextDisabled]);
 		}
 
-		ImFont* font = ImGui::GetFont();
+		ImFont *font = ImGui::GetFont();
 		float fontSize = ImGui::GetFontSize();
 
-		static ImVec2 textSize = {0,0};
-		static ImFont* lastFont = nullptr;
+		static ImVec2 textSize = {0, 0};
+		static ImFont *lastFont = nullptr;
 		static float lastFontSize = 0.0f;
-		if (lastFont != font || lastFontSize != fontSize) {
+		if (lastFont != font || lastFontSize != fontSize)
+		{
 			textSize = font->CalcTextSizeA(fontSize, FLT_MAX, 0.0f, ICON_FA_STAR);
 			lastFont = font;
 			lastFontSize = fontSize;
 		}
 		ImVec2 textPos = ImVec2(pos.x + (GetGuiElementSize() - textSize.x) / 2.0f, pos.y + (GetGuiElementSize() - textSize.y) / 2.0f);
-		
+
 		window->DrawList->AddText(font, fontSize, textPos, color, ICON_FA_STAR);
 
 		return ret;
 	}
+
 	bool FileIcon(const char *label, bool isSelected, ImTextureID icon, bool isDirectory, ImVec2 size, bool hasPreview, int previewWidth, int previewHeight)
 	{
 		ImGuiStyle &style = ImGui::GetStyle();
@@ -362,10 +401,14 @@ namespace ifd
 
 		float windowSpace = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
 		ImVec2 pos = ImGui::GetCursorScreenPos();
-		bool ret = false;
 
-		if (ImGui::InvisibleButton(label, size))
-			ret = true;
+		bool ret = false;
+		auto iconBtn = mui::Button::create(label)
+						   ->setType(mui::ButtonType::Invisible)
+						   ->setSize(size.x, size.y)
+						   ->onClick([&]()
+									 { ret = true; });
+		iconBtn->render();
 
 		bool hovered = ImGui::IsItemHovered();
 		bool active = ImGui::IsItemActive();
@@ -401,30 +444,34 @@ namespace ifd
 		else
 		{
 			// Fallback to font awesome
-			static struct {
+			static struct
+			{
 				float lastIconSize = -1.0f;
 				float lastSizeX = -1.0f;
-				ImFont* lastFont = nullptr;
+				ImFont *lastFont = nullptr;
 				float finalIconSize = 0.0f;
 				ImVec2 textSize = ImVec2(0, 0);
 			} iconCache[2];
 
 			int cacheIdx = isDirectory ? 1 : 0;
-			const char* icon_text = isDirectory ? ICON_FA_FOLDER : ICON_FA_FILE;
-			ImFont* currentFont = ImGui::GetFont();
+			const char *icon_text = isDirectory ? ICON_FA_FOLDER : ICON_FA_FILE;
+			ImFont *currentFont = ImGui::GetFont();
 
-			if (iconCache[cacheIdx].lastIconSize != iconSize || iconCache[cacheIdx].lastSizeX != size.x || iconCache[cacheIdx].lastFont != currentFont) {
+			if (iconCache[cacheIdx].lastIconSize != iconSize || iconCache[cacheIdx].lastSizeX != size.x || iconCache[cacheIdx].lastFont != currentFont)
+			{
 				ImVec2 text_size = currentFont->CalcTextSizeA(iconSize, FLT_MAX, 0.0f, icon_text);
 				float scale = 1.0f;
-				if (text_size.x > 0.0f) scale = std::min<float>(scale, size.x / text_size.x);
-				if (text_size.y > 0.0f) scale = std::min<float>(scale, iconSize / text_size.y);
+				if (text_size.x > 0.0f)
+					scale = std::min<float>(scale, size.x / text_size.x);
+				if (text_size.y > 0.0f)
+					scale = std::min<float>(scale, iconSize / text_size.y);
 				iconCache[cacheIdx].finalIconSize = iconSize * scale * 0.8f;
 				iconCache[cacheIdx].textSize = currentFont->CalcTextSizeA(iconCache[cacheIdx].finalIconSize, FLT_MAX, 0.0f, icon_text);
 				iconCache[cacheIdx].lastIconSize = iconSize;
 				iconCache[cacheIdx].lastSizeX = size.x;
 				iconCache[cacheIdx].lastFont = currentFont;
 			}
-			
+
 			float textPosX = pos.x + (size.x - iconCache[cacheIdx].textSize.x) / 2.0f;
 			float textPosY = pos.y + (iconSize - iconCache[cacheIdx].textSize.y) / 2.0f;
 			window->DrawList->AddText(currentFont, iconCache[cacheIdx].finalIconSize, ImVec2(textPosX, textPosY), ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[ImGuiCol_Text]), icon_text);
