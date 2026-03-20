@@ -2,6 +2,7 @@
 #include "window.hpp"
 #include "theme.hpp"
 #include <SDL3/SDL.h>
+#include "docking.hpp"
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <backends/imgui_impl_sdl3.h>
@@ -9,7 +10,7 @@
 #include <backends/imgui_impl_opengl3.h>
 #include <stdexcept>
 #include <algorithm>
-#include "../dialogs/ImFileDialog.h"
+#include "ifd/ImFileDialog.h"
 
 #if defined(IMGUI_IMPL_OPENGL_LOADER_GLAD)
 #include <glad/glad.h>
@@ -27,10 +28,9 @@ namespace mui
     bool g_use_opengl = false;
     static bool g_running = false;
     std::vector<Window *> App::activeWindows;
-    std::vector<ActiveDialog> App::activeDialogs;
     std::vector<ActiveMessageBox> App::activeMessageBoxes;
 
-    std::function<void(ImGuiID)> App::layoutBuilderCb = nullptr;
+    std::function<void(DockBuilder &)> App::layoutBuilderCb = nullptr;
     bool App::layoutNeedsInit = true;
 
     // Initialize DPI variables
@@ -38,7 +38,7 @@ namespace mui
     bool App::dpiNeedsUpdate = false;
     ThemeType App::currentTheme = ThemeType::Light;
 
-    void App::setLayoutBuilder(std::function<void(Identifier)> cb)
+    void App::setLayoutBuilder(std::function<void(DockBuilder &)> cb)
     {
         layoutBuilderCb = std::move(cb);
     }
@@ -126,9 +126,9 @@ namespace mui
         }
 
         // Initialize ImFileDialog
-        if (g_use_opengl)
+        ifd::FileDialog::Instance().CreateTexture = [=](uint8_t *data, int w, int h, char fmt) -> void *
         {
-            ifd::FileDialog::Instance().CreateTexture = [](uint8_t *data, int w, int h, char fmt) -> void *
+            if (g_use_opengl)
             {
                 GLuint texture;
                 glGenTextures(1, &texture);
@@ -137,35 +137,33 @@ namespace mui
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, fmt == 0 ? GL_BGRA : GL_RGBA, GL_UNSIGNED_BYTE, data);
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, (fmt == 0) ? GL_BGRA : GL_RGBA, GL_UNSIGNED_BYTE, data);
                 glBindTexture(GL_TEXTURE_2D, 0);
-                return (void *)(intptr_t)texture;
-            };
-            ifd::FileDialog::Instance().DeleteTexture = [](void *texture)
+                return (void *)(uintptr_t)texture;
+            }
+            else
             {
-                GLuint texID = (GLuint)(intptr_t)texture;
-                glDeleteTextures(1, &texID);
-            };
-        }
-        else
-        {
-            ifd::FileDialog::Instance().CreateTexture = [](uint8_t *data, int w, int h, char fmt) -> void *
-            {
-                if (!g_renderer)
-                    return nullptr;
-                SDL_Texture *texture = SDL_CreateTexture(g_renderer, fmt == 0 ? SDL_PIXELFORMAT_BGRA32 : SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, w, h);
-                if (!texture)
-                    return nullptr;
-                SDL_UpdateTexture(texture, nullptr, data, w * 4);
-                SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
-                return (void *)texture;
-            };
-            ifd::FileDialog::Instance().DeleteTexture = [](void *texture)
-            {
+                SDL_Texture *texture = SDL_CreateTexture(g_renderer, (fmt == 0) ? SDL_PIXELFORMAT_BGRA32 : SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, w, h);
                 if (texture)
-                    SDL_DestroyTexture(static_cast<SDL_Texture *>(texture));
-            };
-        }
+                {
+                    SDL_UpdateTexture(texture, nullptr, data, w * 4);
+                }
+                return texture;
+            }
+        };
+
+        ifd::FileDialog::Instance().DeleteTexture = [=](void *texture)
+        {
+            if (g_use_opengl)
+            {
+                GLuint texID = (GLuint)(uintptr_t)texture;
+                glDeleteTextures(1, &texID);
+            }
+            else
+            {
+                SDL_DestroyTexture((SDL_Texture *)texture);
+            }
+        };
     }
 
     std::function<void()> App::mainLoopCallback = nullptr;
@@ -264,7 +262,8 @@ namespace mui
                 ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace);
                 ImGui::DockBuilderSetNodeSize(dockspace_id, viewport->Size);
 
-                layoutBuilderCb(dockspace_id);
+                DockBuilder builder(dockspace_id);
+                layoutBuilderCb(builder);
 
                 ImGui::DockBuilderFinish(dockspace_id);
                 layoutNeedsInit = false;
@@ -272,7 +271,6 @@ namespace mui
 
             ImGui::DockSpaceOverViewport(dockspace_id, viewport, ImGuiDockNodeFlags_PassthruCentralNode);
 
-            processDialogs();
             processMessageBoxes();
 
             for (auto *win : activeWindows)
@@ -341,78 +339,60 @@ namespace mui
         callback();
     }
 
-    void App::addDialog(ActiveDialog &&dialog)
-    {
-        activeDialogs.push_back(std::move(dialog));
-    }
-
     void App::addMessageBox(ActiveMessageBox &&mb)
     {
         activeMessageBoxes.push_back(std::move(mb));
     }
 
-    void App::processDialogs()
-    {
-
-        for (auto it = activeDialogs.begin(); it != activeDialogs.end();)
-        {
-            if (ifd::FileDialog::Instance().IsDone(it->key))
-            {
-                if (ifd::FileDialog::Instance().HasResult())
-                {
-                    if (it->on_ok)
-                    {
-                        it->on_ok(ifd::FileDialog::Instance().GetResults());
-                    }
-                }
-                else
-                {
-                    if (it->on_cancel)
-                    {
-                        it->on_cancel();
-                    }
-                }
-                ifd::FileDialog::Instance().Close();
-                it = activeDialogs.erase(it);
-            }
-            else
-            {
-                ++it;
-            }
-        }
-    }
-
     void App::processMessageBoxes()
     {
-        for (auto it = activeMessageBoxes.begin(); it != activeMessageBoxes.end();)
+        if (activeMessageBoxes.empty())
         {
-            std::string popup_id = it->title + "##msgbox";
-            if (it->open_popup)
-            {
-                ImGui::OpenPopup(popup_id.c_str());
-                it->open_popup = false;
-            }
+            return;
+        }
 
-            bool isOpen = true;
-            if (ImGui::BeginPopupModal(popup_id.c_str(), &isOpen))
-            {
-                ImGui::TextWrapped("%s", it->message.c_str());
-                if (ImGui::Button("OK", ImVec2(120, 0)))
-                {
-                    ImGui::CloseCurrentPopup();
-                    isOpen = false;
-                }
-                ImGui::EndPopup();
-            }
+        // Process only the first message box in the queue to show them sequentially.
+        auto &mb = activeMessageBoxes.front();
 
-            if (!isOpen)
+        // Make the ID unique in case multiple popups with the same title are queued.
+        std::string popup_id = mb.title + "##msgbox" + std::to_string(activeMessageBoxes.size());
+        if (mb.open_popup)
+        {
+            ImGui::OpenPopup(popup_id.c_str());
+            mb.open_popup = false;
+        }
+
+        // Center the popup on the screen when it first appears.
+        ImGuiViewport *viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(viewport->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+        // Set size constraints for the popup.
+        ImVec2 min_size = ImVec2(350, 0);
+        ImGui::SetNextWindowSizeConstraints(min_size, ImVec2(600, FLT_MAX));
+
+        bool isOpen = true;
+        if (ImGui::BeginPopupModal(popup_id.c_str(), &isOpen, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::TextWrapped("%s", mb.message.c_str());
+
+            ImGui::Spacing();
+            ImGui::Separator();
+            ImGui::Spacing();
+
+            const float button_width = 120.0f;
+            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - button_width);
+
+            if (ImGui::Button("OK", ImVec2(button_width, 0)))
             {
-                it = activeMessageBoxes.erase(it);
+                ImGui::CloseCurrentPopup();
+                isOpen = false;
             }
-            else
-            {
-                ++it;
-            }
+            ImGui::EndPopup();
+        }
+
+        if (!isOpen)
+        {
+            activeMessageBoxes.erase(activeMessageBoxes.begin());
         }
     }
 

@@ -12,15 +12,10 @@ struct SDL_Renderer;
 namespace mui
 {
     class Window;
+    class DockBuilder;
     using Identifier = ImGuiID;
     extern bool g_use_opengl;
     extern SDL_Renderer *g_renderer;
-    struct ActiveDialog
-    {
-        std::string key;
-        std::function<void(const std::vector<std::filesystem::path> &)> on_ok;
-        std::function<void()> on_cancel;
-    };
 
     struct ActiveMessageBox
     {
@@ -42,21 +37,19 @@ namespace mui
     private:
         static std::thread::id mainThreadId;
         static std::vector<Window *> activeWindows;
-        static std::vector<ActiveDialog> activeDialogs;
         static std::vector<ActiveMessageBox> activeMessageBoxes;
-        static std::function<void(ImGuiID)> layoutBuilderCb;
+        static std::function<void(DockBuilder &)> layoutBuilderCb;
         static bool layoutNeedsInit;
         static float currentDpiScale;
         static bool dpiNeedsUpdate;
         static ThemeType currentTheme;
-        static std::function<void()> mainLoopCallback;
-        static void processDialogs();
+        static std::function<void()> mainLoopCallback; 
         static void processMessageBoxes();
         static SDL_GLContext glContext;
 
     public:
         static void setMainLoopCallback(std::function<void()> cb);
-        static void setLayoutBuilder(std::function<void(Identifier)> cb);
+        static void setLayoutBuilder(std::function<void(DockBuilder &)> cb);
         static void init(bool useOpenGL = false);
         static void run();
         static void quit();
@@ -64,7 +57,6 @@ namespace mui
         static void queueMain(std::function<void()> callback);
         static void setTheme(ThemeType type);
         static ThemeType getTheme() { return currentTheme; }
-        static void addDialog(ActiveDialog &&dialog);
         static void addMessageBox(ActiveMessageBox &&mb);
         static SDL_GLContext getGLContext();
     };

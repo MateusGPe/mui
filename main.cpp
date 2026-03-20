@@ -4,7 +4,9 @@
 #include <string>
 #include <vector>
 #include <cstdio>
-#include "mui_sdl_imgui/dialogs/mui_file_dialog.hpp"
+#include <ctime>
+#include <imgui_internal.h>
+#include "mui/core/docking.hpp"
 using namespace mui;
 
 // Forward declarations for UI creation functions
@@ -24,10 +26,26 @@ int main()
     {
         App::init();
         App::setTheme(ThemeType::Light);
+
+        // Define a docking layout for our windows to arrange them on startup.
+        App::setLayoutBuilder([](mui::DockBuilder &builder) {
+            ImGuiID center = builder.getID();
+            ImGuiID right = builder.splitNode(center, mui::DockDirection::Right, 0.30f);
+
+            // To create a seamless look without the dockspace's own title bars,
+            // we can disable the tab bar on the generated dock nodes.
+            builder.getNode(center).setNoTabBar(true);
+            builder.getNode(right).setNoTabBar(true);
+
+            // Dock windows by their titles
+            builder.dockWindow("MUI Control Gallery", center);
+            builder.dockWindow("Inspector", right);
+        });
+
         App::setMainLoopCallback(
             []()
             {
-                FileDialog::Instance().render();
+                mui::Dialogs::processDialogs();
             });
         Control::setGlobalShadowDefaults(false, {0.0f, 0.0f}, 4.0f, {0.12f, 0.53f, 0.90f, 0.08f}, 8.0f);
 
@@ -58,7 +76,7 @@ int main()
 WindowPtr createMainGalleryWindow()
 {
     auto win = Window::create("MUI Control Gallery", 800, 600);
-    win->setMargined(false); // Use a VBox for root padding/margin
+    win->setMargined(true); // Let the window handle the main padding.
     win->onClosing([]()
                    {
         App::quit();
@@ -66,40 +84,26 @@ WindowPtr createMainGalleryWindow()
 
     // Root container for the window, allows for a status bar
     auto rootVBox = VBox::create();
+    rootVBox->setPadded(false); // Window margin is enough.
     win->setChild(rootVBox);
 
     // Tabs for the main content area
     auto tabs = Tab::create();
     rootVBox->append(tabs, true); // Stretchy, fills available space
 
-    // Status bar at the bottom
+    // Status bar at the bottom, with a separator for visual clarity.
     auto lblStatus = Label::create("Waiting for action...");
-    auto statusBar = HBox::create(); // Use HBox for padding
-    statusBar->setPadded(true);
-    statusBar->append(lblStatus);
-    rootVBox->append(statusBar, false); // Not stretchy
+    rootVBox->append(Separator::create()->setType(SeparatorType::Native), false);
+    rootVBox->append(lblStatus, false);
 
     // Now, create and add the content for each tab
     tabs->append("Basics", createBasicsTab(lblStatus));
-    tabs->setMargined(0, true);
-
     tabs->append("Numbers", createNumbersTab(lblStatus));
-    tabs->setMargined(1, true);
-
     tabs->append("Text", createTextEntriesTab(lblStatus));
-    tabs->setMargined(2, true);
-
     tabs->append("Dialogs", createDialogsTab(win, lblStatus));
-    tabs->setMargined(3, true);
-
     tabs->append("Layouts", createLayoutsTab(lblStatus));
-    tabs->setMargined(4, true);
-
     tabs->append("More", createMoreControlsTab(lblStatus));
-    tabs->setMargined(5, true);
-
     tabs->append("Themes", createThemesTab());
-    tabs->setMargined(6, true);
 
     return win;
 }
@@ -114,7 +118,7 @@ WindowPtr createInspectorWindow()
     win->setMargined(true);
 
     auto root = VBox::create();
-    root->setPadded(true);
+    root->setPadded(false); // Window margin is enough.
     win->setChild(root);
 
     // --- Card Example ---
@@ -156,26 +160,48 @@ WindowPtr createInspectorWindow()
 ControlPtr createBasicsTab(const LabelPtr &lblStatus)
 {
     auto vbox = VBox::create();
-    vbox->setPadded(true);
 
     auto btnClick = Button::create(ICON_FA_FLOPPY_DISK " Click Me");
     btnClick->onClick([lblStatus]()
-                      { lblStatus->setText("Button was clicked!"); })
+                      {
+                          auto currentTime = std::time(nullptr);
+                          char timeStr[100];
+                          std::strftime(timeStr, sizeof(timeStr), "%H:%M:%S", std::localtime(&currentTime));
+                          lblStatus->setText(std::string("Button clicked at ") + timeStr);
+                      })
         ->defaultShadow();
 
     auto chkToggle = Checkbox::create("Enable Feature X");
     chkToggle->onToggled([lblStatus, chkToggle]()
                          { lblStatus->setText(chkToggle->isChecked() ? "Feature X Enabled" : "Feature X Disabled"); });
 
+    auto btnFindNode = Button::create(ICON_FA_MAGNIFYING_GLASS " Find Inspector Dock Node");
+    btnFindNode->onClick([lblStatus]()
+                         {
+        const char* window_title = "Inspector";
+        // Use ImGui's internal API to find the window by its title.
+        ImGuiWindow* window = ImGui::FindWindowByName(window_title);
+
+        // If the window is found and it is docked, get its DockNode.
+        if (window && window->DockNode) {
+            ImGuiDockNode* node = window->DockNode;
+            char buffer[256];
+            snprintf(buffer, sizeof(buffer), "Inspector is in DockNode ID: 0x%08X. Tabs in this node: %d", node->ID, node->TabBar ? node->TabBar->Tabs.Size : 0);
+            lblStatus->setText(buffer);
+        } else {
+            lblStatus->setText("Could not find a docked 'Inspector' window.");
+        } });
+
     append_all(vbox, {{btnClick},
-                      {chkToggle}});
+                      {chkToggle},
+                      {Separator::create()->setType(SeparatorType::Native)},
+                      {btnFindNode}});
     return vbox;
 }
 
 ControlPtr createNumbersTab(const LabelPtr &lblStatus)
 {
     auto vbox = VBox::create();
-    vbox->setPadded(true);
 
     auto spinBox = Spinbox::create(0, 100);
     auto slider = SliderInt::create(0, 100);
@@ -209,7 +235,6 @@ ControlPtr createNumbersTab(const LabelPtr &lblStatus)
 ControlPtr createTextEntriesTab(const LabelPtr &lblStatus)
 {
     auto vbox = VBox::create();
-    vbox->setPadded(true);
 
     auto entryStandard = Entry::create();
     entryStandard->setHint("Type here...");
@@ -240,7 +265,6 @@ ControlPtr createTextEntriesTab(const LabelPtr &lblStatus)
 ControlPtr createDialogsTab(const WindowPtr &win, const LabelPtr &lblStatus)
 {
     auto vbox = VBox::create();
-    vbox->setPadded(true);
 
     auto group = Group::create("System Dialogs");
     group->setMargined(true);
@@ -256,6 +280,7 @@ ControlPtr createDialogsTab(const WindowPtr &win, const LabelPtr &lblStatus)
                [win, lblStatus]()
                {
                    Dialogs::msgBox("Information", "This is a standard message box.");
+                   Dialogs::msgBox("Information 2", "This is a standard message box.");
                    lblStatus->setText("Info dialog shown.");
                })
         ->defaultShadow();
@@ -289,33 +314,35 @@ ControlPtr createDialogsTab(const WindowPtr &win, const LabelPtr &lblStatus)
 ControlPtr createLayoutsTab(const LabelPtr &lblStatus)
 {
     auto vbox = VBox::create();
-    vbox->setPadded(true);
 
     auto gridGroup = Group::create("Grid Layout");
     gridGroup->setMargined(true);
-    vbox->append(gridGroup, true);
+    vbox->append(gridGroup, false); // Let the group have its natural height
 
     auto grid = Grid::create();
+    grid->setColumnWeight(0, 0.3f); // Label column
+    grid->setColumnWeight(1, 0.7f); // Entry column
     gridGroup->setChild(grid);
 
     grid->append(Label::create("First Name:"), 0, 0);
     auto firstNameEntry = Entry::create("John");
-    grid->append(firstNameEntry, 0, 1, 2);
+    grid->append(firstNameEntry, 0, 1);
 
     grid->append(Label::create("Last Name:"), 1, 0);
     auto lastNameEntry = Entry::create("Doe");
-    grid->append(lastNameEntry, 1, 2, 1);
+    grid->append(lastNameEntry, 1, 1);
 
     grid->append(Label::create("Address:"), 2, 0);
     auto addressEntry = Entry::create("123 Main St, Anytown");
-    grid->append(addressEntry, 2, 1, 2); // Span 2 columns
+    grid->append(addressEntry, 2, 1);
 
     auto submitButton = Button::create("Submit");
     submitButton->onClick([lblStatus, firstNameEntry, lastNameEntry, addressEntry]()
                           {
         std::string text = "Submitted: " + firstNameEntry->getText() + " " + lastNameEntry->getText() + " from " + addressEntry->getText();
         lblStatus->setText(text); });
-    grid->append(submitButton, 3, 2); // Align to the right
+    grid->append(Label::create(""), 3, 0); // Empty cell to push button to the right column
+    grid->append(submitButton, 3, 1);
 
     return vbox;
 }
@@ -323,7 +350,6 @@ ControlPtr createLayoutsTab(const LabelPtr &lblStatus)
 ControlPtr createMoreControlsTab(const LabelPtr &lblStatus)
 {
     auto vbox = VBox::create();
-    vbox->setPadded(true);
 
     // ComboBox
     vbox->append(Label::create("ComboBox:"), false);
@@ -411,7 +437,6 @@ ControlPtr createMoreControlsTab(const LabelPtr &lblStatus)
 ControlPtr createThemesTab()
 {
     auto vbox = VBox::create();
-    vbox->setPadded(true);
 
     vbox->append(Label::create("Switch application theme:"));
 

@@ -21,36 +21,12 @@ FetchContent_MakeAvailable(imgui)
 
 # --- Source Definitions ---
 
-set(CORE_SOURCES core/app.cpp core/window.cpp core/theme.cpp)
-
-set(WIDGET_SOURCES
-    widgets/button.cpp
-    widgets/card.cpp
-    widgets/checkbox.cpp
-    widgets/control.cpp
-    widgets/entry.cpp
-    widgets/label.cpp
-    widgets/progressbar.cpp
-    widgets/slider.cpp
-    widgets/spinbox.cpp
-    widgets/image.cpp
-    widgets/coloredit.cpp
-    widgets/combobox.cpp
-    widgets/separator.cpp
-    widgets/radiobutton.cpp)
-
-set(LAYOUT_SOURCES layouts/box.cpp layouts/grid.cpp layouts/group.cpp
-                   layouts/tab.cpp layouts/treenode.cpp)
-
-set(DIALOG_SOURCES
-    dialogs/ImFileDialog.cpp
-    dialogs/dialogs.cpp
-    dialogs/mui_breadcrumb_bar.cpp
-    dialogs/mui_file_dialog.cpp
-    dialogs/mui_file_dialog_layouts.cpp
-    dialogs/mui_icon_grid.cpp
-    dialogs/stb_image.cpp
-    dialogs/mui_tree_view.cpp)
+file(GLOB CORE_SOURCES CONFIGURE_DEPENDS "core/*.cpp")
+file(GLOB WIDGET_SOURCES CONFIGURE_DEPENDS "widgets/*.cpp")
+file(GLOB LAYOUT_SOURCES CONFIGURE_DEPENDS "layouts/*.cpp")
+# Using GLOB_RECURSE for dialogs to include sources in subdirectories.
+# CONFIGURE_DEPENDS ensures CMake re-runs if files are added or removed.
+file(GLOB_RECURSE DIALOG_SOURCES CONFIGURE_DEPENDS "dialogs/*.cpp")
 
 set(IMGUI_SOURCES
     ${imgui_SOURCE_DIR}/imgui.cpp

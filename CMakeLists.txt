@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # --- MUI LIBRARY (SDL3 + ImGui) ---
 # This subdirectory will automatically fetch ImGui and find SDL3.
-add_subdirectory(mui_sdl_imgui)
+add_subdirectory(mui)
 
 # --- YOUR EXECUTABLE ---
 add_executable(${PROJECT_NAME} main.cpp)
@@ -20,5 +20,5 @@ target_link_libraries(${PROJECT_NAME} PUBLIC mui)
 # path to find its headers.
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_BINARY_DIR}/_deps/imgui-src
-    mui_sdl_imgui
+    mui
 )

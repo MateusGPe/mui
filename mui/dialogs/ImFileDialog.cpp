@@ -6,15 +6,13 @@
 #include "ImFileDialog.h"
 #include "../core/app.hpp" // Added for mui::App::assertMainThread()
 #include "IconsFontAwesome6.h"
-#include "stb_image.h"
+#include "ifd/stb_image.h"
 
 #include <fstream>
 #include <algorithm>
 #include <sys/stat.h>
 #include <imgui.h>
 #include <imgui_internal.h>
-
-
 
 #ifdef _WIN32
 #define NOMINMAX
@@ -285,19 +283,20 @@ namespace ifd
 			color = ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[ImGuiCol_TextDisabled]);
 		}
 
-		ImFont* font = ImGui::GetFont();
+		ImFont *font = ImGui::GetFont();
 		float fontSize = ImGui::GetFontSize();
 
-		static ImVec2 textSize = {0,0};
-		static ImFont* lastFont = nullptr;
+		static ImVec2 textSize = {0, 0};
+		static ImFont *lastFont = nullptr;
 		static float lastFontSize = 0.0f;
-		if (lastFont != font || lastFontSize != fontSize) {
+		if (lastFont != font || lastFontSize != fontSize)
+		{
 			textSize = font->CalcTextSizeA(fontSize, FLT_MAX, 0.0f, ICON_FA_STAR);
 			lastFont = font;
 			lastFontSize = fontSize;
 		}
 		ImVec2 textPos = ImVec2(pos.x + (GUI_ELEMENT_SIZE - textSize.x) / 2.0f, pos.y + (GUI_ELEMENT_SIZE - textSize.y) / 2.0f);
-		
+
 		window->DrawList->AddText(font, fontSize, textPos, color, ICON_FA_STAR);
 
 		return ret;
@@ -348,30 +347,34 @@ namespace ifd
 		else
 		{
 			// Fallback to font awesome
-			static struct {
+			static struct
+			{
 				float lastIconSize = -1.0f;
 				float lastSizeX = -1.0f;
-				ImFont* lastFont = nullptr;
+				ImFont *lastFont = nullptr;
 				float finalIconSize = 0.0f;
 				ImVec2 textSize = ImVec2(0, 0);
 			} iconCache[2];
 
 			int cacheIdx = isDirectory ? 1 : 0;
-			const char* icon_text = isDirectory ? ICON_FA_FOLDER : ICON_FA_FILE;
-			ImFont* currentFont = ImGui::GetFont();
+			const char *icon_text = isDirectory ? ICON_FA_FOLDER : ICON_FA_FILE;
+			ImFont *currentFont = ImGui::GetFont();
 
-			if (iconCache[cacheIdx].lastIconSize != iconSize || iconCache[cacheIdx].lastSizeX != size.x || iconCache[cacheIdx].lastFont != currentFont) {
+			if (iconCache[cacheIdx].lastIconSize != iconSize || iconCache[cacheIdx].lastSizeX != size.x || iconCache[cacheIdx].lastFont != currentFont)
+			{
 				ImVec2 text_size = currentFont->CalcTextSizeA(iconSize, FLT_MAX, 0.0f, icon_text);
 				float scale = 1.0f;
-				if (text_size.x > 0.0f) scale = std::min<float>(scale, size.x / text_size.x);
-				if (text_size.y > 0.0f) scale = std::min<float>(scale, iconSize / text_size.y);
+				if (text_size.x > 0.0f)
+					scale = std::min<float>(scale, size.x / text_size.x);
+				if (text_size.y > 0.0f)
+					scale = std::min<float>(scale, iconSize / text_size.y);
 				iconCache[cacheIdx].finalIconSize = iconSize * scale * 0.8f;
 				iconCache[cacheIdx].textSize = currentFont->CalcTextSizeA(iconCache[cacheIdx].finalIconSize, FLT_MAX, 0.0f, icon_text);
 				iconCache[cacheIdx].lastIconSize = iconSize;
 				iconCache[cacheIdx].lastSizeX = size.x;
 				iconCache[cacheIdx].lastFont = currentFont;
 			}
-			
+
 			float textPosX = pos.x + (size.x - iconCache[cacheIdx].textSize.x) / 2.0f;
 			float textPosY = pos.y + (iconSize - iconCache[cacheIdx].textSize.y) / 2.0f;
 			window->DrawList->AddText(currentFont, iconCache[cacheIdx].finalIconSize, ImVec2(textPosX, textPosY), ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[ImGuiCol_Text]), icon_text);
@@ -880,7 +883,8 @@ namespace ifd
 		uint8_t *data = (uint8_t *)malloc(byteSize);
 		GetBitmapBits(iconInfo.hbmColor, byteSize, data);
 
-		m_icons[pathU8] = this->CreateTexture(data, ds.dsBm.bmWidth, ds.dsBm.bmHeight, 0);
+		if (this->CreateTexture)
+			m_icons[pathU8] = this->CreateTexture(data, ds.dsBm.bmWidth, ds.dsBm.bmHeight, 0);
 
 		free(data);
 
@@ -902,7 +906,8 @@ namespace ifd
 				continue;
 
 			deletedIcons.push_back(ptr);
-			DeleteTexture(icon.second);
+			if (DeleteTexture)
+				DeleteTexture(icon.second);
 		}
 		m_iconFilepaths.clear();
 		m_iconIndices.clear();
@@ -932,7 +937,8 @@ namespace ifd
 				continue;
 
 			data.HasIconPreview = false;
-			this->DeleteTexture(data.IconPreview);
+			if (this->DeleteTexture)
+				this->DeleteTexture(data.IconPreview);
 
 			if (data.IconPreviewData != nullptr)
 			{
@@ -1324,7 +1330,8 @@ namespace ifd
 			{
 				if (entry.HasIconPreview && entry.IconPreviewData != nullptr)
 				{
-					entry.IconPreview = this->CreateTexture(entry.IconPreviewData, entry.IconPreviewWidth, entry.IconPreviewHeight, 1u);
+					if (this->CreateTexture)
+						entry.IconPreview = this->CreateTexture(entry.IconPreviewData, entry.IconPreviewWidth, entry.IconPreviewHeight, 1u);
 					stbi_image_free(entry.IconPreviewData);
 					entry.IconPreviewData = nullptr;
 				}
