@@ -11,6 +11,8 @@ namespace mui
   class Window;
   using WindowPtr = std::shared_ptr<Window>;
 
+  using ImGuiWindowFlags = int;
+
   using Identifier = unsigned int;
   class Window : public Control, public Chainable<Window>
   {
@@ -18,10 +20,12 @@ namespace mui
     std::string title;
     int width, height;
     bool isOpen = true;
-    bool borderless = false;
     bool margined = true;
     ControlPtr child;
     std::function<bool()> onClosingCb;
+    bool _needs_focus;
+    Identifier dockId;
+    ImGuiWindowFlags m_flags;
 
   public:
     Window(const std::string &title, int width, int height, bool hasMenubar = false);
@@ -40,10 +44,53 @@ namespace mui
     bool getMargined() const;
     bool isWindowOpen() const;
     WindowPtr setDockId(Identifier id);
-    static WindowPtr create(const std::string &title, int width, int height, bool hasMenubar = false) { return std::make_shared<Window>(title, width, height, hasMenubar); }
 
-  private:
-    Identifier dockId;
+    void close();
+    WindowPtr focus();
+
+    WindowPtr setHasMenubar(bool b);
+    bool getHasMenubar() const;
+    WindowPtr setResizable(bool b);
+    bool getResizable() const;
+    WindowPtr setMovable(bool b);
+    bool getMovable() const;
+    WindowPtr setCollapsible(bool b);
+    bool getCollapsible() const;
+    WindowPtr setHasTitlebar(bool b);
+    bool getHasTitlebar() const;
+
+    WindowPtr setScrollbar(bool b);
+    bool getScrollbar() const;
+    WindowPtr setScrollWithMouse(bool b);
+    bool getScrollWithMouse() const;
+    WindowPtr setAlwaysAutoResize(bool b);
+    bool getAlwaysAutoResize() const;
+    WindowPtr setBackground(bool b);
+    bool getBackground() const;
+    WindowPtr setSavedSettings(bool b);
+    bool getSavedSettings() const;
+    WindowPtr setMouseInputs(bool b);
+    bool getMouseInputs() const;
+    WindowPtr setHorizontalScrollbar(bool b);
+    bool getHorizontalScrollbar() const;
+    WindowPtr setFocusOnAppearing(bool b);
+    bool getFocusOnAppearing() const;
+    WindowPtr setBringToFrontOnFocus(bool b);
+    bool getBringToFrontOnFocus() const;
+    WindowPtr setAlwaysVerticalScrollbar(bool b);
+    bool getAlwaysVerticalScrollbar() const;
+    WindowPtr setAlwaysHorizontalScrollbar(bool b);
+    bool getAlwaysHorizontalScrollbar() const;
+    WindowPtr setNavInputs(bool b);
+    bool getNavInputs() const;
+    WindowPtr setNavFocus(bool b);
+    bool getNavFocus() const;
+    WindowPtr setUnsavedDocument(bool b);
+    bool getUnsavedDocument() const;
+    WindowPtr setDocking(bool b);
+    bool getDocking() const;
+
+    static WindowPtr create(const std::string &title, int width, int height, bool hasMenubar = false) { return std::make_shared<Window>(title, width, height, hasMenubar); }
   };
 
 } // namespace mui

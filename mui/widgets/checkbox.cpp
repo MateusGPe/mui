@@ -1,6 +1,8 @@
 #include "checkbox.hpp"
 #include "app.hpp"
 #include <imgui.h>
+#include <imgui_internal.h>
+#include <algorithm>
 
 namespace mui
 {
@@ -8,14 +10,61 @@ namespace mui
 
     void Checkbox::renderControl()
     {
-        if (!visible) return;
+        if (!visible)
+            return;
         ImGui::PushID(this);
         ImGui::BeginDisabled(!enabled);
-        
-        if (ImGui::Checkbox(text.c_str(), &checked)) {
-            if (onToggledCb) onToggledCb();
+
+        ImGuiWindow *window = ImGui::GetCurrentWindow();
+        if (window->SkipItems)
+        {
+            ImGui::EndDisabled();
+            ImGui::PopID();
+            return;
         }
-        
+
+        const ImGuiStyle &style = ImGui::GetStyle();
+        const ImGuiID id = window->GetID(text.c_str());
+
+        const float check_box_size = ImGui::GetFontSize() * scale;
+        const ImVec2 label_size = ImGui::CalcTextSize(text.c_str(), NULL, true);
+
+        const float frame_height = std::max(check_box_size, label_size.y);
+        const ImRect total_bb(window->DC.CursorPos, ImVec2(window->DC.CursorPos.x + check_box_size + (label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f), window->DC.CursorPos.y + frame_height));
+
+        ImGui::ItemSize(total_bb, 0.0f);
+        if (!ImGui::ItemAdd(total_bb, id))
+        {
+            ImGui::EndDisabled();
+            ImGui::PopID();
+            return;
+        }
+
+        bool hovered, held;
+        bool pressed = ImGui::ButtonBehavior(total_bb, id, &hovered, &held);
+        if (pressed)
+        {
+            checked = !checked;
+            if (onToggledCb)
+                onToggledCb();
+        }
+
+        const float check_y_offset = (frame_height - check_box_size) / 2.0f;
+        const ImRect check_bb(ImVec2(total_bb.Min.x, total_bb.Min.y + check_y_offset), ImVec2(total_bb.Min.x + check_box_size, total_bb.Min.y + check_y_offset + check_box_size));
+
+        ImGui::RenderFrame(check_bb.Min, check_bb.Max, ImGui::GetColorU32((held && hovered) ? ImGuiCol_FrameBgActive : hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg), true, style.FrameRounding);
+        if (checked)
+        {
+            const float pad = std::max(1.0f, (float)(int)(check_box_size / 6.0f));
+            ImGui::RenderCheckMark(window->DrawList, ImVec2(check_bb.Min.x + pad, check_bb.Min.y + pad), ImGui::GetColorU32(ImGuiCol_CheckMark), check_box_size - pad * 2.0f);
+        }
+
+        if (label_size.x > 0.0f)
+        {
+            const float label_y_offset = (frame_height - label_size.y) / 2.0f;
+            ImGui::RenderText(ImVec2(check_bb.Max.x + style.ItemInnerSpacing.x, total_bb.Min.y + label_y_offset), text.c_str());
+        }
+
         ImGui::EndDisabled();
         ImGui::PopID();
     }
@@ -26,4 +75,10 @@ namespace mui
 
     CheckboxPtr Checkbox::setChecked(bool c) { checked = c; return self(); }
     CheckboxPtr Checkbox::onToggled(std::function<void()> cb) { onToggledCb = std::move(cb); return self(); }
+
+    CheckboxPtr Checkbox::setScale(float s)
+    {
+        scale = s;
+        return self();
+    }
 } // namespace mui

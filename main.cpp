@@ -1,3 +1,4 @@
+// main.cpp
 #include <mui.hpp>
 #include <iostream>
 #include <memory>
@@ -7,6 +8,15 @@
 #include <ctime>
 #include <imgui_internal.h>
 #include "mui/core/docking.hpp"
+
+// Include the newly created advanced controls
+#include "mui/widgets/toggleswitch.hpp"
+#include "mui/widgets/rangeslider.hpp"
+#include "mui/widgets/iconstack.hpp"
+#include "mui/layouts/splitter.hpp"
+#include "mui/widgets/table.hpp"
+#include "mui/widgets/breadcrumb.hpp"
+
 using namespace mui;
 
 // Forward declarations for UI creation functions
@@ -16,55 +26,64 @@ ControlPtr createTextEntriesTab(const LabelPtr &statusLabel);
 ControlPtr createDialogsTab(const WindowPtr &parentWindow, const LabelPtr &statusLabel);
 ControlPtr createLayoutsTab(const LabelPtr &statusLabel);
 ControlPtr createMoreControlsTab(const LabelPtr &statusLabel);
+ControlPtr createAdvancedTab(const LabelPtr &statusLabel);
 ControlPtr createThemesTab();
 WindowPtr createMainGalleryWindow();
 WindowPtr createInspectorWindow();
 
 int main()
 {
-    try
-    {
-        App::init();
-        App::setTheme(ThemeType::Light);
+    App::init();
+    App::setTheme(ThemeType::Light);
 
-        // Define a docking layout for our windows to arrange them on startup.
-        App::setLayoutBuilder([](mui::DockBuilder &builder) {
-            ImGuiID center = builder.getID();
-            ImGuiID right = builder.splitNode(center, mui::DockDirection::Right, 0.30f);
+    // Define a docking layout for our windows to arrange them on startup.
+    App::setLayoutBuilder([](mui::DockBuilder &builder)
+                          {
+            ImGuiID dockspace_id = builder.getID();
+            ImGuiDockNode *root_node = ImGui::DockBuilderGetNode(dockspace_id);
+            bool is_new_layout = (root_node == nullptr || root_node->IsEmpty());
+
+            // Part 1: Build the layout only if it doesn't exist (e.g., on first run).
+            if (is_new_layout)
+            {
+                // Start with the full dockspace ID. After the split, this ID will refer to the left node.
+                ImGuiID center_node_id = dockspace_id;
+                ImGuiID right_node_id = builder.splitNode(center_node_id, mui::DockDirection::Right, 0.30f);
+
+                builder.getNode(center_node_id).setHiddenTabBar(true); // Hide the tab bar for the center node
+                builder.getNode(right_node_id).setHiddenTabBar(true); // Hide the tab bar for the right node
+                // Dock windows. This only needs to be done once.
+                builder.dockWindow("MUI Control Gallery", center_node_id);
+                builder.dockWindow("Inspector", right_node_id);
+            }
 
             // To create a seamless look without the dockspace's own title bars,
-            // we can disable the tab bar on the generated dock nodes.
-            builder.getNode(center).setNoTabBar(true);
-            builder.getNode(right).setNoTabBar(true);
+            // we disable the tab bar on the dock nodes. This needs to run every time,
+            // as these flags are not saved in the .ini file.
+            ImGuiWindow *gallery_window = ImGui::FindWindowByName("MUI Control Gallery");
+            if (gallery_window && gallery_window->DockNode)
+                builder.getNode(gallery_window->DockNode->ID).setNoTabBar(true);
+            ImGuiWindow *inspector_window = ImGui::FindWindowByName("Inspector");
+            if (inspector_window && inspector_window->DockNode)
+                builder.getNode(inspector_window->DockNode->ID).setNoTabBar(true); });
 
-            // Dock windows by their titles
-            builder.dockWindow("MUI Control Gallery", center);
-            builder.dockWindow("Inspector", right);
+    App::setMainLoopCallback(
+        []()
+        {
+            mui::Dialogs::processDialogs();
         });
+    Control::setGlobalShadowDefaults(false, {0.0f, 0.0f}, 4.0f, {0.12f, 0.53f, 0.90f, 0.08f}, 8.0f);
 
-        App::setMainLoopCallback(
-            []()
-            {
-                mui::Dialogs::processDialogs();
-            });
-        Control::setGlobalShadowDefaults(false, {0.0f, 0.0f}, 4.0f, {0.12f, 0.53f, 0.90f, 0.08f}, 8.0f);
+    // Create and show the main window with the control gallery
+    auto mainWin = createMainGalleryWindow();
+    mainWin->show();
 
-        // Create and show the main window with the control gallery
-        auto mainWin = createMainGalleryWindow();
-        mainWin->show();
+    // Create and show a second, independent "Inspector" window
+    auto inspectorWin = createInspectorWindow();
+    inspectorWin->show();
 
-        // Create and show a second, independent "Inspector" window
-        auto inspectorWin = createInspectorWindow();
-        inspectorWin->show();
-
-        // Run the application's main loop
-        App::run();
-    }
-    catch (const std::exception &e)
-    {
-        std::cerr << "Fatal Exception: " << e.what() << std::endl;
-        return 1;
-    }
+    // Run the application's main loop
+    App::run();
 
     return 0;
 }
@@ -102,6 +121,7 @@ WindowPtr createMainGalleryWindow()
     tabs->append("Text", createTextEntriesTab(lblStatus));
     tabs->append("Dialogs", createDialogsTab(win, lblStatus));
     tabs->append("Layouts", createLayoutsTab(lblStatus));
+    tabs->append("Advanced", createAdvancedTab(lblStatus)); // Added Advanced Tab for new widgets
     tabs->append("More", createMoreControlsTab(lblStatus));
     tabs->append("Themes", createThemesTab());
 
@@ -161,19 +181,34 @@ ControlPtr createBasicsTab(const LabelPtr &lblStatus)
 {
     auto vbox = VBox::create();
 
+    // IconStack demonstration (Horizontal Toolbar)
+    auto iconStack = IconStack::create()
+                         ->add(ICON_FA_PLAY, [lblStatus]()
+                               { lblStatus->setText("Play clicked"); }, "Play Action")
+                         ->add(ICON_FA_PAUSE, [lblStatus]()
+                               { lblStatus->setText("Pause clicked"); }, "Pause Action")
+                         ->add(ICON_FA_STOP, [lblStatus]()
+                               { lblStatus->setText("Stop clicked"); }, "Stop Action");
+
     auto btnClick = Button::create(ICON_FA_FLOPPY_DISK " Click Me");
     btnClick->onClick([lblStatus]()
                       {
                           auto currentTime = std::time(nullptr);
                           char timeStr[100];
                           std::strftime(timeStr, sizeof(timeStr), "%H:%M:%S", std::localtime(&currentTime));
-                          lblStatus->setText(std::string("Button clicked at ") + timeStr);
-                      })
+                          lblStatus->setText(std::string("Button clicked at ") + timeStr); })
         ->defaultShadow();
 
-    auto chkToggle = Checkbox::create("Enable Feature X");
+    auto chkToggle = Checkbox::create("Standard Checkbox");
     chkToggle->onToggled([lblStatus, chkToggle]()
-                         { lblStatus->setText(chkToggle->isChecked() ? "Feature X Enabled" : "Feature X Disabled"); });
+                         { lblStatus->setText(chkToggle->isChecked() ? "Checkbox Enabled" : "Checkbox Disabled"); });
+    chkToggle->setScale(1.2f); // Make the checkbox larger for better visibility
+
+    // Modern ToggleSwitch demonstration
+    auto modernToggle = ToggleSwitch::create("Modern iOS-Style Toggle");
+    modernToggle->onToggled([lblStatus](bool state)
+                            { lblStatus->setText(state ? "Modern Toggle is ON" : "Modern Toggle is OFF"); });
+    modernToggle->setScale(0.6f); // Make the toggle larger for better visibility
 
     auto btnFindNode = Button::create(ICON_FA_MAGNIFYING_GLASS " Find Inspector Dock Node");
     btnFindNode->onClick([lblStatus]()
@@ -192,8 +227,12 @@ ControlPtr createBasicsTab(const LabelPtr &lblStatus)
             lblStatus->setText("Could not find a docked 'Inspector' window.");
         } });
 
-    append_all(vbox, {{btnClick},
+    append_all(vbox, {{Label::create("Media Controls (IconStack):")},
+                      {iconStack},
+                      {Separator::create()->setType(SeparatorType::Native)},
+                      {btnClick},
                       {chkToggle},
+                      {modernToggle},
                       {Separator::create()->setType(SeparatorType::Native)},
                       {btnFindNode}});
     return vbox;
@@ -225,10 +264,23 @@ ControlPtr createNumbersTab(const LabelPtr &lblStatus)
 
     syncFunc(50); // Initialize to 50
 
+    // Range Slider Demonstration
+    auto rangeSlider = RangeSlider::create(0.0f, 100.0f);
+    rangeSlider->setRange(20.0f, 80.0f);
+    rangeSlider->setSpanAvailWidth(true);
+    rangeSlider->onChanged([lblStatus](float vMin, float vMax)
+                           {
+        char buf[128];
+        snprintf(buf, sizeof(buf), "Range changed: %.1f to %.1f", vMin, vMax);
+        lblStatus->setText(buf); });
+
     append_all(vbox, {{Label::create("Sync Test:"), false},
-                      {spinBox, true},
-                      {slider, true},
-                      {progressBar, true}});
+                      {spinBox, false},
+                      {slider, false},
+                      {progressBar, false},
+                      {Separator::create()->setType(SeparatorType::Native)},
+                      {Label::create("Dual Handle Range Slider:")},
+                      {rangeSlider, false}});
     return vbox;
 }
 
@@ -344,6 +396,87 @@ ControlPtr createLayoutsTab(const LabelPtr &lblStatus)
     grid->append(Label::create(""), 3, 0); // Empty cell to push button to the right column
     grid->append(submitButton, 3, 1);
 
+    return vbox;
+}
+
+ControlPtr createAdvancedTab(const LabelPtr &lblStatus)
+{
+    // This tab demonstrates a complex File Explorer UI built with the new widgets.
+    auto vbox = VBox::create();
+    vbox->setPadded(false); // Remove padding so the splitter takes full space naturally
+
+    // --- Toolbar Area ---
+    auto toolbarArea = VBox::create();
+    toolbarArea->setPadded(true);
+
+    auto toolbarHBox = HBox::create();
+    toolbarHBox->setPadded(true);
+
+    // Breadcrumb Navigator
+    auto breadcrumb = BreadcrumbBar::create("C:/Users/Public/Documents");
+    breadcrumb->onPathNavigated([lblStatus](const std::string &path)
+                                { lblStatus->setText("Navigated to: " + path); });
+
+    // Navigation Buttons (IconStack)
+    auto navButtons = IconStack::create()
+                          ->add(ICON_FA_ARROW_LEFT, [lblStatus]()
+                                { lblStatus->setText("Back clicked"); }, "Go Back")
+                          ->add(ICON_FA_ARROW_RIGHT, [lblStatus]()
+                                { lblStatus->setText("Forward clicked"); }, "Go Forward")
+                          ->add(ICON_FA_ARROW_UP, [lblStatus]()
+                                { lblStatus->setText("Up clicked"); }, "Up to Parent Folder");
+
+    toolbarHBox->append(navButtons, false);
+    toolbarHBox->append(breadcrumb, true); // Stretches to fill width
+
+    toolbarArea->append(toolbarHBox, false);
+    toolbarArea->append(Separator::create()->setType(SeparatorType::Native), false);
+    vbox->append(toolbarArea, false);
+
+    // --- Splitter Area ---
+    auto splitter = SplitterView::create(SplitterOrientation::Horizontal);
+    splitter->setSplitRatio(0.25f);
+
+    // Left Panel: Directory Tree
+    auto leftPanel = VBox::create();
+    leftPanel->setPadded(true);
+
+    auto treeRoot = TreeNode::create(ICON_FA_DESKTOP " This PC")->setDefaultOpen(true);
+    treeRoot->append(Label::create(ICON_FA_HARD_DRIVE " Local Disk (C:)"));
+    auto driveD = TreeNode::create(ICON_FA_HARD_DRIVE " Data (D:)");
+    driveD->append(Label::create(ICON_FA_FOLDER " Backups"));
+    driveD->append(Label::create(ICON_FA_FOLDER " Projects"));
+    treeRoot->append(driveD);
+
+    leftPanel->append(treeRoot, true);
+    splitter->setPanel1(leftPanel);
+
+    // Right Panel: Data Table
+    auto table = Table::create();
+    table->addColumn("Name", 3.0f)->addColumn("Date Modified", 2.0f)->addColumn("Size", 1.0f);
+    table->setSortable(true);
+    table->setSpanAvailWidth(true);
+
+    // Add some mock file data
+    table->addRow({Label::create(ICON_FA_FOLDER " Photos"), Label::create("10/24/2023"), Label::create("--")});
+    table->addRow({Label::create(ICON_FA_FOLDER " Videos"), Label::create("10/12/2023"), Label::create("--")});
+    table->addRow({Label::create(ICON_FA_FILE_WORD " Q4_Report.docx"), Label::create("10/25/2023"), Label::create("2,450 KB")});
+    table->addRow({Label::create(ICON_FA_FILE_EXCEL " Budget_2024.xlsx"), Label::create("10/26/2023"), Label::create("124 KB")});
+    table->addRow({Label::create(ICON_FA_FILE_PDF " Invoice_992.pdf"), Label::create("10/27/2023"), Label::create("89 KB")});
+
+    table->onRowSelected([lblStatus](int row)
+                         { lblStatus->setText("Selected table row: " + std::to_string(row)); });
+
+    table->onSortRequested([lblStatus](int colIndex, bool ascending)
+                           {
+        std::string dir = ascending ? "Ascending" : "Descending";
+        lblStatus->setText("Sort requested on column " + std::to_string(colIndex) + " (" + dir + ")"); });
+
+    auto rightPanel = VBox::create();
+    rightPanel->append(table, true);
+    splitter->setPanel2(rightPanel);
+
+    vbox->append(splitter, true); // Stretchy to take remaining height below toolbar
     return vbox;
 }
 

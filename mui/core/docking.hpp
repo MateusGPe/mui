@@ -38,6 +38,7 @@ namespace mui
     public:
         DockNode(ImGuiDockNode *node);
         void setNoTabBar(bool noTabBar);
+        void setHiddenTabBar(bool hiddenTabBar);
         bool isValid() const { return m_node != nullptr; }
     private:
         ImGuiDockNode *m_node;

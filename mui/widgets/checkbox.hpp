@@ -14,6 +14,7 @@ namespace mui
     protected:
         std::string text;
         bool checked;
+        float scale = 1.0f;
         std::function<void()> onToggledCb;
 
         CheckboxPtr self() { return std::static_pointer_cast<Checkbox>(shared_from_this()); }
@@ -30,5 +31,6 @@ namespace mui
 
         CheckboxPtr setChecked(bool c);
         CheckboxPtr onToggled(std::function<void()> cb);
+        CheckboxPtr setScale(float s);
     };
 } // namespace mui

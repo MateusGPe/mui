@@ -24,6 +24,21 @@ namespace mui
     // --- DockBuilder ---
     DockBuilder::DockBuilder(ImGuiID dockspaceId) : m_dockspaceId(dockspaceId) {}
 
+    void DockNode::setHiddenTabBar(bool hiddenTabBar)
+    {
+        if (m_node)
+        {
+            if (hiddenTabBar)
+            {
+                m_node->SetLocalFlags(m_node->LocalFlags | ImGuiDockNodeFlags_HiddenTabBar);
+            }
+            else
+            {
+                m_node->SetLocalFlags(m_node->LocalFlags & ~ImGuiDockNodeFlags_HiddenTabBar);
+            }
+        }
+    }
+
     ImGuiID DockBuilder::splitNode(ImGuiID &nodeIdToSplit, DockDirection dir, float ratio)
     {
         ImGuiID newNodeId;
