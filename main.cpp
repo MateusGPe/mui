@@ -324,17 +324,28 @@ IControlPtr createDialogsTab(const WindowPtr &win, const LabelPtr &lblStatus)
     auto hboxButtons = HBox::create();
     hboxButtons->setPadded(true);
 
-    auto btnInfo = Button::create("Info Msg");
-    auto btnError = Button::create("Error Msg");
-    auto btnFile = Button::create("Open File");
+    auto btnInfo = Button::create(ICON_FA_CIRCLE_INFO " Info");
+    auto btnWarning = Button::create(ICON_FA_TRIANGLE_EXCLAMATION " Warning");
+    auto btnError = Button::create(ICON_FA_CIRCLE_XMARK " Error");
+    auto btnConfirm = Button::create(ICON_FA_CIRCLE_CHECK " Confirm");
+    auto btnQuestion = Button::create(ICON_FA_CIRCLE_QUESTION " Question");
+    auto btnCustom = Button::create(ICON_FA_GEARS " Custom");
+    auto btnFile = Button::create(ICON_FA_FOLDER_OPEN " Open File");
 
     btnInfo->onClick(
                [win, lblStatus]()
                {
-                   Dialogs::msgBox("Information", "This is a standard message box.");
-                   Dialogs::msgBox("Information 2", "This is a standard message box.");
+                   Dialogs::msgBoxInfo("Information", "This is an informational message box, which is the default type.");
                    lblStatus->setText("Info dialog shown.");
                })
+        ->defaultShadow();
+
+    btnWarning->onClick(
+                  [win, lblStatus]()
+                  {
+                      Dialogs::msgBoxWarning("Warning", "This is a warning message. Something might be wrong, so you should pay attention.");
+                      lblStatus->setText("Warning dialog shown.");
+                  })
         ->defaultShadow();
 
     btnError->onClick(
@@ -342,6 +353,36 @@ IControlPtr createDialogsTab(const WindowPtr &win, const LabelPtr &lblStatus)
         {
             Dialogs::msgBoxError("Critical Error", "Failed to load imaginary resources.");
             lblStatus->setText("Error dialog shown.");
+        });
+
+    btnConfirm->onClick(
+                  [win, lblStatus]()
+                  {
+                      Dialogs::msgBoxConfirm("Confirmation", "This action is permanent. Are you sure you want to proceed?", [lblStatus]()
+                                             { lblStatus->setText("Confirmed!"); }, [lblStatus]()
+                                             { lblStatus->setText("Cancelled."); });
+                  })
+        ->defaultShadow();
+
+    btnQuestion->onClick(
+                   [win, lblStatus]()
+                   {
+                       Dialogs::msgBoxQuestion("Unsaved Work", "Do you want to save your changes before closing?", [lblStatus]()
+                                               { lblStatus->setText("Answered: Yes"); }, [lblStatus]()
+                                               { lblStatus->setText("Answered: No"); });
+                   })
+        ->defaultShadow();
+
+    btnCustom->onClick(
+        [lblStatus]()
+        {
+            Dialogs::msgBoxCustom("File Operation", "The destination file already exists.", MessageBoxType::Warning,
+                                  {{"Overwrite", [lblStatus]()
+                                    { lblStatus->setText("File Overwritten."); }},
+                                   {"Skip", [lblStatus]()
+                                    { lblStatus->setText("File Skipped."); }},
+                                   {"Cancel", [lblStatus]()
+                                    { lblStatus->setText("Operation Cancelled."); }}});
         });
 
     btnFile->onClick(
@@ -355,7 +396,11 @@ IControlPtr createDialogsTab(const WindowPtr &win, const LabelPtr &lblStatus)
         });
 
     append_all(hboxButtons, {{btnInfo, true},
+                             {btnWarning, true},
                              {btnError, true},
+                             {btnConfirm, true},
+                             {btnQuestion, true},
+                             {btnCustom, true},
                              {btnFile, true}});
 
     group->setChild(hboxButtons);
@@ -395,6 +440,89 @@ IControlPtr createLayoutsTab(const LabelPtr &lblStatus)
         lblStatus->setText(text); });
     grid->append(Label::create(""), 3, 0); // Empty cell to push button to the right column
     grid->append(submitButton, 3, 1);
+
+    vbox->append(Separator::create()->setType(SeparatorType::Native));
+
+    auto flowGroup = Group::create("Flow Layout (Left)");
+    flowGroup->setMargined(true);
+    vbox->append(flowGroup, false);
+
+    auto flowBox = FlowBox::create()->setAlign(FlowBox::Align::Left);
+    for (int i = 0; i < 15; ++i)
+    {
+        std::string label = "Button " + std::to_string(i + 1);
+        if (i % 4 == 0)
+        {
+            label += " is a bit longer";
+        }
+        flowBox->append(Button::create(label)->onClick([lblStatus, label]()
+                                                       { lblStatus->setText(label + " clicked"); }));
+    }
+    flowGroup->setChild(flowBox);
+
+    auto flowGroupCenter = Group::create("Flow Layout (Center)");
+    flowGroupCenter->setMargined(true);
+    vbox->append(flowGroupCenter, false);
+    auto flowBoxCenter = FlowBox::create()->setAlign(FlowBox::Align::Center);
+    for (int i = 0; i < 15; ++i)
+    {
+        std::string label = "Button " + std::to_string(i + 1);
+        if (i % 4 == 0)
+        {
+            label += " is a bit longer";
+        }
+        flowBoxCenter->append(Button::create(label)->onClick([lblStatus, label]()
+                                                             { lblStatus->setText(label + " clicked"); }));
+    }
+    flowGroupCenter->setChild(flowBoxCenter);
+
+    auto flowGroupRight = Group::create("Flow Layout (Right)");
+    flowGroupRight->setMargined(true);
+    vbox->append(flowGroupRight, false);
+    auto flowBoxRight = FlowBox::create()->setAlign(FlowBox::Align::Right);
+    for (int i = 0; i < 15; ++i)
+    {
+        std::string label = "Button " + std::to_string(i + 1);
+        if (i % 4 == 0)
+        {
+            label += " is a bit longer";
+        }
+        flowBoxRight->append(Button::create(label)->onClick([lblStatus, label]()
+                                                            { lblStatus->setText(label + " clicked"); }));
+    }
+    flowGroupRight->setChild(flowBoxRight);
+
+    auto flowGroupJustify = Group::create("Flow Layout (Justify)");
+    flowGroupJustify->setMargined(true);
+    vbox->append(flowGroupJustify, false);
+    auto flowBoxJustify = FlowBox::create()->setAlign(FlowBox::Align::Justify);
+    for (int i = 0; i < 15; ++i)
+    {
+        std::string label = "Btn " + std::to_string(i + 1);
+        if (i % 4 == 0)
+        {
+            label += " long";
+        }
+        flowBoxJustify->append(Button::create(label)->onClick([lblStatus, label]()
+                                                              { lblStatus->setText(label + " clicked"); }));
+    }
+    flowGroupJustify->setChild(flowBoxJustify);
+
+    auto flowGroupFill = Group::create("Flow Layout (Fill)");
+    flowGroupFill->setMargined(true);
+    vbox->append(flowGroupFill, false);
+    auto flowBoxFill = FlowBox::create()->setAlign(FlowBox::Align::Fill);
+    for (int i = 0; i < 15; ++i)
+    {
+        std::string label = "Btn " + std::to_string(i + 1);
+        if (i % 4 == 0)
+        {
+            label += " long";
+        }
+        flowBoxFill->append(Button::create(label)->onClick([lblStatus, label]()
+                                                           { lblStatus->setText(label + " clicked"); }));
+    }
+    flowGroupFill->setChild(flowBoxFill);
 
     return vbox;
 }

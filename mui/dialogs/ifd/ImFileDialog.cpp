@@ -1,11 +1,12 @@
-// src/ImFileDialog/ImFileDialog.cpp
 #if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_WARNINGS)
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
 #include "ImFileDialog.h"
+#include "IconsFontAwesome6.h"
 #include "../../core/app.hpp" // Added for mui::App::assertMainThread()
 #include <imgui.h>
+#include <imgui_internal.h>
 
 #ifdef _WIN32
 #define NOMINMAX
@@ -37,6 +38,69 @@ namespace ifd
 
 		m_previewLoader = nullptr;
 		m_previewLoaderRunning = false;
+
+		// Build the MUI-based toolbar
+		m_backButton = mui::IconButton::create(ICON_FA_ARROW_LEFT)->onClick([&]()
+																			{
+			if (m_backHistory.empty())
+				return;
+			m_forwardHistory.push(m_currentDirectory);
+			m_setDirectory(m_backHistory.top(), false);
+			m_backHistory.pop(); });
+
+		m_forwardButton = mui::IconButton::create(ICON_FA_ARROW_RIGHT)->onClick([&]()
+																				{
+			if (m_forwardHistory.empty())
+				return;
+			m_backHistory.push(m_currentDirectory);
+			m_setDirectory(m_forwardHistory.top(), false);
+			m_forwardHistory.pop(); });
+
+		m_upButton = mui::IconButton::create(ICON_FA_ARROW_UP)->onClick([&]()
+																		{
+			if (!m_currentDirectory.has_parent_path())
+				return;
+			m_setDirectory(m_currentDirectory.parent_path()); });
+
+		m_pathBox = mui::BreadcrumbBar::create("")->onPathNavigated([&](const std::string &newPath)
+																	{ m_setDirectory(std::filesystem::u8path(newPath)); });
+
+		m_favoriteButton = mui::IconButton::create(ICON_FA_STAR)->onClick([&]()
+																		  {
+			auto path = m_currentDirectory.u8string();
+			bool isFavorite = std::count(m_favorites.begin(), m_favorites.end(), path) > 0;
+			if (isFavorite) RemoveFavorite(path);
+			else AddFavorite(path); });
+
+		m_searchBox = mui::Entry::create(m_searchBuffer, sizeof(m_searchBuffer))
+						  ->setHint("Search...")
+						  ->onChanged([&]()
+									  { m_setDirectory(m_currentDirectory, false); });
+
+		m_toolbar = mui::HBox::create()->setPadded(false)->append(m_backButton)->append(m_forwardButton)->append(m_upButton)->append(m_pathBox, true) // stretchy
+						->append(m_favoriteButton)
+						->append(m_searchBox);
+
+		m_fileNameInput = mui::Entry::create(m_inputTextbox, sizeof(m_inputTextbox))
+							  ->onEnter([&](const std::string &val)
+										{
+				if (m_inputTextbox[0] != '\0') m_finalize(m_inputTextbox); });
+
+		m_filterCombo = mui::ComboBox::create()
+							->onChanged([&]()
+										{
+				m_filterSelection = m_filterCombo->getSelectedIndex();
+				// A change in filter requires rebuilding the content list
+				m_setDirectory(m_currentDirectory); });
+
+		m_cancelButton = mui::Button::create("Cancel")->onClick([&]()
+																{ m_isOpen = false; });
+
+		m_okButton = mui::Button::create("OK")->onClick([&]()
+														{
+			if (m_inputTextbox[0] != '\0') m_finalize(m_inputTextbox); });
+
+		m_bottomToolbar = mui::HBox::create()->setPadded(false)->append(m_fileNameInput, true)->append(m_filterCombo)->append(m_cancelButton)->append(m_okButton);
 
 		m_setDirectory(std::filesystem::current_path(), false);
 

@@ -11,6 +11,8 @@
 #include <stdexcept>
 #include <algorithm>
 #include "ifd/ImFileDialog.h"
+#include "../dialogs/dialogs.hpp"
+#include "IconsFontAwesome6.h"
 
 #if defined(IMGUI_IMPL_OPENGL_LOADER_GLAD)
 #include <glad/glad.h>
@@ -373,20 +375,7 @@ namespace mui
         bool isOpen = true;
         if (ImGui::BeginPopupModal(popup_id.c_str(), &isOpen, ImGuiWindowFlags_AlwaysAutoResize))
         {
-            ImGui::TextWrapped("%s", mb.message.c_str());
-
-            ImGui::Spacing();
-            ImGui::Separator();
-            ImGui::Spacing();
-
-            const float button_width = 120.0f;
-            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - button_width);
-
-            if (ImGui::Button("OK", ImVec2(button_width, 0)))
-            {
-                ImGui::CloseCurrentPopup();
-                isOpen = false;
-            }
+            Dialogs::renderMessageBox(mb, isOpen);
             ImGui::EndPopup();
         }
 

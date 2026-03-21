@@ -91,5 +91,42 @@ namespace mui
         static HBoxPtr create() { return std::make_shared<HBox>(); }
         void renderControl() override;
     };
-} // namespace mui
 
+    class FlowBox;
+    using FlowBoxPtr = std::shared_ptr<FlowBox>;
+
+    class FlowBox : public Box<FlowBox>
+    {
+    public:
+        enum class Align
+        {
+            Left,
+            Center,
+            Right,
+            Justify,
+            Fill
+        };
+
+    protected:
+        struct flow_internal
+        {
+            float lastpos;
+            float lastline;
+            float lastKnownHeight;
+            float lastKnownWidth;
+        };
+        std::vector<flow_internal> flow_data;
+        Align m_align = Align::Left;
+
+    public:
+        FlowBox();
+        static FlowBoxPtr create() { return std::make_shared<FlowBox>(); }
+        void renderControl() override;
+        FlowBoxPtr append(IControlPtr child, bool stretchy = false);
+        FlowBoxPtr setAlign(Align align)
+        {
+            m_align = align;
+            return self();
+        }
+    };
+} // namespace mui

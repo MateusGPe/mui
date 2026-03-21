@@ -1,51 +1,81 @@
 #include "entry.hpp"
-#include "app.hpp"
+#include "../core/app.hpp"
 #include <imgui.h>
 #include <misc/cpp/imgui_stdlib.h>
 
 namespace mui
 {
-    Entry::Entry(const std::string &initialText, bool password, bool multiline, float h) : text(initialText), readOnly(false), isPassword(password), isMultiline(multiline), height(h) { App::assertMainThread(); }
+    // String constructor
+    Entry::Entry(const std::string &initialText, bool password, bool multiline, float h) 
+        : text(initialText), isPassword(password), isMultiline(multiline), height(h) 
+    { 
+        App::assertMainThread(); 
+    }
+
+    // Buffer constructor
+    Entry::Entry(char* buf, size_t buf_size) 
+        : buffer(buf), bufferSize(buf_size)
+    {
+         App::assertMainThread(); 
+    }
 
     void Entry::renderControl()
     {
         if (!visible)
             return;
         ImGui::PushID(this);
-        ImGui::BeginDisabled(!enabled || readOnly);
+        ImGui::BeginDisabled(!enabled);
 
         ImGuiInputTextFlags flags = 0;
-        if (isPassword)
-            flags |= ImGuiInputTextFlags_Password;
-        if (readOnly)
-            flags |= ImGuiInputTextFlags_ReadOnly;
-        if (autoSelectAll)
-            flags |= ImGuiInputTextFlags_AutoSelectAll;
-        if (noSpaces)
-            flags |= ImGuiInputTextFlags_CharsNoBlank;
+        if (isPassword) flags |= ImGuiInputTextFlags_Password;
+        if (readOnly) flags |= ImGuiInputTextFlags_ReadOnly;
+        if (autoSelectAll) flags |= ImGuiInputTextFlags_AutoSelectAll;
+        if (noSpaces) flags |= ImGuiInputTextFlags_CharsNoBlank;
+        if (onEnterCb) flags |= ImGuiInputTextFlags_EnterReturnsTrue;
 
-        if (spanAvailWidth)
-            ImGui::PushItemWidth(-FLT_MIN);
+        if (width > 0) ImGui::PushItemWidth(width);
+        else if (spanAvailWidth) ImGui::PushItemWidth(-FLT_MIN);
+
 
         bool changed = false;
-        if (isMultiline)
+        bool entered = false;
+        
+        // Decide whether to use buffer or std::string version
+        if (buffer)
         {
-            changed = ImGui::InputTextMultiline("##entry", &text, ImVec2(spanAvailWidth ? -FLT_MIN : 0, height), flags);
+            if (isMultiline) {
+                 // Not implemented for buffer mode
+            } else if (!hint.empty()) {
+                entered = ImGui::InputTextWithHint("##entry", hint.c_str(), buffer, bufferSize, flags);
+            } else {
+                entered = ImGui::InputText("##entry", buffer, bufferSize, flags);
+            }
+            // For buffers, InputText returns true on enter, not change. We can check for edits manually.
+            if (ImGui::IsItemEdited()) changed = true;
         }
-        else if (!hint.empty())
+        else // std::string mode
         {
-            changed = ImGui::InputTextWithHint("##entry", hint.c_str(), &text, flags);
-        }
-        else
-        {
-            changed = ImGui::InputText("##entry", &text, flags);
+            if (isMultiline)
+            {
+                changed = ImGui::InputTextMultiline("##entry", &text, ImVec2(spanAvailWidth ? -FLT_MIN : 0, height), flags);
+            }
+            else if (!hint.empty())
+            {
+                changed = ImGui::InputTextWithHint("##entry", hint.c_str(), &text, flags);
+            }
+            else
+            {
+                changed = ImGui::InputText("##entry", &text, flags);
+            }
+            if (ImGui::IsItemDeactivatedAfterEdit() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter)) ) {
+                entered = true;
+            }
         }
         
-        if (spanAvailWidth)
-            ImGui::PopItemWidth();
+        if (width > 0 || spanAvailWidth) ImGui::PopItemWidth();
 
-        if (changed && onChangedCb)
-            onChangedCb();
+        if (changed && onChangedCb) onChangedCb();
+        if (entered && onEnterCb) onEnterCb(buffer ? std::string(buffer) : text);
 
         renderTooltip();
 
@@ -53,10 +83,19 @@ namespace mui
         ImGui::PopID();
     }
 
-    std::string Entry::getText() const { return text; }
+    std::string Entry::getText() const { 
+        if (buffer) return std::string(buffer);
+        return text; 
+    }
+
     EntryPtr Entry::setText(const std::string &t)
     {
-        text = t;
+        if (buffer) {
+            strncpy(buffer, t.c_str(), bufferSize - 1);
+            buffer[bufferSize - 1] = '\0';
+        } else {
+            text = t;
+        }
         return self();
     }
     EntryPtr Entry::setHint(const std::string &h)
@@ -90,10 +129,14 @@ namespace mui
         onChangedCb = std::move(cb);
         return self();
     }
-
-    EntryPtr Entry::setSpanAvailWidth(bool s)
+    EntryPtr Entry::onEnter(std::function<void(const std::string&)> cb)
     {
-        spanAvailWidth = s;
+        onEnterCb = std::move(cb);
+        return self();
+    }
+    EntryPtr Entry::setWidth(float w)
+    {
+        width = w;
         return self();
     }
 

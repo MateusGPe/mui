@@ -298,123 +298,55 @@ namespace ifd
 
 	void FileDialog::m_renderFileDialog()
 	{
-		/***** TOP BAR *****/
-		bool noBackHistory = m_backHistory.empty(), noForwardHistory = m_forwardHistory.empty();
-
-		ImGui::PushStyleColor(ImGuiCol_Button, 0);
-		if (noBackHistory)
-			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
-		if (ImGui::ArrowButtonEx("##back", ImGuiDir_Left, ImVec2(GUI_ELEMENT_SIZE, GUI_ELEMENT_SIZE), noBackHistory ? ImGuiItemFlags_Disabled : 0))
-		{
-			if (!m_backHistory.empty())
-			{
-				std::filesystem::path newPath = m_backHistory.top();
-				m_backHistory.pop();
-				m_forwardHistory.push(m_currentDirectory);
-
-				m_setDirectory(newPath, false);
-			}
+		// Update state of toolbar widgets before rendering
+		m_backButton->setEnabled(!m_backHistory.empty());
+		m_forwardButton->setEnabled(!m_forwardHistory.empty());
+		m_upButton->setEnabled(m_currentDirectory.has_parent_path());
+		if (!m_pathBox->getIsEditing()) {
+			m_pathBox->setPath(m_currentDirectory.u8string());
 		}
-		if (noBackHistory)
-			ImGui::PopStyleVar();
+		m_favoriteButton->setSelected(std::count(m_favorites.begin(), m_favorites.end(), m_currentDirectory.u8string()) > 0);
+		
+		// Set search box width to a fixed value
+		m_searchBox->setWidth(250);
+
+		// The toolbar HBox will handle the layout of all these items.
+		m_toolbar->render();
+
+		ImGui::BeginChild("##body", ImVec2(0, -ImGui::GetFrameHeightWithSpacing() - 5));
+
+		ImGui::BeginChild("##tree", ImVec2(150, 0));
+		for (auto node : m_treeCache)
+			m_renderTree(node);
+		ImGui::EndChild(); 
+
 		ImGui::SameLine();
 
-		if (noForwardHistory)
-			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
-		if (ImGui::ArrowButtonEx("##forward", ImGuiDir_Right, ImVec2(GUI_ELEMENT_SIZE, GUI_ELEMENT_SIZE), noForwardHistory ? ImGuiItemFlags_Disabled : 0))
+		ImGui::BeginChild("##content");
+		m_renderContent();
+		ImGui::EndChild();
+
+		if (ImGui::IsItemHovered() && ImGui::GetIO().KeyCtrl && ImGui::GetIO().MouseWheel != 0.0f)
 		{
-			if (!m_forwardHistory.empty())
-			{
-				std::filesystem::path newPath = m_forwardHistory.top();
-				m_forwardHistory.pop();
-				m_backHistory.push(m_currentDirectory);
-
-				m_setDirectory(newPath, false);
-			}
+			m_zoom += ImGui::GetIO().MouseWheel;
+			m_zoom = std::min<float>(25.0f, std::max<float>(1.0f, m_zoom));
+			m_refreshIconPreview();
 		}
-		if (noForwardHistory)
-			ImGui::PopStyleVar();
-		ImGui::SameLine();
+		ImGui::EndChild();
 
-		if (ImGui::ArrowButtonEx("##up", ImGuiDir_Up, ImVec2(GUI_ELEMENT_SIZE, GUI_ELEMENT_SIZE)))
-		{
-			if (m_currentDirectory.has_parent_path())
-				m_setDirectory(m_currentDirectory.parent_path());
+		// Update bottom toolbar state
+		m_filterCombo->clear();
+		const char* p = m_filter.c_str();
+		while(*p) {
+			m_filterCombo->append(p);
+			p += strlen(p) + 1;
 		}
+		m_filterCombo->setSelectedIndex(m_filterSelection);
 
-		std::filesystem::path curDirCopy = m_currentDirectory;
-		if (PathBox("##pathbox", curDirCopy, m_pathBuffer, ImVec2(-250, GUI_ELEMENT_SIZE)))
-			m_setDirectory(curDirCopy);
-		ImGui::SameLine();
-
-		if (FavoriteButton("##dirfav", std::count(m_favorites.begin(), m_favorites.end(), m_currentDirectory.u8string())))
-		{
-			if (std::count(m_favorites.begin(), m_favorites.end(), m_currentDirectory.u8string()))
-				RemoveFavorite(m_currentDirectory.u8string());
-			else
-				AddFavorite(m_currentDirectory.u8string());
-		}
-		ImGui::SameLine();
-		ImGui::PopStyleColor();
-
-		if (ImGui::InputTextEx("##searchTB", "Search", m_searchBuffer, 128, ImVec2(-FLT_MIN, GUI_ELEMENT_SIZE), 0)) // TODO: no hardcoded literals
-			m_setDirectory(m_currentDirectory, false);																// refresh
-
-		/***** CONTENT *****/
-		float bottomBarHeight = (ImGui::GetFontSize() + ImGui::GetStyle().FramePadding.y + ImGui::GetStyle().ItemSpacing.y * 2.0f) * 2;
-		if (ImGui::BeginTable("##table", 2, ImGuiTableFlags_Resizable, ImVec2(0, -bottomBarHeight)))
-		{
-			ImGui::TableSetupColumn("##tree", ImGuiTableColumnFlags_WidthFixed, 125.0f);
-			ImGui::TableSetupColumn("##content", ImGuiTableColumnFlags_WidthStretch);
-			ImGui::TableNextRow();
-
-			// the tree on the left side
-			ImGui::TableSetColumnIndex(0);
-			ImGui::BeginChild("##treeContainer", ImVec2(0, -bottomBarHeight));
-			for (auto node : m_treeCache)
-				m_renderTree(node);
-			ImGui::EndChild();
-
-			// content on the right side
-			ImGui::TableSetColumnIndex(1);
-			ImGui::BeginChild("##contentContainer", ImVec2(0, -bottomBarHeight));
-			m_renderContent();
-			ImGui::EndChild();
-			if (ImGui::IsItemHovered() && ImGui::GetIO().KeyCtrl && ImGui::GetIO().MouseWheel != 0.0f)
-			{
-				m_zoom += ImGui::GetIO().MouseWheel;
-				m_zoom = std::min<float>(25.0f, std::max<float>(1.0f, m_zoom));
-				m_refreshIconPreview();
-			}
-			m_renderPopups();
-
-			ImGui::EndTable();
-		}
-
-		/***** BOTTOM BAR *****/
-		ImGui::Text("File name:");
-		ImGui::SameLine();
-		if (ImGui::InputTextEx("##file_input", "", m_inputTextbox, 1024, ImVec2(m_type != IFD_DIALOG_DIRECTORY ? -250.0f : -FLT_MIN, 0), ImGuiInputTextFlags_EnterReturnsTrue))
-			m_finalize(m_inputTextbox);
-		if (m_type != IFD_DIALOG_DIRECTORY)
-		{
-			ImGui::SameLine();
-			ImGui::SetNextItemWidth(-FLT_MIN);
-
-			int sel = m_filterSelection;
-			if (ImGui::Combo("##ext_combo", &sel, m_filter.c_str()))
-			{
-				m_filterSelection = sel;
-				m_setDirectory(m_currentDirectory, false); // refresh
-			}
-		}
-
-		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().ItemSpacing.y);
-		ImGui::SetCursorPosX(ImGui::GetWindowWidth() - ImGui::CalcTextSize("Cancel").x - ImGui::CalcTextSize("OK").x - ImGui::GetStyle().ItemSpacing.x * 4.0f - ImGui::GetStyle().FramePadding.x * 4.0f);
-		if (ImGui::Button("OK"))
-			m_finalize(m_inputTextbox);
-		ImGui::SameLine();
-		if (ImGui::Button("Cancel"))
-			m_isOpen = false;
+		if (m_type != IFD_DIALOG_DIRECTORY) m_filterCombo->show();
+		else m_filterCombo->hide();
+		
+		m_okButton->setEnabled(m_inputTextbox[0] != '\0');
+		m_bottomToolbar->render();
 	}
 }

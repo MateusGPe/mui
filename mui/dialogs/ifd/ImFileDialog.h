@@ -1,6 +1,12 @@
 // include/ImFileDialog/ImFileDialog.h
 #pragma once
 #include "Models.h"
+#include "../../widgets/button.hpp"
+#include "../../widgets/iconbutton.hpp"
+#include "../../widgets/breadcrumb.hpp"
+#include "../../widgets/entry.hpp"
+#include "../../widgets/combobox.hpp"
+#include "../../layouts/box.hpp"
 #include <stack>
 #include <string>
 #include <thread>
@@ -60,6 +66,21 @@ namespace ifd
 		std::function<void(void *)> DeleteTexture;
 
 	private:
+		// mui controls
+		mui::HBoxPtr m_toolbar;
+		mui::IconButtonPtr m_backButton;
+		mui::IconButtonPtr m_forwardButton;
+		mui::IconButtonPtr m_upButton;
+		mui::BreadcrumbBarPtr m_pathBox;
+		mui::IconButtonPtr m_favoriteButton;
+		mui::EntryPtr m_searchBox;
+
+		mui::HBoxPtr m_bottomToolbar;
+		mui::EntryPtr m_fileNameInput;
+		mui::ComboBoxPtr m_filterCombo;
+		mui::ButtonPtr m_cancelButton;
+		mui::ButtonPtr m_okButton;
+		
 		std::string m_currentKey;
 		std::string m_currentTitle;
 		std::filesystem::path m_currentDirectory;

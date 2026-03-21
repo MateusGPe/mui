@@ -1,0 +1,53 @@
+// widgets/iconbutton.hpp
+#pragma once
+#include "control.hpp"
+#include <string>
+#include <functional>
+#include <memory>
+#include <imgui.h>
+
+namespace mui
+{
+    enum class IconButtonLayout
+    {
+        Horizontal,
+        Vertical
+    };
+
+    class IconButton;
+    using IconButtonPtr = std::shared_ptr<IconButton>;
+
+    class IconButton : public Control<IconButton>
+    {
+    protected:
+        std::string text;
+        std::string iconText;
+        ImTextureID iconTex = 0;
+        IconButtonLayout layout = IconButtonLayout::Horizontal;
+        
+        bool selected = false;
+        float width = 0.0f;
+        float height = 0.0f;
+        ImVec2 iconSize = ImVec2(16.0f, 16.0f);
+        
+        std::function<void()> onClickCb;
+        std::function<void()> onDoubleClickCb;
+
+    public:
+        explicit IconButton(const std::string &text = "");
+        static IconButtonPtr create(const std::string &text = "") { return std::make_shared<IconButton>(text); }
+
+        void renderControl() override;
+
+        IconButtonPtr setText(const std::string &t);
+        IconButtonPtr setIconText(const std::string &t);
+        IconButtonPtr setIconTexture(ImTextureID tex);
+        IconButtonPtr setLayout(IconButtonLayout l);
+        IconButtonPtr setSelected(bool s);
+        IconButtonPtr setSize(float w, float h);
+        IconButtonPtr setIconSize(float w, float h);
+        
+        IconButtonPtr onClick(std::function<void()> cb);
+        IconButtonPtr onDoubleClick(std::function<void()> cb);
+    };
+} // namespace mui

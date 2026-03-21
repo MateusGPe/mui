@@ -9,6 +9,9 @@
 // Forward declare SDL_GLContext to avoid including SDL.h in the header
 typedef struct SDL_GLContextState *SDL_GLContext;
 struct SDL_Renderer;
+
+#include "../dialogs/dialogs.hpp"
+
 namespace mui
 {
     class Window;
@@ -16,13 +19,6 @@ namespace mui
     using Identifier = ImGuiID;
     extern bool g_use_opengl;
     extern SDL_Renderer *g_renderer;
-
-    struct ActiveMessageBox
-    {
-        std::string title;
-        std::string message;
-        bool open_popup = true;
-    };
 
     enum class ThemeType
     {

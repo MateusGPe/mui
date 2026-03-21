@@ -1,7 +1,10 @@
 #include "dialogs.hpp"
 #include "ifd/ImFileDialog.h"
 #include "../core/app.hpp"
+#include "IconsFontAwesome6.h"
 #include <vector>
+#include <imgui.h>
+#include <imgui_internal.h>
 
 namespace mui
 {
@@ -58,13 +61,37 @@ namespace mui
 
     void Dialogs::msgBox(const std::string &title, const std::string &message)
     {
-        App::addMessageBox({title, message});
+        App::addMessageBox({title, message, MessageBoxType::Info, {{"OK", nullptr}}});
+    }
+
+    void Dialogs::msgBoxInfo(const std::string &title, const std::string &message)
+    {
+        App::addMessageBox({title, message, MessageBoxType::Info, {{"OK", nullptr}}});
+    }
+
+    void Dialogs::msgBoxWarning(const std::string &title, const std::string &message)
+    {
+        App::addMessageBox({title, message, MessageBoxType::Warning, {{"OK", nullptr}}});
     }
 
     void Dialogs::msgBoxError(const std::string &title, const std::string &message)
     {
-        // For now, same as msgBox. Could be styled differently in App::processMessageBoxes.
-        App::addMessageBox({title, message});
+        App::addMessageBox({title, message, MessageBoxType::Error, {{"OK", nullptr}}});
+    }
+
+    void Dialogs::msgBoxConfirm(const std::string &title, const std::string &message, std::function<void()> on_ok, std::function<void()> on_cancel)
+    {
+        App::addMessageBox({title, message, MessageBoxType::Question, {{"OK", on_ok}, {"Cancel", on_cancel}}});
+    }
+
+    void Dialogs::msgBoxQuestion(const std::string &title, const std::string &message, std::function<void()> on_yes, std::function<void()> on_no)
+    {
+        App::addMessageBox({title, message, MessageBoxType::Question, {{"Yes", on_yes}, {"No", on_no}}});
+    }
+
+    void Dialogs::msgBoxCustom(const std::string &title, const std::string &message, MessageBoxType type, std::vector<MessageBoxButton> &&buttons)
+    {
+        App::addMessageBox({title, message, type, std::move(buttons)});
     }
 
     void Dialogs::openFile(const std::string &title, const std::string &filter, std::function<void(const std::string &)> on_ok, std::function<void()> on_cancel, const std::string &startingDir)
@@ -107,6 +134,93 @@ namespace mui
         if (ifd::FileDialog::Instance().Save(key, title, filter, startingDir))
         {
             g_current_dialog_state = {key, on_ok, nullptr, on_cancel};
+        }
+    }
+
+    void Dialogs::renderMessageBox(ActiveMessageBox &mb, bool &isOpen)
+    {
+        // --- Icon and Color based on type ---
+        const char *icon = ICON_FA_CIRCLE_INFO;
+        ImVec4 iconColor = ImVec4(0.12f, 0.53f, 0.90f, 1.00f); // Blue for Info from light theme
+
+        // Use theme-aware colors if possible
+        if (App::getTheme() == ThemeType::Dark)
+        {
+            iconColor = ImVec4(0.26f, 0.59f, 0.98f, 1.00f); // Blue from dark theme
+        }
+
+        switch (mb.type)
+        {
+        case MessageBoxType::Warning:
+            icon = ICON_FA_TRIANGLE_EXCLAMATION;
+            iconColor = ImVec4(1.0f, 0.75f, 0.0f, 1.0f); // Amber/Yellow for both themes
+            break;
+        case MessageBoxType::Error:
+            icon = ICON_FA_CIRCLE_XMARK;
+            iconColor = ImVec4(0.9f, 0.2f, 0.2f, 1.0f); // Red for both themes
+            break;
+        case MessageBoxType::Question:
+            icon = ICON_FA_CIRCLE_QUESTION;
+            // Use info color, which is already the default.
+            break;
+        case MessageBoxType::Info:
+        default:
+            // Defaults are already set
+            break;
+        }
+
+        // --- Layout for Icon and Text ---
+        if (ImGui::BeginTable("msgbox_layout", 2, ImGuiTableFlags_SizingFixedFit))
+        {
+            ImGui::TableSetupColumn("icon", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("text", ImGuiTableColumnFlags_WidthStretch);
+            ImGui::TableNextRow();
+
+            ImGui::TableSetColumnIndex(0);
+            ImGui::PushStyleColor(ImGuiCol_Text, iconColor);
+            ImGui::SetWindowFontScale(2.0f);
+            ImGui::TextUnformatted(icon);
+            ImGui::SetWindowFontScale(1.0f);
+            ImGui::PopStyleColor();
+
+            ImGui::TableSetColumnIndex(1);
+            ImGui::TextWrapped("%s", mb.message.c_str());
+
+            ImGui::EndTable();
+        }
+
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        // --- Buttons ---
+        const float button_width = 100.0f;
+        const float button_spacing = ImGui::GetStyle().ItemSpacing.x;
+        float total_buttons_width = 0.0f;
+        if (!mb.buttons.empty())
+        {
+            total_buttons_width = (mb.buttons.size() * button_width) + ((mb.buttons.size() - 1) * button_spacing);
+        }
+
+        // Right-align the button group
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - total_buttons_width);
+
+        for (size_t i = 0; i < mb.buttons.size(); ++i)
+        {
+            const auto &button = mb.buttons[i];
+            if (i > 0)
+            {
+                ImGui::SameLine();
+            }
+            if (ImGui::Button(button.text.c_str(), ImVec2(button_width, 0)))
+            {
+                if (button.callback)
+                {
+                    button.callback();
+                }
+                ImGui::CloseCurrentPopup();
+                isOpen = false;
+            }
         }
     }
 } // namespace mui

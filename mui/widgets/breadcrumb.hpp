@@ -5,6 +5,7 @@
 #include <vector>
 #include <functional>
 #include <memory>
+#include <imgui.h>
 
 namespace mui
 {
@@ -16,21 +17,28 @@ namespace mui
     protected:
         std::string currentPath;
         std::vector<std::string> segments;
+        char editBuffer[1024] = {0};
         bool isEditing = false;
-        char editBuffer[1024] = "";
 
-        std::function<void(const std::string&)> onPathNavigatedCb;
+        float width = 0.0f;
+        float height = 0.0f;
 
+        std::function<void(const std::string &)> onPathNavigatedCb;
         void parsePath();
 
     public:
-        BreadcrumbBar(const std::string& path = "");
-        static BreadcrumbBarPtr create(const std::string& path = "") { return std::make_shared<BreadcrumbBar>(path); }
+        explicit BreadcrumbBar(const std::string &path = "");
+        static BreadcrumbBarPtr create(const std::string &path = "") { return std::make_shared<BreadcrumbBar>(path); }
 
         void renderControl() override;
 
         std::string getPath() const;
-        BreadcrumbBarPtr setPath(const std::string& path);
-        BreadcrumbBarPtr onPathNavigated(std::function<void(const std::string&)> cb);
+        BreadcrumbBarPtr setPath(const std::string &path);
+        BreadcrumbBarPtr onPathNavigated(std::function<void(const std::string &)> cb);
+
+        BreadcrumbBarPtr setSize(float w, float h);
+        
+        bool getIsEditing() const { return isEditing; }
+        BreadcrumbBarPtr setIsEditing(bool editing);
     };
 } // namespace mui

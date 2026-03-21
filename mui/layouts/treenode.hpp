@@ -3,7 +3,9 @@
 #include "../widgets/control.hpp"
 #include <string>
 #include <vector>
+#include <functional>
 #include <memory>
+#include <imgui.h>
 
 namespace mui
 {
@@ -14,10 +16,16 @@ namespace mui
     {
     protected:
         std::string label;
+        std::string iconText;
+        ImTextureID iconTex = 0;
         std::vector<IControlPtr> children;
+        
         bool defaultOpen = false;
         bool framed = false;
-        bool spanAvailWidth = false;
+        bool selected = false;
+
+        std::function<void()> onClickCb;
+        std::function<void()> onDoubleClickCb;
 
     public:
         explicit TreeNode(const std::string& label);
@@ -29,6 +37,11 @@ namespace mui
         TreeNodePtr append(IControlPtr child);
         TreeNodePtr setDefaultOpen(bool open);
         TreeNodePtr setFramed(bool f);
-        TreeNodePtr setSpanAvailWidth(bool span);
+        TreeNodePtr setSelected(bool s);
+        TreeNodePtr setIconText(const std::string& t);
+        TreeNodePtr setIconTexture(ImTextureID tex);
+        
+        TreeNodePtr onClick(std::function<void()> cb);
+        TreeNodePtr onDoubleClick(std::function<void()> cb);
     };
 } // namespace mui
