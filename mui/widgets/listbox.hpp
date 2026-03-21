@@ -33,6 +33,7 @@ namespace mui
         ListBoxPtr setSelected(int index);
         ListBoxPtr setVisibleItems(int count);
         ListBoxPtr setSpanAvailWidth(bool span);
+        ListBoxPtr setUseContainerWidth(bool use);
 
         ListBoxPtr onSelected(std::function<void()> cb);
         ListBoxPtr onDoubleClick(std::function<void()> cb);

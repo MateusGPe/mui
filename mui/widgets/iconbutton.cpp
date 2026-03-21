@@ -27,7 +27,12 @@ namespace mui
 
         // 1. Calculate the ideal dimensions
         ImVec2 avail = ImGui::GetContentRegionAvail();
-        ImVec2 actualSize(spanAvailWidth ? avail.x : width, height);
+        float w = width;
+        if (spanAvailWidth)
+            w = avail.x;
+        else if (useContainerWidth)
+            w = ImGui::CalcItemWidth();
+        ImVec2 actualSize(w, height);
         
         float contentWidth = 0.0f;
         float calculatedIconWidth = iconSize.x;
@@ -125,4 +130,10 @@ namespace mui
     IconButtonPtr IconButton::setIconSize(float w, float h) { iconSize = ImVec2(w, h); return self(); }
     IconButtonPtr IconButton::onClick(std::function<void()> cb) { onClickCb = std::move(cb); return self(); }
     IconButtonPtr IconButton::onDoubleClick(std::function<void()> cb) { onDoubleClickCb = std::move(cb); return self(); }
+
+    IconButtonPtr IconButton::setUseContainerWidth(bool use)
+    {
+        useContainerWidth = use;
+        return self();
+    }
 } // namespace mui

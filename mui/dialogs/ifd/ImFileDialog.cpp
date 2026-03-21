@@ -91,7 +91,7 @@ namespace ifd
 										{
 				m_filterSelection = m_filterCombo->getSelectedIndex();
 				// A change in filter requires rebuilding the content list
-				m_setDirectory(m_currentDirectory); })->setMinWidth(100.0f);
+				m_setDirectory(m_currentDirectory); })->setMinWidth(160.0f);
 
 		m_cancelButton = mui::Button::create("Cancel")->onClick([&]()
 																{ m_isOpen = false; });

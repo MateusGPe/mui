@@ -14,7 +14,14 @@ namespace mui
         ScopedID id(this);
         ImGui::BeginDisabled(!enabled);
 
-        if (ImGui::BeginListBox("##listbox", ImVec2(spanAvailWidth ? -FLT_MIN : 0, visibleItemsCount * ImGui::GetTextLineHeightWithSpacing()))) {
+        float w = width;
+        if (spanAvailWidth)
+            w = -FLT_MIN;
+        else if (useContainerWidth)
+            w = ImGui::CalcItemWidth();
+        if (w <= 0) w = 0; // For BeginListBox, 0 means auto-fit content width
+
+        if (ImGui::BeginListBox("##listbox", ImVec2(w, visibleItemsCount * ImGui::GetTextLineHeightWithSpacing()))) {
             for (int i = 0; i < (int)items.size(); ++i) {
                 const bool isSelected = (selectedIndex == i);
                 if (ImGui::Selectable(items[i].c_str(), isSelected)) {
@@ -46,4 +53,10 @@ namespace mui
     ListBoxPtr ListBox::setSpanAvailWidth(bool span) { spanAvailWidth = span; return self(); }
     ListBoxPtr ListBox::onSelected(std::function<void()> cb) { onSelectedCb = std::move(cb); return self(); }
     ListBoxPtr ListBox::onDoubleClick(std::function<void()> cb) { onDoubleClickCb = std::move(cb); return self(); }
+
+    ListBoxPtr ListBox::setUseContainerWidth(bool use)
+    {
+        useContainerWidth = use;
+        return self();
+    }
 } // namespace mui

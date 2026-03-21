@@ -200,8 +200,8 @@ IControlPtr createBasicsTab(const LabelPtr &lblStatus)
         ->defaultShadow();
 
     auto chkToggle = Checkbox::create("Standard Checkbox");
-    chkToggle->onToggled([lblStatus, chkToggle]()
-                         { lblStatus->setText(chkToggle->isChecked() ? "Checkbox Enabled" : "Checkbox Disabled"); });
+    chkToggle->onToggled([lblStatus](bool checked)
+                         { lblStatus->setText(checked ? "Checkbox Enabled" : "Checkbox Disabled"); });
     chkToggle->setScale(1.2f); // Make the checkbox larger for better visibility
 
     // Modern ToggleSwitch demonstration

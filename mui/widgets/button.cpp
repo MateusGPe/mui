@@ -2,6 +2,7 @@
 #include "app.hpp"
 #include <imgui.h>
 #include "../core/scoped.hpp"
+#include <algorithm>
 
 namespace mui
 {
@@ -22,20 +23,24 @@ namespace mui
         }
 
         bool clicked = false;
-        ImVec2 buttonSize(0, height);
-        if (width > 0)
+        ImVec2 buttonSize(width, height);
+        if (spanAvailWidth)
         {
-            buttonSize.x = width;
-        }
-        else if (spanAvailWidth)
-        {
-            // Using -FLT_MIN is a common ImGui trick to fill available width.
-            buttonSize.x = -FLT_MIN;
+            buttonSize.x = ImGui::GetContentRegionAvail().x;
         }
         else if (useContainerWidth)
         {
             buttonSize.x = ImGui::CalcItemWidth();
         }
+
+        // Auto-size if needed before applying constraints
+        if (buttonSize.x <= 0.0f)
+            buttonSize.x = ImGui::CalcTextSize(text.c_str(), NULL, true).x + ImGui::GetStyle().FramePadding.x * 2.0f;
+        if (buttonSize.y <= 0.0f)
+            buttonSize.y = ImGui::GetFrameHeight();
+
+        buttonSize.x = std::clamp(buttonSize.x, minSize.x, maxSize.x);
+        buttonSize.y = std::clamp(buttonSize.y, minSize.y, maxSize.y);
 
         switch (type)
         {

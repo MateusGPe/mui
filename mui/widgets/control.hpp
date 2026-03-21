@@ -148,19 +148,19 @@ namespace mui
             {
                 // Simulated Soft Shadow (Hack)
                 // Warning: High iterations will spike draw calls. Keep between 3 and 5.
-                const int iterations = 4;
-                for (int i = 1; i <= iterations; ++i)
+                const int iterations = 5; // Using 5 for a slightly smoother falloff
+                // Draw from largest, most transparent, to smallest, most opaque for correct blending.
+                // The original loop was reversed, causing larger, more transparent rectangles to be
+                // drawn over smaller, more opaque ones, effectively hiding the shadow.
+                for (int i = iterations; i >= 1; --i)
                 {
                     float step = (shadowBlur / iterations) * i;
                     // Fade alpha outwards
                     float alpha = shadowColor.w * (1.0f - ((float)i / iterations));
                     ImU32 col = ImGui::GetColorU32(ImVec4(shadowColor.x, shadowColor.y, shadowColor.z, alpha));
 
-                    draw_list->AddRectFilled(
-                        ImVec2(p_min.x + shadowOffset.x - step, p_min.y + shadowOffset.y - step),
-                        ImVec2(p_max.x + shadowOffset.x + step, p_max.y + shadowOffset.y + step),
-                        col,
-                        rounding + step);
+                    draw_list->AddRectFilled(ImVec2(p_min.x + shadowOffset.x - step, p_min.y + shadowOffset.y - step),
+                                             ImVec2(p_max.x + shadowOffset.x + step, p_max.y + shadowOffset.y + step), col, rounding + step);
                 }
             }
 

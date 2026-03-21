@@ -17,39 +17,34 @@ namespace mui
 
         std::string preview = (selectedIndex >= 0 && selectedIndex < (int)items.size()) ? items[selectedIndex] : "";
 
-        auto render_combo = [&]
-        {
-            if (ImGui::BeginCombo("##combo", preview.c_str()))
-            {
-                for (int i = 0; i < (int)items.size(); ++i)
-                {
-                    const bool isSelected = (selectedIndex == i);
-                    if (ImGui::Selectable(items[i].c_str(), isSelected))
-                    {
-                        selectedIndex = i;
-                        if (onChangedCb)
-                            onChangedCb();
-                    }
-                    if (isSelected)
-                    {
-                        ImGui::SetItemDefaultFocus();
-                    }
-                }
-                ImGui::EndCombo();
-            }
-        };
+        float w = width;
+        if (spanAvailWidth)
+            w = -FLT_MIN;
 
+        ScopedItemWidth item_width;
+        if (w != 0.0f)
+            item_width.push(w);
+        else if (minSize.x > 0)
+            ImGui::SetNextItemWidth(minSize.x);
+        // useContainerWidth is handled by not pushing a width.
+
+        if (ImGui::BeginCombo("##combo", preview.c_str()))
         {
-            ScopedItemWidth width;
-            if (spanAvailWidth)
+            for (int i = 0; i < (int)items.size(); ++i)
             {
-                width.push(-FLT_MIN);
+                const bool isSelected = (selectedIndex == i);
+                if (ImGui::Selectable(items[i].c_str(), isSelected))
+                {
+                    selectedIndex = i;
+                    if (onChangedCb)
+                        onChangedCb();
+                }
+                if (isSelected)
+                {
+                    ImGui::SetItemDefaultFocus();
+                }
             }
-            else if (useContainerWidth)
-            {
-                width.push(ImGui::CalcItemWidth());
-            }
-            render_combo();
+            ImGui::EndCombo();
         }
 
         renderTooltip();
@@ -101,6 +96,12 @@ namespace mui
     ComboBoxPtr ComboBox::setSpanAvailWidth(bool span)
     {
         spanAvailWidth = span;
+        return self();
+    }
+
+    ComboBoxPtr ComboBox::setMinWidth(float w)
+    {
+        minSize.x = w;
         return self();
     }
 } // namespace mui

@@ -15,7 +15,7 @@ namespace mui
         std::string text;
         bool checked;
         float scale = 1.0f;
-        std::function<void()> onToggledCb;
+        std::function<void(bool)> onToggledCb;
 
     public:
         explicit Checkbox(const std::string &text);
@@ -28,7 +28,7 @@ namespace mui
         CheckboxPtr setText(const std::string &t);
 
         CheckboxPtr setChecked(bool c);
-        CheckboxPtr onToggled(std::function<void()> cb);
+        CheckboxPtr onToggled(std::function<void(bool)> cb);
         CheckboxPtr setScale(float s);
     };
 } // namespace mui

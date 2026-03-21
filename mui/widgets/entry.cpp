@@ -99,6 +99,10 @@ namespace mui
         {
             item_width.push(-FLT_MIN);
         }
+        else if (useContainerWidth)
+        {
+            // Do nothing, will inherit from container.
+        }
         render_entry();
 
         renderTooltip();
@@ -165,6 +169,12 @@ namespace mui
     EntryPtr Entry::setWidth(float w)
     {
         width = w;
+        return self();
+    }
+
+    EntryPtr Entry::setUseContainerWidth(bool use)
+    {
+        useContainerWidth = use;
         return self();
     }
 

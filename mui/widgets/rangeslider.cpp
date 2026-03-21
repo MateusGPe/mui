@@ -37,6 +37,10 @@ namespace mui
             {
                 width.push(-FLT_MIN);
             }
+            else if (useContainerWidth)
+            {
+                // Do nothing, will inherit width from container
+            }
             render_slider();
         }
 
@@ -52,6 +56,12 @@ namespace mui
     RangeSliderPtr RangeSlider::onChanged(std::function<void(float, float)> cb)
     {
         onChangedCb = std::move(cb);
+        return self();
+    }
+
+    RangeSliderPtr RangeSlider::setUseContainerWidth(bool use)
+    {
+        useContainerWidth = use;
         return self();
     }
 }

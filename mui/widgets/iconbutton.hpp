@@ -43,6 +43,7 @@ namespace mui
         IconButtonPtr setLayout(IconButtonLayout l);
         IconButtonPtr setSelected(bool s);
         IconButtonPtr setIconSize(float w, float h);
+        IconButtonPtr setUseContainerWidth(bool use);
         
         IconButtonPtr onClick(std::function<void()> cb);
         IconButtonPtr onDoubleClick(std::function<void()> cb);

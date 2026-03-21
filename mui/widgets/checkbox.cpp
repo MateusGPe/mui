@@ -25,11 +25,23 @@ namespace mui
         const ImGuiStyle &style = ImGui::GetStyle();
         const ImGuiID id = window->GetID(text.c_str());
 
-        const float check_box_size = ImGui::GetFontSize() * scale;
+        const float check_box_size = ImGui::GetFrameHeight() * scale;
         const ImVec2 label_size = ImGui::CalcTextSize(text.c_str(), NULL, true);
 
-        const float frame_height = std::max(check_box_size, label_size.y);
-        const ImRect total_bb(window->DC.CursorPos, ImVec2(window->DC.CursorPos.x + check_box_size + (label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f), window->DC.CursorPos.y + frame_height));
+        float w = width;
+        if (spanAvailWidth)
+            w = ImGui::GetContentRegionAvail().x;
+        else if (useContainerWidth)
+            w = ImGui::CalcItemWidth();
+        if (w <= 0)
+            w = check_box_size + (label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f);
+
+        float h = height > 0 ? height : std::max(check_box_size, label_size.y) + style.FramePadding.y * 2;
+
+        w = std::clamp(w, minSize.x, maxSize.x);
+        h = std::clamp(h, minSize.y, maxSize.y);
+
+        const ImRect total_bb(window->DC.CursorPos, ImVec2(window->DC.CursorPos.x + w, window->DC.CursorPos.y + h));
 
         ImGui::ItemSize(total_bb, 0.0f);
         if (!ImGui::ItemAdd(total_bb, id))
@@ -44,10 +56,10 @@ namespace mui
         {
             checked = !checked;
             if (onToggledCb)
-                onToggledCb();
+                onToggledCb(checked);
         }
 
-        const float check_y_offset = (frame_height - check_box_size) / 2.0f;
+        const float check_y_offset = (h - check_box_size) / 2.0f;
         const ImRect check_bb(ImVec2(total_bb.Min.x, total_bb.Min.y + check_y_offset), ImVec2(total_bb.Min.x + check_box_size, total_bb.Min.y + check_y_offset + check_box_size));
 
         ImGui::RenderFrame(check_bb.Min, check_bb.Max, ImGui::GetColorU32((held && hovered) ? ImGuiCol_FrameBgActive : hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg), true, style.FrameRounding);
@@ -59,7 +71,7 @@ namespace mui
 
         if (label_size.x > 0.0f)
         {
-            const float label_y_offset = (frame_height - label_size.y) / 2.0f;
+            const float label_y_offset = (h - label_size.y) / 2.0f;
             ImGui::RenderText(ImVec2(check_bb.Max.x + style.ItemInnerSpacing.x, total_bb.Min.y + label_y_offset), text.c_str());
         }
 
@@ -71,7 +83,7 @@ namespace mui
     CheckboxPtr Checkbox::setText(const std::string &t) { text = t; return self();}
 
     CheckboxPtr Checkbox::setChecked(bool c) { checked = c; return self(); }
-    CheckboxPtr Checkbox::onToggled(std::function<void()> cb) { onToggledCb = std::move(cb); return self(); }
+    CheckboxPtr Checkbox::onToggled(std::function<void(bool)> cb) { onToggledCb = std::move(cb); return self(); }
 
     CheckboxPtr Checkbox::setScale(float s)
     {

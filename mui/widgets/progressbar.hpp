@@ -23,5 +23,6 @@ namespace mui
         ProgressBarPtr setValue(float v);
         ProgressBarPtr setOverlayText(const std::string &text);
         ProgressBarPtr setSpanAvailWidth(bool span);
+        ProgressBarPtr setUseContainerWidth(bool use);
     };
 } // namespace mui

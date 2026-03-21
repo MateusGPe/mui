@@ -13,7 +13,12 @@ namespace mui
         if (!visible) return;
         ScopedID id(this);
 
-        ImVec2 size(spanAvailWidth ? -FLT_MIN : 0, 0);
+        float w = width;
+        if (spanAvailWidth)
+            w = -FLT_MIN;
+        else if (useContainerWidth)
+            w = ImGui::CalcItemWidth();
+        ImVec2 size(w, 0);
         const char *overlay = overlayText.empty() ? NULL : overlayText.c_str();
 
         ImGui::ProgressBar(value, size, overlay);
@@ -34,6 +39,12 @@ namespace mui
     ProgressBarPtr ProgressBar::setSpanAvailWidth(bool span)
     {
         spanAvailWidth = span;
+        return self();
+    }
+
+    ProgressBarPtr ProgressBar::setUseContainerWidth(bool use)
+    {
+        useContainerWidth = use;
         return self();
     }
 }

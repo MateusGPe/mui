@@ -55,6 +55,7 @@ namespace mui
         EntryPtr setAutoSelectAll(bool a);
         EntryPtr setNoSpaces(bool n);
         EntryPtr setWidth(float w);
+        EntryPtr setUseContainerWidth(bool use);
         EntryPtr onChanged(std::function<void()> cb);
         EntryPtr onEnter(std::function<void(const std::string&)> cb);
     };

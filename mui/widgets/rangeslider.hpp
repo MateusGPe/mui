@@ -26,5 +26,6 @@ namespace mui
         std::pair<float, float> getRange() const { return {currentMin, currentMax}; }
         RangeSliderPtr setRange(float vMin, float vMax);
         RangeSliderPtr onChanged(std::function<void(float, float)> cb);
+        RangeSliderPtr setUseContainerWidth(bool use);
     };
 }
