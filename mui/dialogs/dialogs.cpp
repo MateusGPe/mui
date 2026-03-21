@@ -6,6 +6,7 @@
 #include <imgui.h>
 #include "../core/scoped.hpp"
 #include <imgui_internal.h>
+#include <cstdlib> // for getenv
 
 namespace mui
 {
@@ -20,6 +21,45 @@ namespace mui
         };
 
         static DialogState g_current_dialog_state;
+
+        std::string get_effective_starting_dir(const std::string &startingDir)
+        {
+            if (!startingDir.empty())
+            {
+                return startingDir;
+            }
+
+            try
+            {
+                // This can throw if the current working directory has been deleted
+                return std::filesystem::current_path().u8string();
+            }
+            catch (const std::filesystem::filesystem_error &)
+            {
+// Fallback to a safe directory if current_path fails.
+#ifdef _WIN32
+                const char *user_profile = getenv("USERPROFILE");
+                if (user_profile)
+                {
+                    return std::string(user_profile);
+                }
+                const char *home_drive = getenv("HOMEDRIVE");
+                const char *home_path = getenv("HOMEPATH");
+                if (home_drive && home_path)
+                {
+                    return std::string(home_drive) + std::string(home_path);
+                }
+                return "C:\\"; // Absolute last resort for Windows
+#else
+                const char *home = getenv("HOME");
+                if (home)
+                {
+                    return std::string(home);
+                }
+                return "/"; // Absolute last resort for POSIX
+#endif
+            }
+        }
     } // namespace
 
     void Dialogs::processDialogs()
@@ -104,7 +144,8 @@ namespace mui
         }
         std::string key = "openfile##" + title;
 
-        if (ifd::FileDialog::Instance().Open(key, title, filter, false, startingDir))
+        std::string effectiveDir = get_effective_starting_dir(startingDir);
+        if (ifd::FileDialog::Instance().Open(key, title, filter, false, effectiveDir))
         {
             g_current_dialog_state = {key, on_ok, nullptr, on_cancel};
         }
@@ -118,7 +159,8 @@ namespace mui
         }
         std::string key = "openfiles##" + title;
 
-        if (ifd::FileDialog::Instance().Open(key, title, filter, true, startingDir))
+        std::string effectiveDir = get_effective_starting_dir(startingDir);
+        if (ifd::FileDialog::Instance().Open(key, title, filter, true, effectiveDir))
         {
             g_current_dialog_state = {key, nullptr, on_ok, on_cancel};
         }
@@ -132,7 +174,8 @@ namespace mui
         }
         std::string key = "savefile##" + title;
 
-        if (ifd::FileDialog::Instance().Save(key, title, filter, startingDir))
+        std::string effectiveDir = get_effective_starting_dir(startingDir);
+        if (ifd::FileDialog::Instance().Save(key, title, filter, effectiveDir))
         {
             g_current_dialog_state = {key, on_ok, nullptr, on_cancel};
         }
@@ -178,10 +221,12 @@ namespace mui
             ImGui::TableNextRow();
 
             ImGui::TableSetColumnIndex(0);
-            ScopedColor color(ImGuiCol_Text, iconColor);
-            ImGui::SetWindowFontScale(2.0f);
-            ImGui::TextUnformatted(icon);
-            ImGui::SetWindowFontScale(1.0f);
+            {
+                ScopedColor color(ImGuiCol_Text, iconColor);
+                ImGui::SetWindowFontScale(2.0f);
+                ImGui::TextUnformatted(icon);
+                ImGui::SetWindowFontScale(1.0f);
+            }
 
             ImGui::TableSetColumnIndex(1);
             ImGui::TextWrapped("%s", mb.message.c_str());

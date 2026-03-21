@@ -1,6 +1,7 @@
 #include "box.hpp"
 #include <imgui.h>
 #include <imgui_internal.h>
+#include "../core/scoped.hpp"
 
 namespace mui
 {
@@ -9,7 +10,7 @@ namespace mui
     {
         if (!visible)
             return;
-        ImGui::PushID(this);
+        ScopedID id(this);
 
         ImGuiTableFlags table_flags = ImGuiTableFlags_SizingStretchSame;
         if (scrollable)
@@ -25,12 +26,12 @@ namespace mui
                 ImGui::TableNextColumn();
                 if (child.stretchy)
                 {
-                    ImGui::PushItemWidth(-1);
+                    ScopedItemWidth width(-1);
+                    child.control->render();
                 }
-                child.control->render();
-                if (child.stretchy)
+                else
                 {
-                    ImGui::PopItemWidth();
+                    child.control->render();
                 }
                 if (padded)
                 {
@@ -47,8 +48,6 @@ namespace mui
                 ImGui::SetScrollHereY(1.0f);
             }
         }
-
-        ImGui::PopID();
     }
 
     HBox::HBox() : Box() {}
@@ -56,7 +55,7 @@ namespace mui
     {
         if (!visible)
             return;
-        ImGui::PushID(this);
+        ScopedID id(this);
 
         ImGuiTableFlags table_flags = 0;
         if (scrollable)
@@ -79,18 +78,16 @@ namespace mui
                 ImGui::TableNextColumn();
                 if (children[i].stretchy)
                 {
-                    ImGui::PushItemWidth(-FLT_MIN);
+                    ScopedItemWidth width(-FLT_MIN);
+                    children[i].control->render();
                 }
-                children[i].control->render();
-                if (children[i].stretchy)
+                else
                 {
-                    ImGui::PopItemWidth();
+                    children[i].control->render();
                 }
             }
             ImGui::EndTable();
         }
-
-        ImGui::PopID();
     }
 
     FlowBox::FlowBox() : Box() {}
@@ -98,7 +95,7 @@ namespace mui
     {
         if (!visible)
             return;
-        ImGui::PushID(this);
+        ScopedID id(this);
 
         ImGuiStyle &style = ImGui::GetStyle();
         float contentWidth = ImGui::GetContentRegionAvail().x;
@@ -164,21 +161,18 @@ namespace mui
             {
                 size_t child_idx = line[i];
 
-                if (extra_width_per_item > 0.0f)
                 {
-                    float item_width = flow_data[child_idx].lastKnownWidth;
-                    if (item_width == 0)
-                        item_width = 50.0f; // Guess for new items
-                    ImGui::PushItemWidth(item_width + extra_width_per_item);
-                }
+                    ScopedItemWidth width;
+                    ScopedID child_id((int)child_idx);
 
-                ImGui::PushID((int)child_idx);
-                children[child_idx].control->render();
-                ImGui::PopID();
-
-                if (extra_width_per_item > 0.0f)
-                {
-                    ImGui::PopItemWidth();
+                    if (extra_width_per_item > 0.0f)
+                    {
+                        float item_width = flow_data[child_idx].lastKnownWidth;
+                        if (item_width == 0)
+                            item_width = 50.0f; // Guess for new items
+                        width.push(item_width + extra_width_per_item);
+                    }
+                    children[child_idx].control->render();
                 }
 
                 // To prevent flickering, we only update the cached "natural" width of an item
@@ -186,14 +180,14 @@ namespace mui
                 // we rely on the last known natural width for layout calculations in the next frame.
                 // This provides a stable layout by breaking the feedback loop that causes flickering.
                 if (extra_width_per_item <= 0.0f)
+                {
                     flow_data[child_idx].lastKnownWidth = ImGui::GetItemRectSize().x;
+                }
 
                 if (i < line.size() - 1)
                     ImGui::SameLine(0.0f, spacing);
             }
         }
-
-        ImGui::PopID();
     }
     FlowBoxPtr FlowBox::append(IControlPtr child, bool stretchy)
     {
