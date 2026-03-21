@@ -12,7 +12,7 @@ namespace ifd
 	public:
 		FileTreeNode(const std::string &path)
 		{
-			Path = std::filesystem::u8path(path);
+			Path = std::filesystem::path(path.c_str());
 			Read = false;
 		}
 

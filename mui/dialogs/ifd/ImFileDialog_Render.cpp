@@ -33,9 +33,9 @@ namespace ifd
 		std::error_code ec;
 		ImGui::PushID(node);
 		bool isClicked = false;
-		std::string displayName = node->Path.stem().u8string();
+		std::string displayName = node->Path.stem().string();
 		if (displayName.size() == 0)
-			displayName = node->Path.u8string();
+			displayName = node->Path.string();
 		if (FolderNode(displayName.c_str(), (ImTextureID)(uintptr_t)m_getIcon(node->Path, true), isClicked))
 		{
 			if (!node->Read)
@@ -45,7 +45,7 @@ namespace ifd
 					for (const auto &entry : std::filesystem::directory_iterator(node->Path, ec))
 					{
 						if (std::filesystem::is_directory(entry, ec))
-							node->Children.push_back(new FileTreeNode(entry.path().u8string()));
+							node->Children.push_back(new FileTreeNode(entry.path().string()));
 					}
 				node->Read = true;
 			}
@@ -94,9 +94,9 @@ namespace ifd
 				int fileId = 0;
 				for (auto &entry : m_content)
 				{
-					std::string filename = entry.Path.filename().u8string();
+					std::string filename = entry.Path.filename().string();
 					if (filename.size() == 0)
-						filename = entry.Path.u8string(); // drive
+						filename = entry.Path.string(); // drive
 
 					bool isSelected = std::count(m_selections.begin(), m_selections.end(), entry.Path);
 
@@ -170,9 +170,9 @@ namespace ifd
 					entry.IconPreviewData = nullptr;
 				}
 
-				std::string filename = entry.Path.filename().u8string();
+				std::string filename = entry.Path.filename().string();
 				if (filename.size() == 0)
-					filename = entry.Path.u8string(); // drive
+					filename = entry.Path.string(); // drive
 
 				bool isSelected = std::count(m_selections.begin(), m_selections.end(), entry.Path);
 
@@ -231,7 +231,7 @@ namespace ifd
 			else
 			{
 				const FileData &data = m_content[m_selectedFileItem];
-				ImGui::TextWrapped("Are you sure you want to delete %s?", data.Path.filename().u8string().c_str());
+				ImGui::TextWrapped("Are you sure you want to delete %s?", data.Path.filename().string().c_str());
 				if (ImGui::Button("Yes"))
 				{
 					std::error_code ec;
@@ -303,9 +303,9 @@ namespace ifd
 		m_forwardButton->setEnabled(!m_forwardHistory.empty());
 		m_upButton->setEnabled(m_currentDirectory.has_parent_path());
 		if (!m_pathBox->getIsEditing()) {
-			m_pathBox->setPath(m_currentDirectory.u8string());
+			m_pathBox->setPath(m_currentDirectory.string());
 		}
-		m_favoriteButton->setSelected(std::count(m_favorites.begin(), m_favorites.end(), m_currentDirectory.u8string()) > 0);
+		m_favoriteButton->setSelected(std::count(m_favorites.begin(), m_favorites.end(), m_currentDirectory.string()) > 0);
 		
 		// Set search box width to a fixed value
 		m_searchBox->setWidth(250);

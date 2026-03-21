@@ -32,7 +32,7 @@ namespace mui
             try
             {
                 // This can throw if the current working directory has been deleted
-                return std::filesystem::current_path().u8string();
+                return std::filesystem::current_path().string();
             }
             catch (const std::filesystem::filesystem_error &)
             {
@@ -79,13 +79,13 @@ namespace mui
                     std::vector<std::string> paths;
                     for (const auto &p : instance.GetResults())
                     {
-                        paths.push_back(p.u8string());
+                        paths.push_back(p.string());
                     }
                     g_current_dialog_state.on_ok_multi(paths);
                 }
                 else if (g_current_dialog_state.on_ok_single)
                 {
-                    g_current_dialog_state.on_ok_single(instance.GetResult().u8string());
+                    g_current_dialog_state.on_ok_single(instance.GetResult().string());
                 }
             }
             else

@@ -8,15 +8,6 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 
-#ifdef _WIN32
-#define NOMINMAX
-#include <windows.h>
-#include <lmcons.h>
-#else
-#include <unistd.h>
-#include <pwd.h>
-#endif
-
 namespace ifd
 {
 	FileDialog::FileDialog()
@@ -63,11 +54,11 @@ namespace ifd
 			m_setDirectory(m_currentDirectory.parent_path()); });
 
 		m_pathBox = mui::BreadcrumbBar::create("")->onPathNavigated([&](const std::string &newPath)
-																	{ m_setDirectory(std::filesystem::u8path(newPath)); });
+																	{ m_setDirectory(std::filesystem::path(newPath)); });
 
 		m_favoriteButton = mui::IconButton::create(ICON_FA_STAR)->onClick([&]()
 																		  {
-			auto path = m_currentDirectory.u8string();
+			auto path = m_currentDirectory.string();
 			bool isFavorite = std::count(m_favorites.begin(), m_favorites.end(), path) > 0;
 			if (isFavorite) RemoveFavorite(path);
 			else AddFavorite(path); });
@@ -109,78 +100,7 @@ namespace ifd
 
 		m_setDirectory(std::filesystem::current_path(), false);
 
-		// favorites are available on every OS
-		FileTreeNode *quickAccess = new FileTreeNode("Quick Access");
-		quickAccess->Read = true;
-		m_treeCache.push_back(quickAccess);
-
-#ifdef _WIN32
-		wchar_t username[UNLEN + 1] = {0};
-		DWORD username_len = UNLEN + 1;
-		GetUserNameW(username, &username_len);
-
-		std::wstring userPath = L"C:\\Users\\" + std::wstring(username) + L"\\";
-
-		// Quick Access / Bookmarks
-		quickAccess->Children.push_back(new FileTreeNode(userPath + L"Desktop"));
-		quickAccess->Children.push_back(new FileTreeNode(userPath + L"Documents"));
-		quickAccess->Children.push_back(new FileTreeNode(userPath + L"Downloads"));
-		quickAccess->Children.push_back(new FileTreeNode(userPath + L"Pictures"));
-
-		// OneDrive
-		FileTreeNode *oneDrive = new FileTreeNode(userPath + L"OneDrive");
-		m_treeCache.push_back(oneDrive);
-
-		// This PC
-		FileTreeNode *thisPC = new FileTreeNode("This PC");
-		thisPC->Read = true;
-		if (std::filesystem::exists(userPath + L"3D Objects"))
-			thisPC->Children.push_back(new FileTreeNode(userPath + L"3D Objects"));
-		thisPC->Children.push_back(new FileTreeNode(userPath + L"Desktop"));
-		thisPC->Children.push_back(new FileTreeNode(userPath + L"Documents"));
-		thisPC->Children.push_back(new FileTreeNode(userPath + L"Downloads"));
-		thisPC->Children.push_back(new FileTreeNode(userPath + L"Music"));
-		thisPC->Children.push_back(new FileTreeNode(userPath + L"Pictures"));
-		thisPC->Children.push_back(new FileTreeNode(userPath + L"Videos"));
-		DWORD d = GetLogicalDrives();
-		for (int i = 0; i < 26; i++)
-			if (d & (1 << i))
-				thisPC->Children.push_back(new FileTreeNode(std::string(1, 'A' + i) + ":"));
-		m_treeCache.push_back(thisPC);
-#else
-		std::error_code ec;
-
-		// Quick Access
-		struct passwd *pw;
-		uid_t uid;
-		uid = geteuid();
-		pw = getpwuid(uid);
-		if (pw)
-		{
-			std::string homePath = "/home/" + std::string(pw->pw_name);
-
-			if (std::filesystem::exists(homePath, ec))
-				quickAccess->Children.push_back(new FileTreeNode(homePath));
-			if (std::filesystem::exists(homePath + "/Desktop", ec))
-				quickAccess->Children.push_back(new FileTreeNode(homePath + "/Desktop"));
-			if (std::filesystem::exists(homePath + "/Documents", ec))
-				quickAccess->Children.push_back(new FileTreeNode(homePath + "/Documents"));
-			if (std::filesystem::exists(homePath + "/Downloads", ec))
-				quickAccess->Children.push_back(new FileTreeNode(homePath + "/Downloads"));
-			if (std::filesystem::exists(homePath + "/Pictures", ec))
-				quickAccess->Children.push_back(new FileTreeNode(homePath + "/Pictures"));
-		}
-
-		// This PC
-		FileTreeNode *thisPC = new FileTreeNode("This PC");
-		thisPC->Read = true;
-		for (const auto &entry : std::filesystem::directory_iterator("/", ec))
-		{
-			if (std::filesystem::is_directory(entry, ec))
-				thisPC->Children.push_back(new FileTreeNode(entry.path().u8string()));
-		}
-		m_treeCache.push_back(thisPC);
-#endif
+		m_initSystemFavorites();
 	}
 
 	FileDialog::~FileDialog()
@@ -213,7 +133,7 @@ namespace ifd
 
 		m_parseFilter(filter);
 		if (!startingDir.empty())
-			m_setDirectory(std::filesystem::u8path(startingDir), false);
+			m_setDirectory(std::filesystem::path(startingDir), false);
 		else
 			m_setDirectory(m_currentDirectory, false); // refresh contents
 
@@ -240,7 +160,7 @@ namespace ifd
 
 		m_parseFilter(filter);
 		if (!startingDir.empty())
-			m_setDirectory(std::filesystem::u8path(startingDir), false);
+			m_setDirectory(std::filesystem::path(startingDir), false);
 		else
 			m_setDirectory(m_currentDirectory, false); // refresh contents
 
@@ -303,7 +223,7 @@ namespace ifd
 	{
 		mui::App::assertMainThread();
 
-		auto itr = std::find(m_favorites.begin(), m_favorites.end(), m_currentDirectory.u8string());
+		auto itr = std::find(m_favorites.begin(), m_favorites.end(), m_currentDirectory.string());
 
 		if (itr != m_favorites.end())
 			m_favorites.erase(itr);
@@ -329,7 +249,7 @@ namespace ifd
 		if (std::count(m_favorites.begin(), m_favorites.end(), path) > 0)
 			return;
 
-		if (!std::filesystem::exists(std::filesystem::u8path(path)))
+		if (!std::filesystem::exists(std::filesystem::path(path)))
 			return;
 
 		m_favorites.push_back(path);
@@ -363,9 +283,9 @@ namespace ifd
 
 		if (m_selections.size() == 1)
 		{
-			std::string filename = m_selections[0].filename().u8string();
+			std::string filename = m_selections[0].filename().string();
 			if (filename.size() == 0)
-				filename = m_selections[0].u8string(); // drive
+				filename = m_selections[0].string(); // drive
 
 			strcpy(m_inputTextbox, filename.c_str());
 		}
@@ -374,9 +294,9 @@ namespace ifd
 			std::string textboxVal = "";
 			for (const auto &sel : m_selections)
 			{
-				std::string filename = sel.filename().u8string();
+				std::string filename = sel.filename().string();
 				if (filename.size() == 0)
-					filename = sel.u8string();
+					filename = sel.string();
 
 				textboxVal += "\"" + filename + "\", ";
 			}
@@ -392,7 +312,7 @@ namespace ifd
 		{
 			if (!m_isMultiselect || m_selections.size() <= 1)
 			{
-				std::filesystem::path path = std::filesystem::u8path(filename);
+				std::filesystem::path path = std::filesystem::path(filename);
 				if (path.is_absolute())
 					m_result.push_back(path);
 				else

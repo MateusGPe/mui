@@ -33,10 +33,10 @@ namespace mui
     void BreadcrumbBar::parsePath()
     {
         segments.clear();
-        std::filesystem::path p(std::filesystem::u8path(currentPath));
+        std::filesystem::path p(currentPath);
         for (auto it = p.begin(); it != p.end(); ++it)
         {
-            std::string segment = it->u8string();
+            std::string segment = it->string();
             if (segment != "\\" && segment != "/")
             {
                 segments.push_back(segment);

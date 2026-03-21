@@ -13,7 +13,7 @@ namespace ifd
 		Path = path;
 
 		struct stat attr;
-		if (stat(path.u8string().c_str(), &attr) == 0)
+		if (stat(path.string().c_str(), &attr) == 0)
 		{
 			IsDirectory = S_ISDIR(attr.st_mode);
 			Size = attr.st_size;

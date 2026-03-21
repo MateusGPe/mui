@@ -138,7 +138,7 @@ namespace mui
             }
 
             // Draw current values centered on the slider
-            char bufMin[32], bufMax[32], bufFull[64];
+            char bufMin[32], bufMax[32], bufFull[128];
             snprintf(bufMin, sizeof(bufMin), format.c_str(), currentMin);
             snprintf(bufMax, sizeof(bufMax), format.c_str(), currentMax);
             snprintf(bufFull, sizeof(bufFull), "%s - %s", bufMin, bufMax);
@@ -155,7 +155,11 @@ namespace mui
 
         {
             ScopedItemWidth width;
-            if (spanAvailWidth)
+            if (this->width > 0)
+            {
+                width.push(this->width);
+            }
+            else if (spanAvailWidth)
             {
                 width.push(-FLT_MIN);
             }

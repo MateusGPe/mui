@@ -63,7 +63,7 @@ namespace ifd
 		size_t i = 0;
 		while (m_previewLoaderRunning)
 		{
-			FileData dataCopy(std::filesystem::u8path(""));
+			FileData dataCopy(std::filesystem::path(""));
 			bool found = false;
 
 			// Scoped lock to safely read from m_content
@@ -82,11 +82,11 @@ namespace ifd
 
 			if (found && !dataCopy.HasIconPreview && dataCopy.Path.has_extension())
 			{
-				std::string ext = dataCopy.Path.extension().u8string();
+				std::string ext = dataCopy.Path.extension().string();
 				if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".bmp" || ext == ".tga")
 				{
 					int width, height, nrChannels;
-					unsigned char *image = stbi_load(dataCopy.Path.u8string().c_str(), &width, &height, &nrChannels, STBI_rgb_alpha);
+					unsigned char *image = stbi_load(dataCopy.Path.string().c_str(), &width, &height, &nrChannels, STBI_rgb_alpha);
 
 					if (image != nullptr && width > 0 && height > 0)
 					{

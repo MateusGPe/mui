@@ -7,83 +7,8 @@
 #include <algorithm>
 #include <imgui.h>
 
-#ifdef _WIN32
-#define NOMINMAX
-#include <windows.h>
-#include <shellapi.h>
-#pragma comment(lib, "Shell32.lib")
-#endif
-
 namespace ifd
 {
-	void *FileDialog::m_getIcon(const std::filesystem::path &path, bool isDirectory)
-	{
-#ifdef _WIN32
-		if (m_icons.count(path.u8string()) > 0)
-			return m_icons[path.u8string()];
-
-		std::string pathU8 = path.u8string();
-
-		std::error_code ec;
-		m_icons[pathU8] = nullptr;
-
-		DWORD attrs = 0;
-		UINT flags = SHGFI_ICON | SHGFI_LARGEICON;
-		if (!std::filesystem::exists(path, ec))
-		{
-			flags |= SHGFI_USEFILEATTRIBUTES;
-			attrs = FILE_ATTRIBUTE_DIRECTORY;
-		}
-
-		SHFILEINFOW fileInfo = {0};
-		std::wstring pathW = path.wstring();
-		for (int i = 0; i < pathW.size(); i++)
-			if (pathW[i] == '/')
-				pathW[i] = '\\';
-		SHGetFileInfoW(pathW.c_str(), attrs, &fileInfo, sizeof(SHFILEINFOW), flags);
-
-		if (fileInfo.hIcon == nullptr)
-			return nullptr;
-
-		// check if icon is already loaded
-		auto itr = std::find(m_iconIndices.begin(), m_iconIndices.end(), fileInfo.iIcon);
-		if (itr != m_iconIndices.end())
-		{
-			const std::string &existingIconFilepath = m_iconFilepaths[itr - m_iconIndices.begin()];
-			m_icons[pathU8] = m_icons[existingIconFilepath];
-			return m_icons[pathU8];
-		}
-
-		m_iconIndices.push_back(fileInfo.iIcon);
-		m_iconFilepaths.push_back(pathU8);
-
-		ICONINFO iconInfo = {0};
-		GetIconInfo(fileInfo.hIcon, &iconInfo);
-
-		if (iconInfo.hbmColor == nullptr)
-			return nullptr;
-
-		DIBSECTION ds;
-		GetObject(iconInfo.hbmColor, sizeof(ds), &ds);
-		int byteSize = ds.dsBm.bmWidth * ds.dsBm.bmHeight * (ds.dsBm.bmBitsPixel / 8);
-
-		if (byteSize == 0)
-			return nullptr;
-
-		uint8_t *data = (uint8_t *)malloc(byteSize);
-		GetBitmapBits(iconInfo.hbmColor, byteSize, data);
-
-		m_icons[pathU8] = this->CreateTexture(data, ds.dsBm.bmWidth, ds.dsBm.bmHeight, 0);
-
-		free(data);
-
-		return m_icons[pathU8];
-#else
-		// Naturally fall back to FontAwesome
-		return nullptr;
-#endif
-	}
-
 	void FileDialog::m_clearIcons()
 	{
 		std::vector<unsigned int> deletedIcons;
@@ -113,11 +38,7 @@ namespace ifd
 			m_backHistory.push(m_currentDirectory);
 
 		m_currentDirectory = p;
-#ifdef _WIN32
-		// drives don't work well without the backslash symbol
-		if (p.u8string().size() == 2 && p.u8string()[1] == ':')
-			m_currentDirectory = std::filesystem::u8path(p.u8string() + "\\");
-#endif
+		m_fixDrivePath(m_currentDirectory);
 
 		m_clearIconPreview();
 		m_content.clear(); // p == "" after this line, due to reference
@@ -133,7 +54,7 @@ namespace ifd
 			m_clearIcons();
 		}
 
-		if (m_currentDirectory.u8string() == "Quick Access")
+		if (m_currentDirectory.string() == "Quick Access")
 		{
 			for (auto &node : m_treeCache)
 			{
@@ -142,7 +63,7 @@ namespace ifd
 						m_content.push_back(FileData(c->Path));
 			}
 		}
-		else if (m_currentDirectory.u8string() == "This PC")
+		else if (m_currentDirectory.string() == "This PC")
 		{
 			for (auto &node : m_treeCache)
 			{
@@ -166,7 +87,7 @@ namespace ifd
 					// check if filename matches search query
 					if (m_searchBuffer[0])
 					{
-						std::string filename = info.Path.u8string();
+						std::string filename = info.Path.string();
 
 						std::string filenameSearch = filename;
 						std::string query(m_searchBuffer);
@@ -185,7 +106,7 @@ namespace ifd
 							const auto &exts = m_filterExtensions[m_filterSelection];
 							if (exts.size() > 0)
 							{
-								std::string extension = info.Path.extension().u8string();
+								std::string extension = info.Path.extension().string();
 								bool isWildcard = (std::count(exts.begin(), exts.end(), "*.*") > 0);
 
 								// extension not found? skip
@@ -230,8 +151,8 @@ namespace ifd
 				// name
 				if (column == 0)
 				{
-					std::string lName = left.Path.u8string();
-					std::string rName = right.Path.u8string();
+					std::string lName = left.Path.string();
+					std::string rName = right.Path.string();
 
 					std::transform(lName.begin(), lName.end(), lName.begin(), ::tolower);
 					std::transform(rName.begin(), rName.end(), rName.begin(), ::tolower);

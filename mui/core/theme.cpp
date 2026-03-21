@@ -10,9 +10,8 @@
 #include <fontconfig/fontconfig.h>
 #endif
 
-// Include the macro definitions for the icons
-// (Ensure this file is in your include path)
 #include "IconsFontAwesome6.h"
+#include "fa_solid_900.hpp"
 
 namespace mui
 {
@@ -117,13 +116,13 @@ namespace mui
         // Define the Unicode range for FontAwesome 6
         static const ImWchar icon_ranges[] = {ICON_MIN_FA, ICON_MAX_16_FA, 0};
 
-        // Path to your TTF file (adjust this relative to your working directory)
-        const std::string iconFontPath = "fonts/fa-solid-900.ttf";
-
-        if (fileExists(iconFontPath))
-        {
-            io.Fonts->AddFontFromFileTTF(iconFontPath.c_str(), fontSize, &icon_config, icon_ranges);
-        }
+        // Load the embedded icon font from memory
+        io.Fonts->AddFontFromMemoryCompressedTTF(
+            fa_solid_900_compressed_data,
+            fa_solid_900_compressed_size,
+            fontSize,
+            &icon_config,
+            icon_ranges);
     }
 
     void Theme::applyStyle(float dpiScale)

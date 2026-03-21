@@ -111,6 +111,8 @@ namespace ifd
 		std::vector<int> m_iconIndices;
 		std::vector<std::string> m_iconFilepaths; // m_iconIndices[x] <-> m_iconFilepaths[x]
 		std::unordered_map<std::string, void *> m_icons;
+		void m_initSystemFavorites();
+		void m_fixDrivePath(std::filesystem::path &p);
 		void *m_getIcon(const std::filesystem::path &path, bool isDirectory);
 		void m_clearIcons();
 		void m_refreshIconPreview();
