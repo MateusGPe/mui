@@ -1,6 +1,7 @@
 #include "label.hpp"
 #include "app.hpp"
 #include <imgui.h>
+#include "../core/scoped.hpp"
 
 namespace mui
 {
@@ -8,20 +9,18 @@ namespace mui
 
     void Label::renderControl()
     {
-        if (!visible)
-            return;
-        ImGui::PushID(this);
+        if (!visible) return;
+        ScopedID id(this);
         ImGui::BeginDisabled(!enabled);
 
+        ScopedColor scoped_color;
         if (useCustomColor)
-            ImGui::PushStyleColor(ImGuiCol_Text, color);
+            scoped_color.push(ImGuiCol_Text, color);
 
         if (spanAvailWidth)
         {
-            // To make a simple text label span, we can use TextWrapped and push the item width.
-            ImGui::PushItemWidth(-FLT_MIN);
+            ScopedItemWidth width(-FLT_MIN);
             ImGui::TextWrapped("%s", text.c_str());
-            ImGui::PopItemWidth();
         }
         else
         {
@@ -45,11 +44,7 @@ namespace mui
 
         renderTooltip();
 
-        if (useCustomColor)
-            ImGui::PopStyleColor();
-
         ImGui::EndDisabled();
-        ImGui::PopID();
     }
 
     std::string Label::getText() const { return text; }

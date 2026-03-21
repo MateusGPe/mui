@@ -2,6 +2,7 @@
 #include "iconstack.hpp"
 #include "app.hpp"
 #include <imgui.h>
+#include "../core/scoped.hpp"
 
 namespace mui
 {
@@ -10,11 +11,11 @@ namespace mui
     void IconStack::renderControl()
     {
         if (!visible || icons.empty()) return;
-        ImGui::PushID(this);
+        ScopedID id(this);
         
         ImGui::BeginGroup();
         for (size_t i = 0; i < icons.size(); ++i) {
-            ImGui::PushID((int)i);
+            ScopedID icon_id((int)i);
             if (ImGui::Button(icons[i].icon.c_str(), ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight()))) {
                 if (icons[i].cb) icons[i].cb();
             }
@@ -22,11 +23,8 @@ namespace mui
                 ImGui::SetTooltip("%s", icons[i].tooltip.c_str());
             }
             if (i < icons.size() - 1) ImGui::SameLine();
-            ImGui::PopID();
         }
         ImGui::EndGroup();
-        
-        ImGui::PopID();
     }
 
     IconStackPtr IconStack::add(const std::string& icon, std::function<void()> onClick, const std::string& tip) {

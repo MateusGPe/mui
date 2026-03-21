@@ -1,6 +1,7 @@
 #include "tab.hpp"
 #include "app.hpp"
 #include <imgui.h>
+#include "../core/scoped.hpp"
 
 namespace mui
 {
@@ -9,7 +10,7 @@ namespace mui
     void Tab::renderControl()
     {
         if (!visible) return;
-        ImGui::PushID(this);
+        ScopedID id(this);
         if (ImGui::BeginTabBar("##tabs")) {
             for (size_t i = 0; i < pages.size(); ++i) {
                 if (ImGui::BeginTabItem(pages[i].name.c_str())) {
@@ -20,10 +21,10 @@ namespace mui
 
                     if (pages[i].margined)
                     {
-                        ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
-                        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+                        ScopedColor colors;
+                        colors.push(ImGuiCol_ChildBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+                        colors.push(ImGuiCol_FrameBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
                         ImGui::BeginChild("##margined_tab_content", ImVec2(0, 0), ImGuiChildFlags_FrameStyle);
-                        ImGui::PopStyleColor(2);
                         pages[i].control->render();
                         ImGui::EndChild();
                     }
@@ -36,7 +37,6 @@ namespace mui
             }
             ImGui::EndTabBar();
         }
-        ImGui::PopID();
     }
 
     TabPtr Tab::append(const std::string &name, IControlPtr child)

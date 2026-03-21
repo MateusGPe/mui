@@ -2,6 +2,7 @@
 #include "toggleswitch.hpp"
 #include "app.hpp"
 #include <imgui.h>
+#include "../core/scoped.hpp"
 #include <imgui_internal.h>
 
 namespace mui
@@ -10,15 +11,15 @@ namespace mui
 
     void ToggleSwitch::renderControl()
     {
-        if (!visible) return;
-        ImGui::PushID(this);
+        if (!visible)
+            return;
+        ScopedID sid(this);
         ImGui::BeginDisabled(!enabled);
 
         ImGuiWindow *window = ImGui::GetCurrentWindow();
         if (window->SkipItems)
         {
             ImGui::EndDisabled();
-            ImGui::PopID();
             return;
         }
 
@@ -40,7 +41,6 @@ namespace mui
         if (!ImGui::ItemAdd(total_bb, id))
         {
             ImGui::EndDisabled();
-            ImGui::PopID();
             return;
         }
 
@@ -59,7 +59,10 @@ namespace mui
         const ImRect switch_bb(ImVec2(total_bb.Min.x, total_bb.Min.y + switch_y_offset), ImVec2(total_bb.Min.x + switch_width, total_bb.Min.y + switch_y_offset + switch_height));
         const float radius = switch_height * 0.50f;
 
-        ImU32 col_bg = ImGui::GetColorU32(checked ? ((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button) : ((held && hovered) ? ImGuiCol_FrameBgActive : hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg));
+        ImU32 col_bg = ImGui::GetColorU32(checked ? ((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered
+                                                                                                         : ImGuiCol_Button)
+                                                  : ((held && hovered) ? ImGuiCol_FrameBgActive : hovered ? ImGuiCol_FrameBgHovered
+                                                                                                          : ImGuiCol_FrameBg));
         window->DrawList->AddRectFilled(switch_bb.Min, switch_bb.Max, col_bg, radius);
         float t = checked ? 1.0f : 0.0f;
         window->DrawList->AddCircleFilled(ImVec2(switch_bb.Min.x + radius + t * (switch_width - radius * 2.0f), switch_bb.Min.y + radius), radius - 2.0f, ImGui::GetColorU32(ImGuiCol_Text));
@@ -72,11 +75,18 @@ namespace mui
 
         renderTooltip();
         ImGui::EndDisabled();
-        ImGui::PopID();
     }
 
-    ToggleSwitchPtr ToggleSwitch::setChecked(bool c) { checked = c; return self(); }
-    ToggleSwitchPtr ToggleSwitch::onToggled(std::function<void(bool)> cb) { onToggledCb = std::move(cb); return self(); }
+    ToggleSwitchPtr ToggleSwitch::setChecked(bool c)
+    {
+        checked = c;
+        return self();
+    }
+    ToggleSwitchPtr ToggleSwitch::onToggled(std::function<void(bool)> cb)
+    {
+        onToggledCb = std::move(cb);
+        return self();
+    }
 
     ToggleSwitchPtr ToggleSwitch::setScale(float s)
     {

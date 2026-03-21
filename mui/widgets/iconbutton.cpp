@@ -2,6 +2,7 @@
 #include "iconbutton.hpp"
 #include "../core/app.hpp"
 #include <imgui.h>
+#include "../core/scoped.hpp"
 #include <imgui_internal.h>
 #include <algorithm>
 #include <cfloat>
@@ -13,13 +14,12 @@ namespace mui
     void IconButton::renderControl()
     {
         if (!visible) return;
-        ImGui::PushID(this);
+        ScopedID id(this);
         ImGui::BeginDisabled(!enabled);
 
         ImGuiWindow *window = ImGui::GetCurrentWindow();
         if (window->SkipItems) {
             ImGui::EndDisabled();
-            ImGui::PopID();
             return;
         }
 
@@ -52,7 +52,6 @@ namespace mui
         ImGui::ItemSize(bb);
         if (!ImGui::ItemAdd(bb, window->GetID("##ibtn"))) {
             ImGui::EndDisabled();
-            ImGui::PopID();
             return;
         }
 
@@ -116,7 +115,6 @@ namespace mui
 
         renderTooltip();
         ImGui::EndDisabled();
-        ImGui::PopID();
     }
 
     IconButtonPtr IconButton::setText(const std::string &t) { text = t; return self(); }

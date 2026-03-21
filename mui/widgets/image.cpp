@@ -2,6 +2,7 @@
 #include "image.hpp"
 #include "app.hpp"
 #include <imgui.h>
+#include "../core/scoped.hpp"
 
 namespace mui
 {
@@ -11,7 +12,7 @@ namespace mui
     void Image::renderControl()
     {
         if (!visible || !textureId) return;
-        ImGui::PushID(this);
+        ScopedID id(this);
         ImGui::BeginDisabled(!enabled);
         
         ImGui::Image(textureId, ImVec2(width, height), uv0, uv1, tintColor, borderColor);
@@ -19,7 +20,6 @@ namespace mui
         renderTooltip();
         
         ImGui::EndDisabled();
-        ImGui::PopID();
     }
 
     ImagePtr Image::setTexture(ImTextureID tex) { textureId = tex; return self(); }

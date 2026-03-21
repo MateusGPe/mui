@@ -2,6 +2,7 @@
 #include "app.hpp"
 #include <imgui.h>
 #include <imgui_internal.h>
+#include "../core/scoped.hpp"
 
 namespace mui
 {
@@ -12,14 +13,13 @@ namespace mui
 
     void Card::renderControl()
     {
-        if (!visible)
-            return;
+        if (!visible) return;
+        ScopedID id(this);
 
-        ImGui::PushID(this);
-
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(padding, padding));
-        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, ImGui::GetStyle().ChildRounding);
-        ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 1.0f);
+        ScopedStyle style;
+        style.push(ImGuiStyleVar_WindowPadding, ImVec2(padding, padding));
+        style.push(ImGuiStyleVar_ChildRounding, ImGui::GetStyle().ChildRounding);
+        style.push(ImGuiStyleVar_ChildBorderSize, 1.0f);
 
         // Explicitly set the next window size.
         // Passing 0.0f forces an auto-fit on that axis.
@@ -49,9 +49,6 @@ namespace mui
             child->render();
 
         ImGui::EndChild();
-
-        ImGui::PopStyleVar(3);
-        ImGui::PopID();
     }
 
     CardPtr Card::setChild(IControlPtr c)

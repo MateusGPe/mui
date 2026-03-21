@@ -2,6 +2,7 @@
 #include "app.hpp"
 #include <imgui.h>
 #include <algorithm>
+#include "../core/scoped.hpp"
 
 namespace mui
 {
@@ -9,9 +10,8 @@ namespace mui
 
     void ProgressBar::renderControl()
     {
-        if (!visible)
-            return;
-        ImGui::PushID(this);
+        if (!visible) return;
+        ScopedID id(this);
 
         ImVec2 size(spanAvailWidth ? -FLT_MIN : 0, 0);
         const char *overlay = overlayText.empty() ? NULL : overlayText.c_str();
@@ -19,7 +19,6 @@ namespace mui
         ImGui::ProgressBar(value, size, overlay);
 
         renderTooltip();
-        ImGui::PopID();
     }
 
     ProgressBarPtr ProgressBar::setValue(float v)

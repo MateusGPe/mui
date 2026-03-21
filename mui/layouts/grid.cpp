@@ -2,6 +2,7 @@
 #include "app.hpp"
 #include <imgui.h>
 #include <string>
+#include "../core/scoped.hpp"
 #include <algorithm>
 
 namespace mui
@@ -27,7 +28,7 @@ namespace mui
     void Grid::renderControl()
     {
         if (!visible || m_cells.empty()) return;
-        ImGui::PushID(this);
+        ScopedID id(this);
 
         ImGuiTableFlags flags = ImGuiTableFlags_NoClip;
         if (!m_columnWeights.empty()) {
@@ -56,14 +57,12 @@ namespace mui
                             float endX = ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x;
                             ImGui::TableSetColumnIndex(c);
                             float startX = ImGui::GetCursorPosX();
-                            ImGui::PushItemWidth(endX - startX);
+                            ScopedItemWidth width(endX - startX);
                             cell.control->render();
-                            ImGui::PopItemWidth();
                             c += cell.colSpan;
                         } else {
-                            ImGui::PushItemWidth(-FLT_MIN);
+                            ScopedItemWidth width(-FLT_MIN);
                             cell.control->render();
-                            ImGui::PopItemWidth();
                             c++;
                         }
                     } else {
@@ -73,6 +72,5 @@ namespace mui
             }
             ImGui::EndTable();
         }
-        ImGui::PopID();
     }
 } // namespace mui

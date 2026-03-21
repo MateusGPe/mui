@@ -2,6 +2,7 @@
 #include "table.hpp"
 #include "../core/app.hpp"
 #include <imgui.h>
+#include "../core/scoped.hpp"
 
 namespace mui
 {
@@ -10,7 +11,7 @@ namespace mui
     void Table::renderControl()
     {
         if (!visible || columns.empty()) return;
-        ImGui::PushID(this);
+        ScopedID id(this);
 
         ImGuiTableFlags flags = ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY;
         if (sortable) flags |= ImGuiTableFlags_Sortable;
@@ -67,16 +68,13 @@ namespace mui
 
                     if (c < rows[r].size() && rows[r][c]) {
                         // Ensure widgets fit in cell
-                        ImGui::PushItemWidth(-FLT_MIN);
+                        ScopedItemWidth width(-FLT_MIN);
                         rows[r][c]->render();
-                        ImGui::PopItemWidth();
                     }
                 }
             }
             ImGui::EndTable();
         }
-
-        ImGui::PopID();
     }
 
     TablePtr Table::addColumn(const std::string &name, float weight, bool fixedWidth) { columns.push_back({name, weight, fixedWidth}); return self(); }

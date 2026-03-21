@@ -1,6 +1,7 @@
 #include "group.hpp"
 #include "app.hpp"
 #include <imgui.h>
+#include "../core/scoped.hpp"
 
 namespace mui
 {
@@ -9,13 +10,12 @@ namespace mui
     void Group::renderControl()
     {
         if (!visible) return;
-        ImGui::PushID(this);
+        ScopedID id(this);
         if (ImGui::CollapsingHeader(title.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
             if (margined) ImGui::Indent();
             if (child) child->render();
             if (margined) ImGui::Unindent();
         }
-        ImGui::PopID();
     }
 
     GroupPtr Group::setChild(IControlPtr c) { child = c; return self(); }

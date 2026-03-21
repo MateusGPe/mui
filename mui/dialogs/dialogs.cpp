@@ -4,6 +4,7 @@
 #include "IconsFontAwesome6.h"
 #include <vector>
 #include <imgui.h>
+#include "../core/scoped.hpp"
 #include <imgui_internal.h>
 
 namespace mui
@@ -177,11 +178,10 @@ namespace mui
             ImGui::TableNextRow();
 
             ImGui::TableSetColumnIndex(0);
-            ImGui::PushStyleColor(ImGuiCol_Text, iconColor);
+            ScopedColor color(ImGuiCol_Text, iconColor);
             ImGui::SetWindowFontScale(2.0f);
             ImGui::TextUnformatted(icon);
             ImGui::SetWindowFontScale(1.0f);
-            ImGui::PopStyleColor();
 
             ImGui::TableSetColumnIndex(1);
             ImGui::TextWrapped("%s", mb.message.c_str());

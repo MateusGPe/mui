@@ -2,15 +2,14 @@
 #include "separator.hpp"
 #include <imgui.h>
 #include <imgui_internal.h>
+#include "../core/scoped.hpp"
 
 namespace mui
 {
     void Separator::renderControl()
     {
-        if (!visible)
-            return;
-
-        ImGui::PushID(this);
+        if (!visible) return;
+        ScopedID id(this);
 
         switch (type)
         {
@@ -27,7 +26,6 @@ namespace mui
         }
 
         renderTooltip();
-        ImGui::PopID();
     }
 
     void Separator::renderCustomSeparator()

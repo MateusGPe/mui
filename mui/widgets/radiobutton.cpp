@@ -1,6 +1,7 @@
 #include "radiobutton.hpp"
 #include "app.hpp"
 #include <imgui.h>
+#include "../core/scoped.hpp"
 
 namespace mui
 {
@@ -8,9 +9,8 @@ namespace mui
 
     void RadioButton::renderControl()
     {
-        if (!visible)
-            return;
-        ImGui::PushID(this);
+        if (!visible) return;
+        ScopedID id(this);
         ImGui::BeginDisabled(!enabled);
 
         bool changed = false;
@@ -34,7 +34,6 @@ namespace mui
 
         renderTooltip();
         ImGui::EndDisabled();
-        ImGui::PopID();
     }
 
     bool RadioButton::isChecked() const

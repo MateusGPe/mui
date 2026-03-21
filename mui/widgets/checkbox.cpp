@@ -2,6 +2,7 @@
 #include "app.hpp"
 #include <imgui.h>
 #include <imgui_internal.h>
+#include "../core/scoped.hpp"
 #include <algorithm>
 
 namespace mui
@@ -10,16 +11,14 @@ namespace mui
 
     void Checkbox::renderControl()
     {
-        if (!visible)
-            return;
-        ImGui::PushID(this);
+        if (!visible) return;
+        ScopedID sid(this);
         ImGui::BeginDisabled(!enabled);
 
         ImGuiWindow *window = ImGui::GetCurrentWindow();
         if (window->SkipItems)
         {
             ImGui::EndDisabled();
-            ImGui::PopID();
             return;
         }
 
@@ -36,7 +35,6 @@ namespace mui
         if (!ImGui::ItemAdd(total_bb, id))
         {
             ImGui::EndDisabled();
-            ImGui::PopID();
             return;
         }
 
@@ -66,7 +64,6 @@ namespace mui
         }
 
         ImGui::EndDisabled();
-        ImGui::PopID();
     }
 
     bool Checkbox::isChecked() const { return checked; }

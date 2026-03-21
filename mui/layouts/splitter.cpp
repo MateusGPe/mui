@@ -2,6 +2,7 @@
 #include "splitter.hpp"
 #include "../core/app.hpp"
 #include <imgui.h>
+#include "../core/scoped.hpp"
 #include <algorithm>
 
 namespace mui
@@ -11,7 +12,7 @@ namespace mui
     void SplitterView::renderControl()
     {
         if (!visible) return;
-        ImGui::PushID(this);
+        ScopedID id(this);
 
         ImVec2 avail = ImGui::GetContentRegionAvail();
         
@@ -69,8 +70,6 @@ namespace mui
             if (panel2) panel2->render();
             ImGui::EndChild();
         }
-
-        ImGui::PopID();
     }
 
     SplitterViewPtr SplitterView::setPanel1(IControlPtr c) { panel1 = c; return self(); }

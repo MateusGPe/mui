@@ -1,0 +1,96 @@
+// core/scoped.hpp
+#pragma once
+#include <imgui.h>
+
+namespace mui
+{
+    // --- Scoped Style Colors ---
+    class ScopedColor
+    {
+    private:
+        int m_count = 0;
+
+    public:
+        ScopedColor() = default;
+        ScopedColor(ImGuiCol idx, ImU32 col) { push(idx, col); }
+        ScopedColor(ImGuiCol idx, const ImVec4 &col) { push(idx, col); }
+
+        ~ScopedColor()
+        {
+            if (m_count > 0)
+                ImGui::PopStyleColor(m_count);
+        }
+
+        // Prevent copying to avoid double-pops
+        ScopedColor(const ScopedColor &) = delete;
+        ScopedColor &operator=(const ScopedColor &) = delete;
+
+        void push(ImGuiCol idx, ImU32 col)
+        {
+            ImGui::PushStyleColor(idx, col);
+            m_count++;
+        }
+        void push(ImGuiCol idx, const ImVec4 &col)
+        {
+            ImGui::PushStyleColor(idx, col);
+            m_count++;
+        }
+    };
+
+    // --- Scoped Style Variables ---
+    class ScopedStyle
+    {
+    private:
+        int m_count = 0;
+
+    public:
+        ScopedStyle() = default;
+        ScopedStyle(ImGuiStyleVar idx, float val) { push(idx, val); }
+        ScopedStyle(ImGuiStyleVar idx, const ImVec2 &val) { push(idx, val); }
+
+        ~ScopedStyle()
+        {
+            if (m_count > 0)
+                ImGui::PopStyleVar(m_count);
+        }
+
+        ScopedStyle(const ScopedStyle &) = delete;
+        ScopedStyle &operator=(const ScopedStyle &) = delete;
+
+        void push(ImGuiStyleVar idx, float val)
+        {
+            ImGui::PushStyleVar(idx, val);
+            m_count++;
+        }
+        void push(ImGuiStyleVar idx, const ImVec2 &val)
+        {
+            ImGui::PushStyleVar(idx, val);
+            m_count++;
+        }
+    };
+
+    // --- Scoped ID ---
+    class ScopedID
+    {
+    public:
+        ScopedID(int id) { ImGui::PushID(id); }
+        ScopedID(const char *str_id) { ImGui::PushID(str_id); }
+        ScopedID(const void *ptr_id) { ImGui::PushID(ptr_id); }
+
+        ~ScopedID() { ImGui::PopID(); }
+
+        ScopedID(const ScopedID &) = delete;
+        ScopedID &operator=(const ScopedID &) = delete;
+    };
+
+    // --- Scoped Item Width ---
+    class ScopedItemWidth
+    {
+    public:
+        ScopedItemWidth(float item_width) { ImGui::PushItemWidth(item_width); }
+        ~ScopedItemWidth() { ImGui::PopItemWidth(); }
+
+        ScopedItemWidth(const ScopedItemWidth &) = delete;
+        ScopedItemWidth &operator=(const ScopedItemWidth &) = delete;
+    };
+} // namespace mui

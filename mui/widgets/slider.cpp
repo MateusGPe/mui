@@ -1,6 +1,7 @@
 #include "slider.hpp"
 #include "app.hpp"
 #include <imgui.h>
+#include "../core/scoped.hpp"
 
 namespace mui
 {
@@ -8,9 +9,8 @@ namespace mui
     SliderInt::SliderInt(int min, int max) : minVal(min), maxVal(max), value(min), format("%d") { App::assertMainThread(); }
     void SliderInt::renderControl()
     {
-        if (!visible)
-            return;
-        ImGui::PushID(this);
+        if (!visible) return;
+        ScopedID id(this);
         ImGui::BeginDisabled(!enabled);
 
         ImGuiSliderFlags flags = logarithmic ? ImGuiSliderFlags_Logarithmic : 0;
@@ -22,7 +22,6 @@ namespace mui
 
         renderTooltip();
         ImGui::EndDisabled();
-        ImGui::PopID();
     }
     int SliderInt::getValue() const { return value; }
     SliderIntPtr SliderInt::setValue(int v)
@@ -50,9 +49,8 @@ namespace mui
     SliderFloat::SliderFloat(float min, float max) : minVal(min), maxVal(max), value(min), format("%.3f") { App::assertMainThread(); }
     void SliderFloat::renderControl()
     {
-        if (!visible)
-            return;
-        ImGui::PushID(this);
+        if (!visible) return;
+        ScopedID id(this);
         ImGui::BeginDisabled(!enabled);
 
         ImGuiSliderFlags flags = logarithmic ? ImGuiSliderFlags_Logarithmic : 0;
@@ -64,7 +62,6 @@ namespace mui
 
         renderTooltip();
         ImGui::EndDisabled();
-        ImGui::PopID();
     }
     float SliderFloat::getValue() const { return value; }
     SliderFloatPtr SliderFloat::setValue(float v)

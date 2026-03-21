@@ -5,6 +5,7 @@
 #include "IconsFontAwesome6.h"
 #include <imgui.h>
 #include <imgui_internal.h>
+#include "../core/scoped.hpp"
 #include <cstring>
 #include <filesystem>
 
@@ -39,7 +40,7 @@ namespace mui
     {
         if (!visible)
             return;
-        ImGui::PushID(this);
+        ScopedID id(this);
         ImGui::BeginDisabled(!enabled);
 
         ImGuiWindow *window = ImGui::GetCurrentWindow();
@@ -58,15 +59,16 @@ namespace mui
         bool clicked = hovered && ImGui::IsMouseReleased(ImGuiMouseButton_Left);
 
         // Use Child Window to perfectly encapsulate the cursor changes and clipping
-        ImGui::PushStyleColor(ImGuiCol_ChildBg, style.Colors[hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg]);
-        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, style.FrameRounding);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0)); // No internal padding
+        ScopedColor childBg(ImGuiCol_ChildBg, style.Colors[hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg]);
+        ScopedStyle styleVars;
+        styleVars.push(ImGuiStyleVar_ChildRounding, style.FrameRounding);
+        styleVars.push(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 
         ImGui::BeginChild("##bc_host", actualSize, false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 
         if (!isEditing)
         {
-            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, style.ItemSpacing.y));
+            ScopedStyle itemSpacing(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, style.ItemSpacing.y));
             bool anyItemInteraction = false;
 
             for (size_t i = 0; i < segments.size(); ++i)
@@ -74,29 +76,32 @@ namespace mui
                 if (segments[i].empty())
                     continue;
 
-                ImGui::PushID(static_cast<int>(i));
+                ScopedID segment_id(static_cast<int>(i));
 
                 if (i > 0)
                 {
-                    ImGui::PushID("sep");
-                    auto sep = mui::IconButton::create("")
-                                   ->setIconText(ICON_FA_ANGLE_RIGHT)
-                                   ->setSize(ImGui::GetFrameHeight(), actualSize.y);
-                    sep->render();
-                    anyItemInteraction |= ImGui::IsItemHovered() | ImGui::IsItemClicked();
-                    ImGui::PopID();
+                    {
+                        ScopedID sep_id("sep");
+                        auto sep = mui::IconButton::create("")
+                                       ->setIconText(ICON_FA_ANGLE_RIGHT)
+                                       ->setSize(ImGui::GetFrameHeight(), actualSize.y);
+                        sep->render();
+                        anyItemInteraction |= ImGui::IsItemHovered() | ImGui::IsItemClicked();
+                    }
                     ImGui::SameLine();
                 }
 
-                ImGui::PushID("btn");
                 bool btnClicked = false;
-                auto btn = mui::IconButton::create(segments[i])
-                               ->setLayout(mui::IconButtonLayout::Horizontal)
-                               ->setSize(0, actualSize.y)
+                {
+                    ScopedID btn_id("btn");
+                    auto btn = mui::IconButton::create(segments[i])
+                                   ->setLayout(mui::IconButtonLayout::Horizontal)
+                                   ->setSize(0, actualSize.y)
                                ->onClick([&]()
                                          { btnClicked = true; });
-                btn->render();
-                anyItemInteraction |= ImGui::IsItemHovered() | btnClicked;
+                    btn->render();
+                    anyItemInteraction |= ImGui::IsItemHovered() | btnClicked;
+                }
 
                 if (btnClicked)
                 {
@@ -121,11 +126,8 @@ namespace mui
                     if (onPathNavigatedCb)
                         onPathNavigatedCb(currentPath);
                 }
-                ImGui::PopID();
                 ImGui::SameLine();
-                ImGui::PopID();
             }
-            ImGui::PopStyleVar();
 
             if (!anyItemInteraction && clicked)
             {
@@ -138,14 +140,13 @@ namespace mui
             ImGui::SetKeyboardFocusHere();
 
             float expectedPaddingY = (actualSize.y - ImGui::GetFontSize()) / 2.0f;
-            bool pushedPadding = false;
+            ScopedStyle framePadding;
             if (expectedPaddingY > style.FramePadding.y)
             {
-                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(style.FramePadding.x, expectedPaddingY));
-                pushedPadding = true;
+                framePadding.push(ImGuiStyleVar_FramePadding, ImVec2(style.FramePadding.x, expectedPaddingY));
             }
 
-            ImGui::PushItemWidth(-FLT_MIN);
+            ScopedItemWidth width(-FLT_MIN);
             if (ImGui::InputTextEx("##bc_edit", "", editBuffer, sizeof(editBuffer), ImVec2(-FLT_MIN, actualSize.y), ImGuiInputTextFlags_EnterReturnsTrue))
             {
                 setPath(editBuffer);
@@ -153,10 +154,6 @@ namespace mui
                 if (onPathNavigatedCb)
                     onPathNavigatedCb(currentPath);
             }
-            ImGui::PopItemWidth();
-
-            if (pushedPadding)
-                ImGui::PopStyleVar();
 
             if (!ImGui::IsItemActive() && (ImGui::IsMouseClicked(0) || ImGui::IsMouseClicked(1)))
             {
@@ -165,12 +162,9 @@ namespace mui
         }
 
         ImGui::EndChild();
-        ImGui::PopStyleVar(2);
-        ImGui::PopStyleColor();
 
         renderTooltip();
         ImGui::EndDisabled();
-        ImGui::PopID();
     }
 
     std::string BreadcrumbBar::getPath() const { return currentPath; }

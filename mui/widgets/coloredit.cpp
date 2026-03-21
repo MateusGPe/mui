@@ -2,6 +2,7 @@
 #include "coloredit.hpp"
 #include "../core/app.hpp"
 #include <imgui.h>
+#include "../core/scoped.hpp"
 
 namespace mui
 {
@@ -16,9 +17,8 @@ namespace mui
 
     void ColorEdit::renderControl()
     {
-        if (!visible)
-            return;
-        ImGui::PushID(this);
+        if (!visible) return;
+        ScopedID id(this);
         ImGui::BeginDisabled(!enabled);
 
         if (ImGui::ColorEdit4("##color", color, ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreviewHalf))
@@ -30,7 +30,6 @@ namespace mui
         renderTooltip();
 
         ImGui::EndDisabled();
-        ImGui::PopID();
     }
 
     std::array<float, 4> ColorEdit::getColor() const

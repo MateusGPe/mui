@@ -2,6 +2,7 @@
 #include "treenode.hpp"
 #include "../core/app.hpp"
 #include <imgui.h>
+#include "../core/scoped.hpp"
 
 namespace mui
 {
@@ -18,7 +19,7 @@ namespace mui
     void TreeNode::renderControl()
     {
         if (!visible) return;
-        ImGui::PushID(this);
+        ScopedID id(this);
         ImGui::BeginDisabled(!enabled);
 
         ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
@@ -63,7 +64,6 @@ namespace mui
 
         renderTooltip();
         ImGui::EndDisabled();
-        ImGui::PopID();
     }
 
     TreeNodePtr TreeNode::append(IControlPtr child) { verifyState(); children.push_back(child); return self(); }

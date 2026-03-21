@@ -1,6 +1,7 @@
 #include "button.hpp"
 #include "app.hpp"
 #include <imgui.h>
+#include "../core/scoped.hpp"
 
 namespace mui
 {
@@ -8,16 +9,16 @@ namespace mui
 
     void Button::renderControl()
     {
-        if (!visible)
-            return;
-        ImGui::PushID(this);
+        if (!visible) return;
+        ScopedID id(this);
         ImGui::BeginDisabled(!enabled);
 
         if (useCustomColor)
         {
-            ImGui::PushStyleColor(ImGuiCol_Button, color);
-            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, colorHovered);
-            ImGui::PushStyleColor(ImGuiCol_ButtonActive, colorActive);
+            ScopedColor colors;
+            colors.push(ImGuiCol_Button, color);
+            colors.push(ImGuiCol_ButtonHovered, colorHovered);
+            colors.push(ImGuiCol_ButtonActive, colorActive);
         }
 
         bool clicked = false;
@@ -61,13 +62,7 @@ namespace mui
 
         renderTooltip();
 
-        if (useCustomColor)
-        {
-            ImGui::PopStyleColor(3);
-        }
-
         ImGui::EndDisabled();
-        ImGui::PopID();
     }
 
     std::string Button::getText() const { return text; }

@@ -2,6 +2,7 @@
 #include "listbox.hpp"
 #include "app.hpp"
 #include <imgui.h>
+#include "../core/scoped.hpp"
 
 namespace mui
 {
@@ -10,12 +11,8 @@ namespace mui
     void ListBox::renderControl()
     {
         if (!visible) return;
-        ImGui::PushID(this);
+        ScopedID id(this);
         ImGui::BeginDisabled(!enabled);
-
-        if (spanAvailWidth) {
-            ImGui::PushItemWidth(-FLT_MIN);
-        }
 
         if (ImGui::BeginListBox("##listbox", ImVec2(spanAvailWidth ? -FLT_MIN : 0, visibleItemsCount * ImGui::GetTextLineHeightWithSpacing()))) {
             for (int i = 0; i < (int)items.size(); ++i) {
@@ -36,14 +33,9 @@ namespace mui
             ImGui::EndListBox();
         }
 
-        if (spanAvailWidth) {
-            ImGui::PopItemWidth();
-        }
-
         renderTooltip();
 
         ImGui::EndDisabled();
-        ImGui::PopID();
     }
 
     ListBoxPtr ListBox::append(const std::string& item) { items.push_back(item); return self(); }
