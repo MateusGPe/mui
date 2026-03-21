@@ -10,7 +10,7 @@
 #include <backends/imgui_impl_opengl3.h>
 #include <stdexcept>
 #include <algorithm>
-#include "ifd/mui_dialog.h"
+#include "file/mui_dialog.h"
 #include "../dialogs/dialogs.hpp"
 #include "IconsFontAwesome6.h"
 
@@ -128,7 +128,7 @@ namespace mui
         }
 
         // Initialize ImFileDialog
-        ifd::FileDialog::Instance().CreateTexture = [=](uint8_t *data, int w, int h, char fmt) -> void *
+        mui_dlg::FileDialog::Instance().CreateTexture = [=](uint8_t *data, int w, int h, char fmt) -> void *
         {
             if (g_use_opengl)
             {
@@ -154,7 +154,7 @@ namespace mui
             }
         };
 
-        ifd::FileDialog::Instance().DeleteTexture = [=](void *texture)
+        mui_dlg::FileDialog::Instance().DeleteTexture = [=](void *texture)
         {
             if (g_use_opengl)
             {

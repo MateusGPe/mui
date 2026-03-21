@@ -15,6 +15,7 @@ namespace mui
         IControlPtr child;
         bool margined = false;
         bool m_open = true;
+        int m_flags = 0;
 
     public:
         mui::Signal<bool> onToggledSignal;
@@ -35,5 +36,14 @@ namespace mui
         GroupPtr onToggled(std::function<void(bool)> cb);
         GroupPtr bindTitle(std::shared_ptr<Observable<std::string>> observable);
         GroupPtr bindOpen(std::shared_ptr<Observable<bool>> observable);
+        GroupPtr defaultOpen(bool open);
+        GroupPtr setAllowOverlap(bool allow);
+        GroupPtr setOpenOnDoubleClick(bool open);
+        GroupPtr setOpenOnArrow(bool open);
+        GroupPtr setBullet(bool show);
+        GroupPtr setFramePadding(bool use);
+        GroupPtr setSpanAvailWidth(bool span);
+        GroupPtr setSpanFullWidth(bool span);
+        GroupPtr setNavLeftJumpsToParent(bool allow);
     };
 } // namespace mui

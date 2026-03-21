@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <pwd.h>
 
-namespace ifd
+namespace mui_dlg
 {
 	void FileDialog::m_initSystemFavorites()
 	{

@@ -22,14 +22,14 @@
 #define IFD_DIALOG_SAVE 2
 #include <queue>
 
-namespace ifd
+namespace mui_dlg
 {
 	class FileDialog
 	{
 	public:
 		// Maintaining backward compatibility with aliases
-		using FileTreeNode = ifd::FileTreeNode;
-		using FileData = ifd::FileData;
+		using FileTreeNode = mui_dlg::FileTreeNode;
+		using FileData = mui_dlg::FileData;
 
 		static inline FileDialog &Instance()
 		{

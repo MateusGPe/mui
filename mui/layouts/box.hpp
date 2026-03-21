@@ -118,7 +118,7 @@ namespace mui
             Center,
             Right,
             Justify,
-            Fill
+            //Fill
         };
 
     protected:

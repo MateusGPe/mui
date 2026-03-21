@@ -6,7 +6,7 @@
 #include "mui_dialog.h"
 #include "stb_image.h"
 
-namespace ifd
+namespace mui_dlg
 {
 	void FileDialog::m_processPreviewResults()
 	{

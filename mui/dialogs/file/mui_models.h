@@ -5,7 +5,7 @@
 #include <vector>
 #include <ctime>
 
-namespace ifd
+namespace mui_dlg
 {
 	class FileTreeNode
 	{

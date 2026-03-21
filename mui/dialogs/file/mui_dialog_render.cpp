@@ -22,7 +22,7 @@
 #define ICON_SIZE ImGui::GetFontSize() + 3
 #define GUI_ELEMENT_SIZE std::max(ImGui::GetFontSize() + 10.f, 24.f)
 
-namespace ifd
+namespace mui_dlg
 {
 	void FileDialog::m_renderTree(FileTreeNode *node)
 	{

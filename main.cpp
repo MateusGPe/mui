@@ -383,7 +383,29 @@ IControlPtr createDialogsTab(const WindowPtr &win, const LabelPtr &lblStatus)
                          {btnFile, true}});
 
     group->setChild(hboxButtons);
-    vbox->append(group, true);
+    vbox->append(group, false);
+
+    vbox->append(Separator::create());
+
+    auto groupVariants = Group::create("Group Style Variants");
+    groupVariants->setMargined(true)->defaultOpen(true);
+    vbox->append(groupVariants, false);
+
+    auto variantsVBox = VBox::create()->setPadded(true);
+    groupVariants->setChild(variantsVBox);
+
+    variantsVBox->append(Group::create("Open on Double-Click")
+                             ->setOpenOnDoubleClick(true)
+                             ->setChild(Label::create("This group opens when you double-click the header.")));
+
+    variantsVBox->append(Group::create("Open on Arrow Click Only")
+                             ->setOpenOnArrow(true)
+                             ->setChild(Label::create("This group only opens when you click the arrow icon.")));
+
+    variantsVBox->append(Group::create("Bullet Style (no arrow)")->setBullet(true)->setChild(Label::create("This group uses a bullet instead of an arrow.")));
+
+    variantsVBox->append(Group::create("Spans Available Width (entire header is clickable)")->setSpanAvailWidth(true)->setChild(Label::create("The entire width of this header is clickable.")));
+
     return vbox;
 }
 
@@ -488,21 +510,21 @@ IControlPtr createLayoutsTab(const LabelPtr &lblStatus)
     }
     flowGroupJustify->setChild(flowBoxJustify);
 
-    auto flowGroupFill = Group::create("Flow Layout (Fill)");
-    flowGroupFill->setMargined(true);
-    vbox->append(flowGroupFill, false);
-    auto flowBoxFill = FlowBox::create()->setAlign(FlowBox::Align::Fill);
-    for (int i = 0; i < 15; ++i)
-    {
-        std::string label = "Btn " + std::to_string(i + 1);
-        if (i % 4 == 0)
-        {
-            label += " long";
-        }
-        flowBoxFill->append(Button::create(label)->onClick([lblStatus, label]()
-                                                           { lblStatus->setText(label + " clicked"); }));
-    }
-    flowGroupFill->setChild(flowBoxFill);
+    // auto flowGroupFill = Group::create("Flow Layout (Fill)");
+    // flowGroupFill->setMargined(true);
+    // vbox->append(flowGroupFill, false);
+    // auto flowBoxFill = FlowBox::create()->setAlign(FlowBox::Align::Fill);
+    // for (int i = 0; i < 15; ++i)
+    // {
+    //     std::string label = "Btn " + std::to_string(i + 1);
+    //     if (i % 4 == 0)
+    //     {
+    //         label += " long";
+    //     }
+    //     flowBoxFill->append(Button::create(label)->onClick([lblStatus, label]()
+    //                                                        { lblStatus->setText(label + " clicked"); }));
+    // }
+    // flowGroupFill->setChild(flowBoxFill);
 
     return vbox;
 }

@@ -153,8 +153,8 @@ namespace mui
                 offset = remaining_space / 2.0f;
             else if (m_align == Align::Justify && line.size() > 1)
                 spacing = style.ItemSpacing.x + remaining_space / (line.size() - 1);
-            else if (m_align == Align::Fill && line.size() > 0 && remaining_space > 1.0f)
-                extra_width_per_item = remaining_space / line.size();
+            // else if (m_align == Align::Fill && line.size() > 0 && remaining_space > 1.0f)
+            //     extra_width_per_item = remaining_space / line.size();
 
             if (offset > 0)
                 ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offset);

@@ -8,7 +8,7 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 
-namespace ifd
+namespace mui_dlg
 {
 	FileDialog::FileDialog()
 	{

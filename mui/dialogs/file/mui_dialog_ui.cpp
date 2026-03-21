@@ -24,7 +24,7 @@ namespace
 	inline float GetGuiElementSize() { return ImGui::GetFrameHeight(); }
 }
 
-namespace ifd
+namespace mui_dlg
 {
 	bool FolderNode(const char *label, ImTextureID icon, bool &clicked)
 	{

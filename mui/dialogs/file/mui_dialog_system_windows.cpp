@@ -11,7 +11,7 @@
 #include <algorithm>
 #pragma comment(lib, "Shell32.lib")
 
-namespace ifd
+namespace mui_dlg
 {
 	void FileDialog::m_initSystemFavorites()
 	{

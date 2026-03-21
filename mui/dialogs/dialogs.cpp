@@ -1,5 +1,5 @@
 #include "dialogs.hpp"
-#include "ifd/mui_dialog.h"
+#include "file/mui_dialog.h"
 #include "../core/app.hpp"
 #include "IconsFontAwesome6.h"
 #include <vector>
@@ -69,7 +69,7 @@ namespace mui
             return;
         }
 
-        auto &instance = ifd::FileDialog::Instance();
+        auto &instance = mui_dlg::FileDialog::Instance();
         if (instance.IsDone(g_current_dialog_state.key))
         {
             if (instance.HasResult())
@@ -145,7 +145,7 @@ namespace mui
         std::string key = "openfile##" + title;
 
         std::string effectiveDir = get_effective_starting_dir(startingDir);
-        if (ifd::FileDialog::Instance().Open(key, title, filter, false, effectiveDir))
+        if (mui_dlg::FileDialog::Instance().Open(key, title, filter, false, effectiveDir))
         {
             g_current_dialog_state = {key, on_ok, nullptr, on_cancel};
         }
@@ -160,7 +160,7 @@ namespace mui
         std::string key = "openfiles##" + title;
 
         std::string effectiveDir = get_effective_starting_dir(startingDir);
-        if (ifd::FileDialog::Instance().Open(key, title, filter, true, effectiveDir))
+        if (mui_dlg::FileDialog::Instance().Open(key, title, filter, true, effectiveDir))
         {
             g_current_dialog_state = {key, nullptr, on_ok, on_cancel};
         }
@@ -175,7 +175,7 @@ namespace mui
         std::string key = "savefile##" + title;
 
         std::string effectiveDir = get_effective_starting_dir(startingDir);
-        if (ifd::FileDialog::Instance().Save(key, title, filter, effectiveDir))
+        if (mui_dlg::FileDialog::Instance().Save(key, title, filter, effectiveDir))
         {
             g_current_dialog_state = {key, on_ok, nullptr, on_cancel};
         }

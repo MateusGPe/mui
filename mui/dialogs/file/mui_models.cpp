@@ -6,7 +6,7 @@
 #include "mui_models.h"
 #include <sys/stat.h>
 
-namespace ifd
+namespace mui_dlg
 {
 	FileData::FileData(const std::filesystem::path &path)
 	{
