@@ -176,7 +176,7 @@ namespace mui
                     }
                     children[child_idx].control->render();
                 }
-                
+
                 if (extra_width_per_item <= 0.0f)
                 {
                     float actual_width = ImGui::GetItemRectSize().x;

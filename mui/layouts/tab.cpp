@@ -14,9 +14,9 @@ namespace mui
         if (ImGui::BeginTabBar("##tabs")) {
             for (size_t i = 0; i < pages.size(); ++i) {
                 if (ImGui::BeginTabItem(pages[i].name.c_str())) {
-                    if (selectedIndex != i) {
-                        selectedIndex = i;
-                        if (onSelectedCb) onSelectedCb();
+                    if (selectedIndex != (int)i) {
+                        selectedIndex = (int)i;
+                        onSelectedSignal(selectedIndex);
                     }
 
                     if (pages[i].margined)
@@ -45,7 +45,26 @@ namespace mui
         return self();
     }
     
-    TabPtr Tab::onSelected(std::function<void()> cb) { onSelectedCb = std::move(cb); return self(); }
+    TabPtr Tab::onSelected(std::function<void(int)> cb)
+    {
+        if (cb) m_connections.push_back(onSelectedSignal.connect(std::move(cb)));
+        return self();
+    }
     int Tab::getNumPages() const { return pages.size(); }
     int Tab::getSelected() const { return selectedIndex; }
+
+    TabPtr Tab::setSelected(int index)
+    {
+        if (index >= 0 && index < (int)pages.size())
+            selectedIndex = index;
+        return self();
+    }
+
+    TabPtr Tab::bindSelected(std::shared_ptr<Observable<int>> observable)
+    {
+        setSelected(observable->get());
+        m_connections.push_back(observable->onValueChanged.connect([this](const int &val) { mui::App::queueMain([this, val]() { this->setSelected(val); }); }));
+        m_connections.push_back(onSelectedSignal.connect([observable](int val) { observable->set(val); }));
+        return self();
+    }
 } // namespace mui

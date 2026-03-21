@@ -3,8 +3,8 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-#include "ImFileDialog.h"
-#include "UIControls.h"
+#include "mui_dialog.h"
+#include "mui_dialog_ui.h"
 #include "IconsFontAwesome6.h"
 #include "stb_image.h"
 #include <imgui.h>
@@ -163,13 +163,6 @@ namespace ifd
 			int fileId = 0;
 			for (auto &entry : m_content)
 			{
-				if (entry.HasIconPreview && entry.IconPreviewData != nullptr)
-				{
-					entry.IconPreview = this->CreateTexture(entry.IconPreviewData, entry.IconPreviewWidth, entry.IconPreviewHeight, 1u);
-					stbi_image_free(entry.IconPreviewData);
-					entry.IconPreviewData = nullptr;
-				}
-
 				std::string filename = entry.Path.filename().string();
 				if (filename.size() == 0)
 					filename = entry.Path.string(); // drive
@@ -298,6 +291,8 @@ namespace ifd
 
 	void FileDialog::m_renderFileDialog()
 	{
+		m_processPreviewResults();
+
 		// Update state of toolbar widgets before rendering
 		m_backButton->setEnabled(!m_backHistory.empty());
 		m_forwardButton->setEnabled(!m_forwardHistory.empty());

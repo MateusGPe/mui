@@ -2,7 +2,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-#include "ImFileDialog.h"
+#include "mui_dialog.h"
 #include "IconsFontAwesome6.h"
 #include "../../core/app.hpp" // Added for mui::App::assertMainThread()
 #include <imgui.h>

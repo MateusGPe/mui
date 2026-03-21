@@ -4,6 +4,8 @@
 #include <vector>
 #include <functional>
 #include <memory>
+#include "../core/signal.hpp"
+#include "../core/observable.hpp"
 
 namespace mui
 {
@@ -21,9 +23,10 @@ namespace mui
         };
         std::vector<TabPage> pages;
         int selectedIndex = 0;
-        std::function<void()> onSelectedCb;
 
     public:
+        mui::Signal<int> onSelectedSignal;
+
         Tab();
         static TabPtr create() { return std::make_shared<Tab>(); }
 
@@ -38,8 +41,11 @@ namespace mui
             }
             return self();
         }
-        TabPtr onSelected(std::function<void()> cb);
+        TabPtr onSelected(std::function<void(int)> cb);
         int getNumPages() const;
         int getSelected() const;
+
+        TabPtr setSelected(int index);
+        TabPtr bindSelected(std::shared_ptr<Observable<int>> observable);
     };
 } // namespace mui

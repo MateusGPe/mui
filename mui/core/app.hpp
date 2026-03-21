@@ -49,6 +49,7 @@ namespace mui
         static void init(bool useOpenGL = false);
         static void run();
         static void quit();
+        static void shutdown();
         static void assertMainThread();
         static void queueMain(std::function<void()> callback);
         static void setTheme(ThemeType type);

@@ -1,6 +1,6 @@
 // include/ImFileDialog/ImFileDialog.h
 #pragma once
-#include "Models.h"
+#include "mui_models.h"
 #include "../../widgets/button.hpp"
 #include "../../widgets/iconbutton.hpp"
 #include "../../widgets/breadcrumb.hpp"
@@ -20,6 +20,7 @@
 #define IFD_DIALOG_FILE 0
 #define IFD_DIALOG_DIRECTORY 1
 #define IFD_DIALOG_SAVE 2
+#include <queue>
 
 namespace ifd
 {
@@ -64,6 +65,13 @@ namespace ifd
 
 		std::function<void *(uint8_t *, int, int, char)> CreateTexture; // char -> fmt -> { 0 = BGRA, 1 = RGBA }
 		std::function<void(void *)> DeleteTexture;
+
+	private:
+		struct PreviewResult {
+			std::filesystem::path Path;
+			unsigned char* IconPreviewData;
+			int IconPreviewWidth, IconPreviewHeight;
+		};
 
 	private:
 		// mui controls
@@ -121,6 +129,9 @@ namespace ifd
 		std::thread *m_previewLoader;
 		std::atomic<bool> m_previewLoaderRunning;
 		void m_stopPreviewLoader();
+		std::vector<std::filesystem::path> m_previewQueue;
+		std::queue<PreviewResult> m_previewResults;
+		std::mutex m_previewResultsMutex;
 		void m_loadPreview();
 
 		std::vector<FileTreeNode *> m_treeCache;
@@ -135,6 +146,7 @@ namespace ifd
 		void m_setDirectory(const std::filesystem::path &p, bool addHistory = true);
 		void m_sortContent(unsigned int column, unsigned int sortDirection);
 
+		void m_processPreviewResults();
 		void m_renderContent();
 		void m_renderPopups();
 		void m_renderFileDialog();

@@ -4,7 +4,7 @@
 #endif
 
 #define IMGUI_DEFINE_MATH_OPERATORS
-#include "UIControls.h"
+#include "mui_dialog_ui.h"
 #include "IconsFontAwesome6.h"
 #include "../../widgets/iconbutton.hpp"
 #include <imgui_internal.h>

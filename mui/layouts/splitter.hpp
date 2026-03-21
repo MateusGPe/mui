@@ -2,6 +2,8 @@
 #pragma once
 #include "../widgets/control.hpp"
 #include <memory>
+#include "../core/signal.hpp"
+#include "../core/observable.hpp"
 
 namespace mui
 {
@@ -24,6 +26,8 @@ namespace mui
         float thickness = 4.0f;
 
     public:
+        mui::Signal<float> onSplitRatioChangedSignal;
+
         SplitterView(SplitterOrientation o = SplitterOrientation::Horizontal);
         static SplitterViewPtr create(SplitterOrientation o = SplitterOrientation::Horizontal) { return std::make_shared<SplitterView>(o); }
 
@@ -33,5 +37,9 @@ namespace mui
         SplitterViewPtr setPanel2(IControlPtr c);
         SplitterViewPtr setSplitRatio(float ratio);
         SplitterViewPtr setThickness(float t);
+
+        float getSplitRatio() const;
+        SplitterViewPtr onSplitRatioChanged(std::function<void(float)> cb);
+        SplitterViewPtr bindSplitRatio(std::shared_ptr<Observable<float>> observable);
     };
 } // namespace mui

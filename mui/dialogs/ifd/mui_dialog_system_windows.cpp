@@ -4,7 +4,7 @@
 
 #ifdef _WIN32
 #define NOMINMAX
-#include "ImFileDialog.h"
+#include "mui_dialog.h"
 #include <windows.h>
 #include <shellapi.h>
 #include <lmcons.h>

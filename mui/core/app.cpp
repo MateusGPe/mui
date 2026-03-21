@@ -10,7 +10,7 @@
 #include <backends/imgui_impl_opengl3.h>
 #include <stdexcept>
 #include <algorithm>
-#include "ifd/ImFileDialog.h"
+#include "ifd/mui_dialog.h"
 #include "../dialogs/dialogs.hpp"
 #include "IconsFontAwesome6.h"
 
@@ -28,7 +28,7 @@ namespace mui
     SDL_Renderer *g_renderer = nullptr;
     SDL_GLContext App::glContext = nullptr;
     bool g_use_opengl = false;
-    static bool g_running = false;
+    bool g_running = false;
     std::vector<Window *> App::activeWindows;
     std::vector<ActiveMessageBox> App::activeMessageBoxes;
 
@@ -324,6 +324,8 @@ namespace mui
                 }
             }
         }
+
+        App::shutdown();
     }
 
     void App::quit() { g_running = false; }
@@ -334,6 +336,11 @@ namespace mui
         {
             throw std::runtime_error("MUI Error: UI interaction outside of the main thread.");
         }
+    }
+
+    void App::shutdown()
+    {
+        // No need to reset unique_ptr, as platformService is now a raw pointer to a static object.
     }
 
     void App::queueMain(std::function<void()> callback)

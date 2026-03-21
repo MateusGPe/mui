@@ -40,8 +40,8 @@ namespace mui
         bool nodeOpen = ImGui::TreeNodeEx(label.c_str(), flags, "%s", displayStr.c_str());
 
         // Event hooks
-        if (ImGui::IsItemClicked(0) && onClickCb) onClickCb();
-        if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered() && onDoubleClickCb) onDoubleClickCb();
+        if (ImGui::IsItemClicked(0)) onClickSignal();
+        if (ImGui::IsMouseDoubleClicked(0) && ImGui::IsItemHovered()) onDoubleClickSignal();
 
         // Draw image manually right into the space we left for it
         if (iconTex) {
@@ -72,6 +72,24 @@ namespace mui
     TreeNodePtr TreeNode::setSelected(bool s) { selected = s; return self(); }
     TreeNodePtr TreeNode::setIconText(const std::string& t) { iconText = t; return self(); }
     TreeNodePtr TreeNode::setIconTexture(ImTextureID tex) { iconTex = tex; return self(); }
-    TreeNodePtr TreeNode::onClick(std::function<void()> cb) { onClickCb = std::move(cb); return self(); }
-    TreeNodePtr TreeNode::onDoubleClick(std::function<void()> cb) { onDoubleClickCb = std::move(cb); return self(); }
+    TreeNodePtr TreeNode::onClick(std::function<void()> cb)
+    {
+        if (cb) m_connections.push_back(onClickSignal.connect(std::move(cb)));
+        return self();
+    }
+    TreeNodePtr TreeNode::onDoubleClick(std::function<void()> cb)
+    {
+        if (cb) m_connections.push_back(onDoubleClickSignal.connect(std::move(cb)));
+        return self();
+    }
+
+    bool TreeNode::isSelected() const { return selected; }
+    TreeNodePtr TreeNode::bindSelected(std::shared_ptr<Observable<bool>> observable)
+    {
+        setSelected(observable->get());
+        m_connections.push_back(observable->onValueChanged.connect([this](const bool &val) { mui::App::queueMain([this, val]() { this->setSelected(val); }); }));
+        // Two-way binding requires external logic to manage selection state across multiple nodes.
+        // The app can use the onClick signal to update the observable.
+        return self();
+    }
 } // namespace mui

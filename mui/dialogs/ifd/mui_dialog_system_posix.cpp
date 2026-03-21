@@ -4,7 +4,7 @@
 
 #ifndef _WIN32
 
-#include "ImFileDialog.h"
+#include "mui_dialog.h"
 #include <unistd.h>
 #include <pwd.h>
 

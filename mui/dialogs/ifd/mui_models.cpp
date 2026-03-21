@@ -3,7 +3,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-#include "Models.h"
+#include "mui_models.h"
 #include <sys/stat.h>
 
 namespace ifd
@@ -29,7 +29,6 @@ namespace ifd
 
 		HasIconPreview = false;
 		IconPreview = nullptr;
-		IconPreviewData = nullptr;
 		IconPreviewHeight = 0;
 		IconPreviewWidth = 0;
 	}

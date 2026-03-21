@@ -33,7 +33,6 @@ namespace ifd
 
 		bool HasIconPreview;
 		void *IconPreview;
-		uint8_t *IconPreviewData;
 		int IconPreviewWidth, IconPreviewHeight;
 	};
 }

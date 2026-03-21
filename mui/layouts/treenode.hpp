@@ -5,7 +5,9 @@
 #include <vector>
 #include <functional>
 #include <memory>
-#include <imgui.h>
+#include <imgui.h> // For ImTextureID
+#include "../core/signal.hpp"
+#include "../core/observable.hpp"
 
 namespace mui
 {
@@ -24,10 +26,10 @@ namespace mui
         bool framed = false;
         bool selected = false;
 
-        std::function<void()> onClickCb;
-        std::function<void()> onDoubleClickCb;
-
     public:
+        mui::Signal<> onClickSignal;
+        mui::Signal<> onDoubleClickSignal;
+
         explicit TreeNode(const std::string& label);
         static TreeNodePtr create(const std::string& label) { return std::make_shared<TreeNode>(label); }
 
@@ -43,5 +45,8 @@ namespace mui
         
         TreeNodePtr onClick(std::function<void()> cb);
         TreeNodePtr onDoubleClick(std::function<void()> cb);
+
+        bool isSelected() const;
+        TreeNodePtr bindSelected(std::shared_ptr<Observable<bool>> observable);
     };
 } // namespace mui
