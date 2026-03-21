@@ -24,10 +24,10 @@ namespace mui
         std::string iconText;
         ImTextureID iconTex = 0;
         IconButtonLayout layout = IconButtonLayout::Horizontal;
-        
+
         bool selected = false;
         ImVec2 iconSize = ImVec2(16.0f, 16.0f);
-        
+
         std::function<void()> onClickCb;
         std::function<void()> onDoubleClickCb;
 
@@ -44,7 +44,7 @@ namespace mui
         IconButtonPtr setSelected(bool s);
         IconButtonPtr setIconSize(float w, float h);
         IconButtonPtr setUseContainerWidth(bool use);
-        
+
         IconButtonPtr onClick(std::function<void()> cb);
         IconButtonPtr onDoubleClick(std::function<void()> cb);
     };

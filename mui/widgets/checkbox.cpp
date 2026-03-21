@@ -11,7 +11,8 @@ namespace mui
 
     void Checkbox::renderControl()
     {
-        if (!visible) return;
+        if (!visible)
+            return;
         ScopedID sid(this);
         ImGui::BeginDisabled(!enabled);
 
@@ -62,17 +63,25 @@ namespace mui
         const float check_y_offset = (h - check_box_size) / 2.0f;
         const ImRect check_bb(ImVec2(total_bb.Min.x, total_bb.Min.y + check_y_offset), ImVec2(total_bb.Min.x + check_box_size, total_bb.Min.y + check_y_offset + check_box_size));
 
-        ImGui::RenderFrame(check_bb.Min, check_bb.Max, ImGui::GetColorU32((held && hovered) ? ImGuiCol_FrameBgActive : hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg), true, style.FrameRounding);
+        ImGui::RenderFrame(check_bb.Min, check_bb.Max, ImGui::GetColorU32((held && hovered) ? ImGuiCol_FrameBgActive : hovered ? ImGuiCol_FrameBgHovered
+                                                                                                                               : ImGuiCol_FrameBg),
+                           true, style.FrameRounding);
         if (checked)
         {
             const float pad = std::max(1.0f, (float)(int)(check_box_size / 6.0f));
-            ImGui::RenderCheckMark(window->DrawList, ImVec2(check_bb.Min.x + pad, check_bb.Min.y + pad), ImGui::GetColorU32(ImGuiCol_CheckMark), check_box_size - pad * 2.0f);
+            ImGui::RenderCheckMark(
+                window->DrawList,
+                ImVec2(check_bb.Min.x + pad, check_bb.Min.y + pad),
+                ImGui::GetColorU32(ImGuiCol_CheckMark),
+                check_box_size - pad * 2.0f);
         }
 
         if (label_size.x > 0.0f)
         {
             const float label_y_offset = (h - label_size.y) / 2.0f;
-            ImGui::RenderText(ImVec2(check_bb.Max.x + style.ItemInnerSpacing.x, total_bb.Min.y + label_y_offset), text.c_str());
+            ImGui::RenderText(
+                ImVec2(check_bb.Max.x + style.ItemInnerSpacing.x, total_bb.Min.y + label_y_offset),
+                text.c_str());
         }
 
         ImGui::EndDisabled();
@@ -80,10 +89,22 @@ namespace mui
 
     bool Checkbox::isChecked() const { return checked; }
     std::string Checkbox::getText() const { return text; }
-    CheckboxPtr Checkbox::setText(const std::string &t) { text = t; return self();}
+    CheckboxPtr Checkbox::setText(const std::string &t)
+    {
+        text = t;
+        return self();
+    }
 
-    CheckboxPtr Checkbox::setChecked(bool c) { checked = c; return self(); }
-    CheckboxPtr Checkbox::onToggled(std::function<void(bool)> cb) { onToggledCb = std::move(cb); return self(); }
+    CheckboxPtr Checkbox::setChecked(bool c)
+    {
+        checked = c;
+        return self();
+    }
+    CheckboxPtr Checkbox::onToggled(std::function<void(bool)> cb)
+    {
+        onToggledCb = std::move(cb);
+        return self();
+    }
 
     CheckboxPtr Checkbox::setScale(float s)
     {

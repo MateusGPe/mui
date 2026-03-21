@@ -13,7 +13,8 @@ namespace mui
 
     void Card::renderControl()
     {
-        if (!visible) return;
+        if (!visible)
+            return;
         ScopedID id(this);
 
         ScopedStyle style;

@@ -17,7 +17,8 @@ namespace mui
 
     void ColorEdit::renderControl()
     {
-        if (!visible) return;
+        if (!visible)
+            return;
         ScopedID id(this);
         ImGui::BeginDisabled(!enabled);
 

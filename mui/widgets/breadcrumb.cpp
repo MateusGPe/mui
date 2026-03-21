@@ -20,14 +20,14 @@ namespace mui
         App::assertMainThread();
         currentPath = path;
         parsePath();
-    m_editEntry = Entry::create(editBuffer, sizeof(editBuffer))
-                      ->setAutoSelectAll(true)
-                      ->onEnter([this](const std::string &text) {
+        m_editEntry = Entry::create(editBuffer, sizeof(editBuffer))
+                          ->setAutoSelectAll(true)
+                          ->onEnter([this](const std::string &text)
+                                    {
                           setPath(text);
                           setIsEditing(false);
                           if (onPathNavigatedCb)
-                              onPathNavigatedCb(currentPath);
-                      });
+                              onPathNavigatedCb(currentPath); });
     }
 
     void BreadcrumbBar::parsePath()

@@ -8,7 +8,8 @@ namespace mui
 {
     void Separator::renderControl()
     {
-        if (!visible) return;
+        if (!visible)
+            return;
         ScopedID id(this);
 
         switch (type)
@@ -80,9 +81,21 @@ namespace mui
         type = t;
         return self();
     }
-    SeparatorPtr Separator::setOrientation(SeparatorOrientation o) { orientation = o; return self(); }
-    SeparatorPtr Separator::setThickness(float t) { thickness = t; return self(); }
-    SeparatorPtr Separator::setAsRect(bool rect) { isRect = rect; return self(); }
+    SeparatorPtr Separator::setOrientation(SeparatorOrientation o)
+    {
+        orientation = o;
+        return self();
+    }
+    SeparatorPtr Separator::setThickness(float t)
+    {
+        thickness = t;
+        return self();
+    }
+    SeparatorPtr Separator::setAsRect(bool rect)
+    {
+        isRect = rect;
+        return self();
+    }
 
     SeparatorPtr Separator::setColor(ImVec4 c)
     {

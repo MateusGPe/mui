@@ -13,7 +13,8 @@ namespace mui
     class IconStack : public Control<IconStack>
     {
     protected:
-        struct IconBtn {
+        struct IconBtn
+        {
             std::string icon;
             std::string tooltip;
             std::function<void()> cb;
@@ -25,6 +26,6 @@ namespace mui
         static IconStackPtr create() { return std::make_shared<IconStack>(); }
 
         void renderControl() override;
-        IconStackPtr add(const std::string& icon, std::function<void()> onClick, const std::string& tip = "");
+        IconStackPtr add(const std::string &icon, std::function<void()> onClick, const std::string &tip = "");
     };
 }

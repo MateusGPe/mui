@@ -10,7 +10,8 @@ namespace mui
 
     void ListBox::renderControl()
     {
-        if (!visible) return;
+        if (!visible)
+            return;
         ScopedID id(this);
         ImGui::BeginDisabled(!enabled);
 
@@ -19,21 +20,29 @@ namespace mui
             w = -FLT_MIN;
         else if (useContainerWidth)
             w = ImGui::CalcItemWidth();
-        if (w <= 0) w = 0; // For BeginListBox, 0 means auto-fit content width
+        if (w <= 0)
+            w = 0; // For BeginListBox, 0 means auto-fit content width
 
-        if (ImGui::BeginListBox("##listbox", ImVec2(w, visibleItemsCount * ImGui::GetTextLineHeightWithSpacing()))) {
-            for (int i = 0; i < (int)items.size(); ++i) {
+        if (ImGui::BeginListBox("##listbox", ImVec2(w, visibleItemsCount * ImGui::GetTextLineHeightWithSpacing())))
+        {
+            for (int i = 0; i < (int)items.size(); ++i)
+            {
                 const bool isSelected = (selectedIndex == i);
-                if (ImGui::Selectable(items[i].c_str(), isSelected)) {
+                if (ImGui::Selectable(items[i].c_str(), isSelected))
+                {
                     selectedIndex = i;
-                    if (onSelectedCb) onSelectedCb();
-                }
-                
-                if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
-                    if (onDoubleClickCb) onDoubleClickCb();
+                    if (onSelectedCb)
+                        onSelectedCb();
                 }
 
-                if (isSelected) {
+                if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
+                {
+                    if (onDoubleClickCb)
+                        onDoubleClickCb();
+                }
+
+                if (isSelected)
+                {
                     ImGui::SetItemDefaultFocus();
                 }
             }
@@ -45,14 +54,43 @@ namespace mui
         ImGui::EndDisabled();
     }
 
-    ListBoxPtr ListBox::append(const std::string& item) { items.push_back(item); return self(); }
-    ListBoxPtr ListBox::clear() { items.clear(); selectedIndex = -1; return self(); }
+    ListBoxPtr ListBox::append(const std::string &item)
+    {
+        items.push_back(item);
+        return self();
+    }
+    ListBoxPtr ListBox::clear()
+    {
+        items.clear();
+        selectedIndex = -1;
+        return self();
+    }
     int ListBox::getSelected() const { return selectedIndex; }
-    ListBoxPtr ListBox::setSelected(int index) { selectedIndex = index; return self(); }
-    ListBoxPtr ListBox::setVisibleItems(int count) { visibleItemsCount = count; return self(); }
-    ListBoxPtr ListBox::setSpanAvailWidth(bool span) { spanAvailWidth = span; return self(); }
-    ListBoxPtr ListBox::onSelected(std::function<void()> cb) { onSelectedCb = std::move(cb); return self(); }
-    ListBoxPtr ListBox::onDoubleClick(std::function<void()> cb) { onDoubleClickCb = std::move(cb); return self(); }
+    ListBoxPtr ListBox::setSelected(int index)
+    {
+        selectedIndex = index;
+        return self();
+    }
+    ListBoxPtr ListBox::setVisibleItems(int count)
+    {
+        visibleItemsCount = count;
+        return self();
+    }
+    ListBoxPtr ListBox::setSpanAvailWidth(bool span)
+    {
+        spanAvailWidth = span;
+        return self();
+    }
+    ListBoxPtr ListBox::onSelected(std::function<void()> cb)
+    {
+        onSelectedCb = std::move(cb);
+        return self();
+    }
+    ListBoxPtr ListBox::onDoubleClick(std::function<void()> cb)
+    {
+        onDoubleClickCb = std::move(cb);
+        return self();
+    }
 
     ListBoxPtr ListBox::setUseContainerWidth(bool use)
     {

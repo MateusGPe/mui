@@ -9,7 +9,8 @@ namespace mui
 
     void RadioButton::renderControl()
     {
-        if (!visible) return;
+        if (!visible)
+            return;
         ScopedID id(this);
         ImGui::BeginDisabled(!enabled);
 

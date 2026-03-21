@@ -9,7 +9,8 @@ namespace mui
     SliderInt::SliderInt(int min, int max) : minVal(min), maxVal(max), value(min), format("%d") { App::assertMainThread(); }
     void SliderInt::renderControl()
     {
-        if (!visible) return;
+        if (!visible)
+            return;
         ScopedID id(this);
         ImGui::BeginDisabled(!enabled);
 
@@ -49,7 +50,8 @@ namespace mui
     SliderFloat::SliderFloat(float min, float max) : minVal(min), maxVal(max), value(min), format("%.3f") { App::assertMainThread(); }
     void SliderFloat::renderControl()
     {
-        if (!visible) return;
+        if (!visible)
+            return;
         ScopedID id(this);
         ImGui::BeginDisabled(!enabled);
 

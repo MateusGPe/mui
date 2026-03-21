@@ -10,7 +10,8 @@ namespace mui
 
     void ProgressBar::renderControl()
     {
-        if (!visible) return;
+        if (!visible)
+            return;
         ScopedID id(this);
 
         float w = width;

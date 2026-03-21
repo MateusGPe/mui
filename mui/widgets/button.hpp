@@ -34,7 +34,7 @@ namespace mui
     public:
         explicit Button(const std::string &text);
         static ButtonPtr create(const std::string &text) { return std::make_shared<Button>(text); }
-        
+
         void renderControl() override;
 
         std::string getText() const;

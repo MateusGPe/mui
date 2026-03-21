@@ -43,9 +43,11 @@ namespace mui
         if (onEnterCb)
             flags |= ImGuiInputTextFlags_EnterReturnsTrue;
 
-        ImGuiInputTextCallback callback = [](ImGuiInputTextCallbackData* data) -> int {
-            Entry* entry = (Entry*)data->UserData;
-            if (entry) {
+        ImGuiInputTextCallback callback = [](ImGuiInputTextCallbackData *data) -> int
+        {
+            Entry *entry = (Entry *)data->UserData;
+            if (entry)
+            {
                 entry->selStart = data->SelectionStart;
                 entry->selEnd = data->SelectionEnd;
             }
@@ -104,14 +106,15 @@ namespace mui
 
                 int start = selStart;
                 int end = selEnd;
-                if (start > end) std::swap(start, end);
+                if (start > end)
+                    std::swap(start, end);
                 bool has_selection = (start != end);
 
                 if (ImGui::MenuItem("Cut", "CTRL+X", false, has_selection && !readOnly))
                 {
                     std::string selected_text = current_text.substr(start, end - start);
                     ImGui::SetClipboardText(selected_text.c_str());
-                    
+
                     std::string new_text = current_text;
                     new_text.erase(start, end - start);
                     setText(new_text);
@@ -132,33 +135,33 @@ namespace mui
                         {
                             new_text.erase(start, end - start);
                         }
-                        
+
                         std::string clipboard_str = clipboard_text;
 
                         if (!isMultiline)
                         {
                             if (noSpaces)
                             {
-                                clipboard_str.erase(std::remove_if(clipboard_str.begin(), clipboard_str.end(), [](char c) {
-                                    return c == '\n' || c == '\r' || c == ' ' || c == '\t';
-                                }), clipboard_str.end());
+                                clipboard_str.erase(std::remove_if(clipboard_str.begin(), clipboard_str.end(), [](char c)
+                                                                   { return c == '\n' || c == '\r' || c == ' ' || c == '\t'; }),
+                                                    clipboard_str.end());
                             }
                             else if (isPassword)
                             {
-                                clipboard_str.erase(std::remove_if(clipboard_str.begin(), clipboard_str.end(), [](char c) {
-                                    return c == '\n' || c == '\r';
-                                }), clipboard_str.end());
+                                clipboard_str.erase(std::remove_if(clipboard_str.begin(), clipboard_str.end(), [](char c)
+                                                                   { return c == '\n' || c == '\r'; }),
+                                                    clipboard_str.end());
                             }
                             else
                             {
-                                std::replace_if(clipboard_str.begin(), clipboard_str.end(), [](char c) {
-                                    return c == '\n' || c == '\r';
-                                }, ' ');
+                                std::replace_if(clipboard_str.begin(), clipboard_str.end(), [](char c)
+                                                { return c == '\n' || c == '\r'; }, ' ');
                             }
                         }
 
                         int insert_pos = start;
-                        if (insert_pos > new_text.length()) insert_pos = new_text.length();
+                        if (insert_pos > new_text.length())
+                            insert_pos = new_text.length();
                         new_text.insert(insert_pos, clipboard_str);
 
                         setText(new_text);

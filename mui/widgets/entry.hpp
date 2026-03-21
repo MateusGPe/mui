@@ -16,7 +16,7 @@ namespace mui
         std::string text;
 
         // Buffer mode
-        char* buffer = nullptr;
+        char *buffer = nullptr;
         size_t bufferSize = 0;
 
         std::string hint;
@@ -31,7 +31,7 @@ namespace mui
         int selEnd = 0;
 
         std::function<void()> onChangedCb;
-        std::function<void(const std::string&)> onEnterCb;
+        std::function<void(const std::string &)> onEnterCb;
 
     public:
         // String constructor
@@ -42,12 +42,11 @@ namespace mui
         }
 
         // Buffer constructor
-        Entry(char* buf, size_t buf_size);
-        static EntryPtr create(char* buf, size_t buf_size)
+        Entry(char *buf, size_t buf_size);
+        static EntryPtr create(char *buf, size_t buf_size)
         {
             return std::make_shared<Entry>(buf, buf_size);
         }
-
 
         void renderControl() override;
 
@@ -62,7 +61,7 @@ namespace mui
         EntryPtr setWithContextMenu(bool c);
         EntryPtr setUseContainerWidth(bool use);
         EntryPtr onChanged(std::function<void()> cb);
-        EntryPtr onEnter(std::function<void(const std::string&)> cb);
+        EntryPtr onEnter(std::function<void(const std::string &)> cb);
     };
 
     class PasswordEntry;

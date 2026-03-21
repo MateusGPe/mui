@@ -34,7 +34,7 @@ namespace mui
         std::string getPath() const;
         BreadcrumbBarPtr setPath(const std::string &path);
         BreadcrumbBarPtr onPathNavigated(std::function<void(const std::string &)> cb);
-        
+
         bool getIsEditing() const { return isEditing; }
         BreadcrumbBarPtr setIsEditing(bool editing);
     };
