@@ -4,6 +4,9 @@
 #include <string>
 #include <functional>
 #include <memory>
+#include <utility>
+#include "../core/signal.hpp"
+#include "../core/observable.hpp"
 
 namespace mui
 {
@@ -17,9 +20,10 @@ namespace mui
         float currentMin, currentMax;
         std::string text;
         std::string format = "%.3f";
-        std::function<void(float, float)> onChangedCb;
 
     public:
+        mui::Signal<float, float> onChangedSignal;
+
         RangeSlider(float min, float max);
         static RangeSliderPtr create(float min, float max) { return std::make_shared<RangeSlider>(min, max); }
 
@@ -30,6 +34,7 @@ namespace mui
         std::pair<float, float> getRange() const { return {currentMin, currentMax}; }
         RangeSliderPtr setRange(float vMin, float vMax);
         RangeSliderPtr setFormat(const std::string &f);
+        RangeSliderPtr bind(std::shared_ptr<Observable<std::pair<float, float>>> observable);
         RangeSliderPtr onChanged(std::function<void(float, float)> cb);
         RangeSliderPtr setUseContainerWidth(bool use);
     };

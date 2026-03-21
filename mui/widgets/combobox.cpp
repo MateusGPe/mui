@@ -36,8 +36,7 @@ namespace mui
                 if (ImGui::Selectable(items[i].c_str(), isSelected))
                 {
                     selectedIndex = i;
-                    if (onChangedCb)
-                        onChangedCb();
+                    onChangedSignal(i);
                 }
                 if (isSelected)
                 {
@@ -87,9 +86,22 @@ namespace mui
         return self();
     }
 
+    ComboBoxPtr ComboBox::bind(std::shared_ptr<Observable<int>> observable)
+    {
+        setSelectedIndex(observable->get());
+        m_connections.push_back(observable->onValueChanged.connect([this](const int &val)
+                                                                   { mui::App::queueMain([this, val]()
+                                                                                         { this->setSelectedIndex(val); }); }));
+        m_connections.push_back(onChangedSignal.connect([observable](int val)
+                                                        { observable->set(val); }));
+        return self();
+    }
+
     ComboBoxPtr ComboBox::onChanged(std::function<void()> cb)
     {
-        onChangedCb = std::move(cb);
+        if (cb)
+            m_connections.push_back(onChangedSignal.connect([cb](int)
+                                                            { cb(); }));
         return self();
     }
 

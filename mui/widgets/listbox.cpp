@@ -31,14 +31,12 @@ namespace mui
                 if (ImGui::Selectable(items[i].c_str(), isSelected))
                 {
                     selectedIndex = i;
-                    if (onSelectedCb)
-                        onSelectedCb();
+                    onSelectedSignal(selectedIndex);
                 }
 
                 if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
                 {
-                    if (onDoubleClickCb)
-                        onDoubleClickCb();
+                    onDoubleClickSignal(i);
                 }
 
                 if (isSelected)
@@ -71,6 +69,19 @@ namespace mui
         selectedIndex = index;
         return self();
     }
+
+    ListBoxPtr ListBox::bind(std::shared_ptr<Observable<int>> observable)
+    {
+        setSelected(observable->get());
+        m_connections.push_back(observable->onValueChanged.connect([this](const int &val) {
+            mui::App::queueMain([this, val]() { this->setSelected(val); });
+        }));
+        m_connections.push_back(onSelectedSignal.connect([observable](int val) {
+            observable->set(val);
+        }));
+        return self();
+    }
+
     ListBoxPtr ListBox::setVisibleItems(int count)
     {
         visibleItemsCount = count;
@@ -83,12 +94,12 @@ namespace mui
     }
     ListBoxPtr ListBox::onSelected(std::function<void()> cb)
     {
-        onSelectedCb = std::move(cb);
+        if (cb) m_connections.push_back(onSelectedSignal.connect([cb](int) { cb(); }));
         return self();
     }
     ListBoxPtr ListBox::onDoubleClick(std::function<void()> cb)
     {
-        onDoubleClickCb = std::move(cb);
+        if (cb) m_connections.push_back(onDoubleClickSignal.connect([cb](int) { cb(); }));
         return self();
     }
 

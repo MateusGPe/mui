@@ -5,6 +5,8 @@
 #include <vector>
 #include <functional>
 #include <memory>
+#include "../core/signal.hpp"
+#include "../core/observable.hpp"
 
 namespace mui
 {
@@ -17,10 +19,11 @@ namespace mui
         std::vector<std::string> items;
         int selectedIndex;
         int visibleItemsCount;
-        std::function<void()> onSelectedCb;
-        std::function<void()> onDoubleClickCb;
 
     public:
+        mui::Signal<int> onSelectedSignal;
+        mui::Signal<int> onDoubleClickSignal;
+
         ListBox();
         static ListBoxPtr create() { return std::make_shared<ListBox>(); }
 
@@ -32,6 +35,7 @@ namespace mui
         int getSelected() const;
         ListBoxPtr setSelected(int index);
         ListBoxPtr setVisibleItems(int count);
+        ListBoxPtr bind(std::shared_ptr<Observable<int>> observable);
         ListBoxPtr setSpanAvailWidth(bool span);
         ListBoxPtr setUseContainerWidth(bool use);
 

@@ -1,11 +1,14 @@
+// widgets/control.hpp
 #pragma once
 
 #include <string>
 #include <memory>
+#include <vector>
 #include <stdexcept>
 #include <imgui.h>
 #include <imgui_internal.h>
 #include "../core/app.hpp"
+#include "../core/signal.hpp"
 
 namespace mui
 {
@@ -16,10 +19,17 @@ namespace mui
     // Non-templated base class for polymorphism.
     class IControl
     {
+    protected:
+        // Centralized connection management for all controls
+        // Ensures safe lifecycle and automatic disconnection upon destruction
+        std::vector<mui::Connection> m_connections;
+
     public:
         virtual ~IControl() = default;
         virtual void render() = 0;
         virtual void onHandleDestroyed() = 0;
+
+        void clearConnections() { m_connections.clear(); }
     };
 
     template <class Derived>
@@ -128,8 +138,6 @@ namespace mui
                 // Warning: High iterations will spike draw calls. Keep between 3 and 5.
                 const int iterations = 5; // Using 5 for a slightly smoother falloff
                 // Draw from largest, most transparent, to smallest, most opaque for correct blending.
-                // The original loop was reversed, causing larger, more transparent rectangles to be
-                // drawn over smaller, more opaque ones, effectively hiding the shadow.
                 for (int i = iterations; i >= 1; --i)
                 {
                     float step = (shadowBlur / iterations) * i;

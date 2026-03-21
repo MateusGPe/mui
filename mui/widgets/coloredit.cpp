@@ -24,8 +24,7 @@ namespace mui
 
         if (ImGui::ColorEdit4("##color", color, ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreviewHalf))
         {
-            if (onChangedCb)
-                onChangedCb();
+            onChangedSignal(getColor());
         }
 
         renderTooltip();
@@ -47,9 +46,22 @@ namespace mui
         return self();
     }
 
+    ColorEditPtr ColorEdit::bind(std::shared_ptr<Observable<std::array<float, 4>>> observable)
+    {
+        auto c = observable->get();
+        setColor(c[0], c[1], c[2], c[3]);
+        m_connections.push_back(observable->onValueChanged.connect([this](const std::array<float, 4> &val) {
+            mui::App::queueMain([this, val]() { this->setColor(val[0], val[1], val[2], val[3]); });
+        }));
+        m_connections.push_back(onChangedSignal.connect([observable](const std::array<float, 4> &val) {
+            observable->set(val);
+        }));
+        return self();
+    }
+
     ColorEditPtr ColorEdit::onChanged(std::function<void()> cb)
     {
-        onChangedCb = std::move(cb);
+        if (cb) m_connections.push_back(onChangedSignal.connect([cb](const std::array<float, 4> &) { cb(); }));
         return self();
     }
 } // namespace mui

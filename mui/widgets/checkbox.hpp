@@ -1,8 +1,11 @@
+// widgets/checkbox.hpp
 #pragma once
 #include "control.hpp"
+#include "../core/observable.hpp"
+#include "../core/signal.hpp"
 #include <string>
-#include <functional>
 #include <memory>
+#include <vector>
 
 namespace mui
 {
@@ -15,9 +18,10 @@ namespace mui
         std::string text;
         bool checked;
         float scale = 1.0f;
-        std::function<void(bool)> onToggledCb;
 
     public:
+        mui::Signal<bool> onToggledSignal;
+
         explicit Checkbox(const std::string &text);
         static CheckboxPtr create(const std::string &text) { return std::make_shared<Checkbox>(text); }
 
@@ -28,7 +32,8 @@ namespace mui
         CheckboxPtr setText(const std::string &t);
 
         CheckboxPtr setChecked(bool c);
-        CheckboxPtr onToggled(std::function<void(bool)> cb);
         CheckboxPtr setScale(float s);
+        CheckboxPtr bind(std::shared_ptr<Observable<bool>> observable);
+        CheckboxPtr onToggled(std::function<void(bool)> cb);
     };
 } // namespace mui

@@ -5,6 +5,8 @@
 #include <vector>
 #include <functional>
 #include <memory>
+#include "../core/signal.hpp"
+#include "../core/observable.hpp"
 
 namespace mui
 {
@@ -26,11 +28,11 @@ namespace mui
         int selectedRow = -1;
         bool sortable = false;
 
-        std::function<void(int)> onRowSelectedCb;
-        std::function<void(int)> onRowDoubleClickedCb;
-        std::function<void(int, bool)> onSortRequestedCb; // Column index, Ascending
-
     public:
+        mui::Signal<int> onRowSelectedSignal;
+        mui::Signal<int> onRowDoubleClickedSignal;
+        mui::Signal<int, bool> onSortRequestedSignal; // Column index, Ascending
+
         Table();
         static TablePtr create() { return std::make_shared<Table>(); }
 
@@ -42,6 +44,7 @@ namespace mui
 
         int getSelectedRow() const;
         TablePtr setSelectedRow(int index);
+        TablePtr bind(std::shared_ptr<Observable<int>> observable);
         TablePtr setSortable(bool s);
 
         TablePtr onRowSelected(std::function<void(int)> cb);

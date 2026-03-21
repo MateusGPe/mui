@@ -149,8 +149,8 @@ namespace mui
                 ImGui::RenderText(ImVec2(frame_bb.Max.x + style.ItemInnerSpacing.x, frame_bb.Min.y + style.FramePadding.y), text.c_str());
             }
 
-            if (value_changed && onChangedCb)
-                onChangedCb(currentMin, currentMax);
+            if (value_changed)
+                onChangedSignal(currentMin, currentMax);
         };
 
         {
@@ -191,9 +191,23 @@ namespace mui
         currentMax = vMax;
         return self();
     }
+
+    RangeSliderPtr RangeSlider::bind(std::shared_ptr<Observable<std::pair<float, float>>> observable)
+    {
+        auto range = observable->get();
+        setRange(range.first, range.second);
+        m_connections.push_back(observable->onValueChanged.connect([this](const std::pair<float, float> &val) {
+            mui::App::queueMain([this, val]() { this->setRange(val.first, val.second); });
+        }));
+        m_connections.push_back(onChangedSignal.connect([observable](float minVal, float maxVal) {
+            observable->set({minVal, maxVal});
+        }));
+        return self();
+    }
+
     RangeSliderPtr RangeSlider::onChanged(std::function<void(float, float)> cb)
     {
-        onChangedCb = std::move(cb);
+        if (cb) m_connections.push_back(onChangedSignal.connect(std::move(cb)));
         return self();
     }
 

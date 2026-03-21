@@ -77,10 +77,10 @@ namespace mui
         bool hovered, held;
         bool pressed = ImGui::ButtonBehavior(bb, button_id, &hovered, &held);
 
-        if (pressed && onClickCb)
-            onClickCb();
-        if (hovered && ImGui::IsMouseDoubleClicked(0) && onDoubleClickCb)
-            onDoubleClickCb();
+        if (pressed)
+            onClickSignal();
+        if (hovered && ImGui::IsMouseDoubleClicked(0))
+            onDoubleClickSignal();
 
         // 4. Draw Background
         ImU32 col_bg = 0;
@@ -181,12 +181,14 @@ namespace mui
     }
     IconButtonPtr IconButton::onClick(std::function<void()> cb)
     {
-        onClickCb = std::move(cb);
+        if (cb)
+            m_connections.push_back(onClickSignal.connect(std::move(cb)));
         return self();
     }
     IconButtonPtr IconButton::onDoubleClick(std::function<void()> cb)
     {
-        onDoubleClickCb = std::move(cb);
+        if (cb)
+            m_connections.push_back(onDoubleClickSignal.connect(std::move(cb)));
         return self();
     }
 

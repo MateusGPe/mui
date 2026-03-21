@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <functional> // <-- Added this!
+#include "../core/signal.hpp"
 
 namespace mui
 {
@@ -17,11 +18,12 @@ namespace mui
         {
             std::string icon;
             std::string tooltip;
-            std::function<void()> cb;
         };
         std::vector<IconBtn> icons;
 
     public:
+        mui::Signal<int> onIconClickedSignal;
+
         IconStack();
         static IconStackPtr create() { return std::make_shared<IconStack>(); }
 

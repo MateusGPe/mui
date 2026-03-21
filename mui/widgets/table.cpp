@@ -37,9 +37,9 @@ namespace mui
             {
                 if (ImGuiTableSortSpecs *sorts_specs = ImGui::TableGetSortSpecs())
                 {
-                    if (sorts_specs->SpecsDirty && onSortRequestedCb)
+                    if (sorts_specs->SpecsDirty)
                     {
-                        onSortRequestedCb(sorts_specs->Specs->ColumnIndex, sorts_specs->Specs->SortDirection == ImGuiSortDirection_Ascending);
+                        onSortRequestedSignal(sorts_specs->Specs->ColumnIndex, sorts_specs->Specs->SortDirection == ImGuiSortDirection_Ascending);
                         sorts_specs->SpecsDirty = false;
                     }
                 }
@@ -62,11 +62,10 @@ namespace mui
                         if (ImGui::Selectable(selId.c_str(), selectedRow == (int)r, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap))
                         {
                             selectedRow = (int)r;
-                            if (onRowSelectedCb)
-                                onRowSelectedCb(selectedRow);
-                            if (ImGui::IsMouseDoubleClicked(0) && onRowDoubleClickedCb)
+                            onRowSelectedSignal(selectedRow);
+                            if (ImGui::IsMouseDoubleClicked(0))
                             {
-                                onRowDoubleClickedCb(selectedRow);
+                                onRowDoubleClickedSignal(selectedRow);
                             }
                         }
                         ImGui::SameLine();
@@ -106,6 +105,19 @@ namespace mui
         selectedRow = index;
         return self();
     }
+
+    TablePtr Table::bind(std::shared_ptr<Observable<int>> observable)
+    {
+        setSelectedRow(observable->get());
+        m_connections.push_back(observable->onValueChanged.connect([this](const int &val) {
+            mui::App::queueMain([this, val]() { this->setSelectedRow(val); });
+        }));
+        m_connections.push_back(onRowSelectedSignal.connect([observable](int val) {
+            observable->set(val);
+        }));
+        return self();
+    }
+
     TablePtr Table::setSortable(bool s)
     {
         sortable = s;
@@ -113,17 +125,17 @@ namespace mui
     }
     TablePtr Table::onRowSelected(std::function<void(int)> cb)
     {
-        onRowSelectedCb = std::move(cb);
+        if (cb) m_connections.push_back(onRowSelectedSignal.connect(std::move(cb)));
         return self();
     }
     TablePtr Table::onRowDoubleClicked(std::function<void(int)> cb)
     {
-        onRowDoubleClickedCb = std::move(cb);
+        if (cb) m_connections.push_back(onRowDoubleClickedSignal.connect(std::move(cb)));
         return self();
     }
     TablePtr Table::onSortRequested(std::function<void(int, bool)> cb)
     {
-        onSortRequestedCb = std::move(cb);
+        if (cb) m_connections.push_back(onSortRequestedSignal.connect(std::move(cb)));
         return self();
     }
 } // namespace mui

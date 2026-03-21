@@ -26,12 +26,10 @@ namespace mui
         const ImGuiStyle &style = ImGui::GetStyle();
         const ImGuiID id = window->GetID(label.c_str());
 
-        // Calculate dimensions
         const float switch_height = ImGui::GetFrameHeight() * scale;
         const float switch_width = switch_height * 1.8f;
         const ImVec2 label_size = ImGui::CalcTextSize(label.c_str(), NULL, true);
 
-        // Calculate total bounding box for the whole widget (switch + label)
         const float frame_height = std::max(switch_height, label_size.y);
         const ImRect total_bb(window->DC.CursorPos,
                               ImVec2(window->DC.CursorPos.x + switch_width + (label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f),
@@ -44,17 +42,14 @@ namespace mui
             return;
         }
 
-        // Use the total bounding box for interaction
         bool hovered, held;
         bool pressed = ImGui::ButtonBehavior(total_bb, id, &hovered, &held);
         if (pressed)
         {
             checked = !checked;
-            if (onToggledCb)
-                onToggledCb(checked);
+            onToggledSignal(checked);
         }
 
-        // --- Render ---
         const float switch_y_offset = (frame_height - switch_height) / 2.0f;
         const ImRect switch_bb(ImVec2(total_bb.Min.x, total_bb.Min.y + switch_y_offset), ImVec2(total_bb.Min.x + switch_width, total_bb.Min.y + switch_y_offset + switch_height));
         const float radius = switch_height * 0.50f;
@@ -82,15 +77,35 @@ namespace mui
         checked = c;
         return self();
     }
-    ToggleSwitchPtr ToggleSwitch::onToggled(std::function<void(bool)> cb)
-    {
-        onToggledCb = std::move(cb);
-        return self();
-    }
 
     ToggleSwitchPtr ToggleSwitch::setScale(float s)
     {
         scale = s;
+        return self();
+    }
+
+    ToggleSwitchPtr ToggleSwitch::bind(std::shared_ptr<Observable<bool>> observable)
+    {
+        setChecked(observable->get());
+        
+        m_connections.push_back(
+            observable->onValueChanged.connect([this](const bool& val) {
+                mui::App::queueMain([this, val]() { this->setChecked(val); });
+            })
+        );
+        
+        m_connections.push_back(
+            onToggledSignal.connect([observable](bool val) {
+                observable->set(val);
+            })
+        );
+
+        return self();
+    }
+
+    ToggleSwitchPtr ToggleSwitch::onToggled(std::function<void(bool)> cb)
+    {
+        if (cb) m_connections.push_back(onToggledSignal.connect(std::move(cb)));
         return self();
     }
 }

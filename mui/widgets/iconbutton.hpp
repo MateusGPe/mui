@@ -4,6 +4,7 @@
 #include <string>
 #include <functional>
 #include <memory>
+#include "../core/signal.hpp"
 #include <imgui.h>
 
 namespace mui
@@ -28,10 +29,10 @@ namespace mui
         bool selected = false;
         ImVec2 iconSize = ImVec2(16.0f, 16.0f);
 
-        std::function<void()> onClickCb;
-        std::function<void()> onDoubleClickCb;
-
     public:
+        mui::Signal<> onClickSignal;
+        mui::Signal<> onDoubleClickSignal;
+
         explicit IconButton(const std::string &text = "");
         static IconButtonPtr create(const std::string &text = "") { return std::make_shared<IconButton>(text); }
 

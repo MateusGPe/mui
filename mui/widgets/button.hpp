@@ -1,5 +1,7 @@
+// widgets/button.hpp
 #pragma once
 #include "control.hpp"
+#include "../core/signal.hpp"
 #include <string>
 #include <functional>
 #include <memory>
@@ -29,9 +31,9 @@ namespace mui
         ImVec4 colorHovered;
         ImVec4 colorActive;
 
-        std::function<void()> onClickCb;
-
     public:
+        mui::Signal<> onClickSignal;
+
         explicit Button(const std::string &text);
         static ButtonPtr create(const std::string &text) { return std::make_shared<Button>(text); }
 
@@ -40,7 +42,9 @@ namespace mui
         std::string getText() const;
         ButtonPtr setText(const std::string &t);
         ButtonPtr setType(ButtonType t);
-        ButtonPtr onClick(std::function<void()> cb);
         ButtonPtr setColor(ImVec4 c, ImVec4 hover, ImVec4 active);
+        
+        // Backward compatibility for the fluent builder pattern
+        ButtonPtr onClick(std::function<void()> cb);
     };
 } // namespace mui

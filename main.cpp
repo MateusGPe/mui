@@ -171,14 +171,11 @@ WindowPtr createInspectorWindow()
     return win;
 }
 
-// --- TAB CREATION FUNCTIONS ---
-
 IControlPtr createBasicsTab(const LabelPtr &lblStatus)
 {
     auto vbox = VBox::create();
     vbox->setPadded(true);
 
-    // IconStack demonstration (Horizontal Toolbar)
     auto iconStack = IconStack::create()
                          ->add(ICON_FA_PLAY, [lblStatus]()
                                { lblStatus->setText("Play clicked"); }, "Play Action")

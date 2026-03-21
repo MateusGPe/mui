@@ -26,11 +26,11 @@ namespace mui
             changed = ImGui::RadioButton(text.c_str(), &m_checked);
         }
 
-        if (changed && onToggledCb)
+        if (changed)
         {
             // The callback expects a boolean indicating the new state.
             // Since main.cpp only checks for `if(checked)`, we only need to fire on the positive edge.
-            onToggledCb(isChecked());
+            onToggledSignal(isChecked());
         }
 
         renderTooltip();
@@ -64,7 +64,7 @@ namespace mui
 
     RadioButtonPtr RadioButton::onToggled(std::function<void(bool)> cb)
     {
-        onToggledCb = std::move(cb);
+        if (cb) m_connections.push_back(onToggledSignal.connect(std::move(cb)));
         return self();
     }
 

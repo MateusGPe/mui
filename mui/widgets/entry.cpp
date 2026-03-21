@@ -1,3 +1,4 @@
+// widgets/entry.cpp
 #include "entry.hpp"
 #include "../core/app.hpp"
 #include <imgui.h>
@@ -9,7 +10,6 @@
 
 namespace mui
 {
-    // String constructor
     Entry::Entry(const std::string &initialText, bool password, bool multiline, float h)
         : text(initialText), isPassword(password), isMultiline(multiline)
     {
@@ -17,7 +17,6 @@ namespace mui
         height = h;
     }
 
-    // Buffer constructor
     Entry::Entry(char *buf, size_t buf_size)
         : buffer(buf), bufferSize(buf_size)
     {
@@ -40,7 +39,7 @@ namespace mui
             flags |= ImGuiInputTextFlags_AutoSelectAll;
         if (noSpaces)
             flags |= ImGuiInputTextFlags_CharsNoBlank;
-        if (onEnterCb)
+        if (onEnterSignal.slot_count() > 0)
             flags |= ImGuiInputTextFlags_EnterReturnsTrue;
 
         ImGuiInputTextCallback callback = [](ImGuiInputTextCallbackData *data) -> int
@@ -60,39 +59,27 @@ namespace mui
             bool changed = false;
             bool entered = false;
 
-            // Decide whether to use buffer or std::string version
             if (buffer)
             {
                 if (isMultiline)
-                {
-                    // Not implemented for buffer mode
+                { /* Not implemented for buffer mode */
                 }
                 else if (!hint.empty())
-                {
                     entered = ImGui::InputTextWithHint("##entry", hint.c_str(), buffer, bufferSize, flags, callback, this);
-                }
                 else
-                {
                     entered = ImGui::InputText("##entry", buffer, bufferSize, flags, callback, this);
-                }
-                // For buffers, InputText returns true on enter, not change. We can check for edits manually.
                 if (ImGui::IsItemEdited())
                     changed = true;
             }
-            else // std::string mode
+            else
             {
                 if (isMultiline)
-                {
                     changed = ImGui::InputTextMultiline("##entry", &text, ImVec2(spanAvailWidth ? -FLT_MIN : 0, height), flags, callback, this);
-                }
                 else if (!hint.empty())
-                {
                     changed = ImGui::InputTextWithHint("##entry", hint.c_str(), &text, flags, callback, this);
-                }
                 else
-                {
                     changed = ImGui::InputText("##entry", &text, flags, callback, this);
-                }
+
                 if (ImGui::IsItemDeactivatedAfterEdit() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter)))
                 {
                     entered = true;
@@ -103,7 +90,6 @@ namespace mui
             {
                 std::string current_text = getText();
                 bool has_text = !current_text.empty();
-
                 int start = selStart;
                 int end = selEnd;
                 if (start > end)
@@ -114,7 +100,6 @@ namespace mui
                 {
                     std::string selected_text = current_text.substr(start, end - start);
                     ImGui::SetClipboardText(selected_text.c_str());
-
                     std::string new_text = current_text;
                     new_text.erase(start, end - start);
                     setText(new_text);
@@ -132,38 +117,28 @@ namespace mui
                     {
                         std::string new_text = current_text;
                         if (has_selection)
-                        {
                             new_text.erase(start, end - start);
-                        }
-
                         std::string clipboard_str = clipboard_text;
 
                         if (!isMultiline)
                         {
                             if (noSpaces)
-                            {
                                 clipboard_str.erase(std::remove_if(clipboard_str.begin(), clipboard_str.end(), [](char c)
                                                                    { return c == '\n' || c == '\r' || c == ' ' || c == '\t'; }),
                                                     clipboard_str.end());
-                            }
                             else if (isPassword)
-                            {
                                 clipboard_str.erase(std::remove_if(clipboard_str.begin(), clipboard_str.end(), [](char c)
                                                                    { return c == '\n' || c == '\r'; }),
                                                     clipboard_str.end());
-                            }
                             else
-                            {
                                 std::replace_if(clipboard_str.begin(), clipboard_str.end(), [](char c)
                                                 { return c == '\n' || c == '\r'; }, ' ');
-                            }
                         }
 
                         int insert_pos = start;
                         if (insert_pos > new_text.length())
                             insert_pos = new_text.length();
                         new_text.insert(insert_pos, clipboard_str);
-
                         setText(new_text);
                         changed = true;
                     }
@@ -179,29 +154,20 @@ namespace mui
                 ImGui::EndPopup();
             }
 
-            if (changed && onChangedCb)
-                onChangedCb();
-            if (entered && onEnterCb)
-                onEnterCb(buffer ? std::string(buffer) : text);
+            if (changed)
+                onChangedSignal(getText());
+            if (entered)
+                onEnterSignal(getText());
         };
 
         ScopedItemWidth item_width;
         if (width > 0)
-        {
             item_width.push(width);
-        }
         else if (spanAvailWidth)
-        {
             item_width.push(-FLT_MIN);
-        }
-        else if (useContainerWidth)
-        {
-            // Do nothing, will inherit from container.
-        }
+
         render_entry();
-
         renderTooltip();
-
         ImGui::EndDisabled();
     }
 
@@ -220,11 +186,10 @@ namespace mui
             buffer[bufferSize - 1] = '\0';
         }
         else
-        {
             text = t;
-        }
         return self();
     }
+
     EntryPtr Entry::setHint(const std::string &h)
     {
         hint = h;
@@ -251,31 +216,45 @@ namespace mui
         noSpaces = n;
         return self();
     }
-    EntryPtr Entry::onChanged(std::function<void()> cb)
-    {
-        onChangedCb = std::move(cb);
-        return self();
-    }
-    EntryPtr Entry::onEnter(std::function<void(const std::string &)> cb)
-    {
-        onEnterCb = std::move(cb);
-        return self();
-    }
     EntryPtr Entry::setWidth(float w)
     {
         width = w;
         return self();
     }
-
     EntryPtr Entry::setWithContextMenu(bool c)
     {
         withContextMenu = c;
         return self();
     }
-
     EntryPtr Entry::setUseContainerWidth(bool use)
     {
         useContainerWidth = use;
+        return self();
+    }
+
+    EntryPtr Entry::bind(std::shared_ptr<Observable<std::string>> observable)
+    {
+        setText(observable->get());
+        m_connections.push_back(observable->onValueChanged.connect([this](const std::string &val)
+                                                                   { mui::App::queueMain([this, val]()
+                                                                                         { this->setText(val); }); }));
+        m_connections.push_back(onChangedSignal.connect([observable](const std::string &val)
+                                                        { observable->set(val); }));
+        return self();
+    }
+
+    EntryPtr Entry::onChanged(std::function<void()> cb)
+    {
+        if (cb)
+            m_connections.push_back(onChangedSignal.connect([cb](const std::string &)
+                                                            { cb(); }));
+        return self();
+    }
+
+    EntryPtr Entry::onEnter(std::function<void(const std::string &)> cb)
+    {
+        if (cb)
+            m_connections.push_back(onEnterSignal.connect(std::move(cb)));
         return self();
     }
 

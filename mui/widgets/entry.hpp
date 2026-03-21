@@ -1,8 +1,12 @@
+// widgets/entry.hpp
 #pragma once
 #include "control.hpp"
+#include "../core/observable.hpp"
+#include "../core/signal.hpp"
 #include <string>
 #include <functional>
 #include <memory>
+#include <vector>
 
 namespace mui
 {
@@ -12,10 +16,7 @@ namespace mui
     class Entry : public Control<Entry>
     {
     protected:
-        // String mode
         std::string text;
-
-        // Buffer mode
         char *buffer = nullptr;
         size_t bufferSize = 0;
 
@@ -30,18 +31,16 @@ namespace mui
         int selStart = 0;
         int selEnd = 0;
 
-        std::function<void()> onChangedCb;
-        std::function<void(const std::string &)> onEnterCb;
-
     public:
-        // String constructor
+        mui::Signal<std::string> onChangedSignal;
+        mui::Signal<std::string> onEnterSignal;
+
         Entry(const std::string &initialText = "", bool password = false, bool multiline = false, float h = 0.0f);
         static EntryPtr create(const std::string &initialText = "", bool password = false, bool multiline = false, float h = 0.0f)
         {
             return std::make_shared<Entry>(initialText, password, multiline, h);
         }
 
-        // Buffer constructor
         Entry(char *buf, size_t buf_size);
         static EntryPtr create(char *buf, size_t buf_size)
         {
@@ -60,6 +59,10 @@ namespace mui
         EntryPtr setWidth(float w);
         EntryPtr setWithContextMenu(bool c);
         EntryPtr setUseContainerWidth(bool use);
+        
+        EntryPtr bind(std::shared_ptr<Observable<std::string>> observable);
+
+        // Backward compatibility
         EntryPtr onChanged(std::function<void()> cb);
         EntryPtr onEnter(std::function<void(const std::string &)> cb);
     };

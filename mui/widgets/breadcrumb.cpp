@@ -26,8 +26,7 @@ namespace mui
                                     {
                           setPath(text);
                           setIsEditing(false);
-                          if (onPathNavigatedCb)
-                              onPathNavigatedCb(currentPath); });
+                          onPathNavigatedSignal(currentPath); });
     }
 
     void BreadcrumbBar::parsePath()
@@ -144,8 +143,7 @@ namespace mui
 #endif
                 }
                 setPath(newPath);
-                if (onPathNavigatedCb)
-                    onPathNavigatedCb(currentPath);
+                onPathNavigatedSignal(currentPath);
             };
 
             // Helper to render a segment button
@@ -286,12 +284,23 @@ namespace mui
         return self();
     }
 
-    BreadcrumbBarPtr BreadcrumbBar::onPathNavigated(std::function<void(const std::string &)> cb)
+    BreadcrumbBarPtr BreadcrumbBar::bind(std::shared_ptr<Observable<std::string>> observable)
     {
-        onPathNavigatedCb = std::move(cb);
+        setPath(observable->get());
+        m_connections.push_back(observable->onValueChanged.connect([this](const std::string &val)
+                                                                   { mui::App::queueMain([this, val]()
+                                                                                         { this->setPath(val); }); }));
+        m_connections.push_back(onPathNavigatedSignal.connect([observable](const std::string &val)
+                                                              { observable->set(val); }));
         return self();
     }
 
+    BreadcrumbBarPtr BreadcrumbBar::onPathNavigated(std::function<void(const std::string &)> cb)
+    {
+        if (cb)
+            m_connections.push_back(onPathNavigatedSignal.connect(std::move(cb)));
+        return self();
+    }
     BreadcrumbBarPtr BreadcrumbBar::setIsEditing(bool editing)
     {
         isEditing = editing;

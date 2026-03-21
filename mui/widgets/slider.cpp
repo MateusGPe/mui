@@ -1,3 +1,4 @@
+// filepath: widgets/slider.cpp
 #include "slider.hpp"
 #include "app.hpp"
 #include <imgui.h>
@@ -17,8 +18,7 @@ namespace mui
         ImGuiSliderFlags flags = logarithmic ? ImGuiSliderFlags_Logarithmic : 0;
         if (ImGui::SliderInt("##slider", &value, minVal, maxVal, format.c_str(), flags))
         {
-            if (onChangedCb)
-                onChangedCb();
+            this->onChangedSignal(value);
         }
 
         renderTooltip();
@@ -42,7 +42,18 @@ namespace mui
     }
     SliderIntPtr SliderInt::onChanged(std::function<void()> cb)
     {
-        onChangedCb = std::move(cb);
+        if (cb) m_connections.push_back(this->onChangedSignal.connect([cb](int) { cb(); }));
+        return self();
+    }
+    SliderIntPtr SliderInt::bind(std::shared_ptr<Observable<int>> observable)
+    {
+        value = observable->get();
+        m_connections.push_back(observable->onValueChanged.connect([this](const int& val) {
+            this->value = val;
+        }));
+        m_connections.push_back(this->onChangedSignal.connect([observable](int val) {
+            observable->set(val);
+        }));
         return self();
     }
 
@@ -58,8 +69,7 @@ namespace mui
         ImGuiSliderFlags flags = logarithmic ? ImGuiSliderFlags_Logarithmic : 0;
         if (ImGui::SliderFloat("##slider", &value, minVal, maxVal, format.c_str(), flags))
         {
-            if (onChangedCb)
-                onChangedCb();
+            this->onChangedSignal(value);
         }
 
         renderTooltip();
@@ -83,7 +93,18 @@ namespace mui
     }
     SliderFloatPtr SliderFloat::onChanged(std::function<void()> cb)
     {
-        onChangedCb = std::move(cb);
+        if (cb) m_connections.push_back(this->onChangedSignal.connect([cb](float) { cb(); }));
+        return self();
+    }
+    SliderFloatPtr SliderFloat::bind(std::shared_ptr<Observable<float>> observable)
+    {
+        value = observable->get();
+        m_connections.push_back(observable->onValueChanged.connect([this](const float& val) {
+            this->value = val;
+        }));
+        m_connections.push_back(this->onChangedSignal.connect([observable](float val) {
+            observable->set(val);
+        }));
         return self();
     }
 }

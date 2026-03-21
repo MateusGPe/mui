@@ -20,8 +20,7 @@ namespace mui
             ScopedID icon_id((int)i);
             if (ImGui::Button(icons[i].icon.c_str(), ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight())))
             {
-                if (icons[i].cb)
-                    icons[i].cb();
+                onIconClickedSignal((int)i);
             }
             if (!icons[i].tooltip.empty() && ImGui::IsItemHovered())
             {
@@ -35,7 +34,15 @@ namespace mui
 
     IconStackPtr IconStack::add(const std::string &icon, std::function<void()> onClick, const std::string &tip)
     {
-        icons.push_back({icon, tip, std::move(onClick)});
+        int index = (int)icons.size();
+        icons.push_back({icon, tip});
+
+        if (onClick) {
+            m_connections.push_back(onIconClickedSignal.connect([index, cb = std::move(onClick)](int clickedIndex) {
+                if (clickedIndex == index) cb();
+            }));
+        }
+        
         return self();
     }
 }

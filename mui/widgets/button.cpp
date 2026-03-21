@@ -1,3 +1,4 @@
+// widgets/button.cpp
 #include "button.hpp"
 #include "app.hpp"
 #include <imgui.h>
@@ -34,7 +35,6 @@ namespace mui
             buttonSize.x = ImGui::CalcItemWidth();
         }
 
-        // Auto-size if needed before applying constraints
         if (buttonSize.x <= 0.0f)
             buttonSize.x = ImGui::CalcTextSize(text.c_str(), NULL, true).x + ImGui::GetStyle().FramePadding.x * 2.0f;
         if (buttonSize.y <= 0.0f)
@@ -63,8 +63,8 @@ namespace mui
             break;
         }
 
-        if (clicked && onClickCb)
-            onClickCb();
+        if (clicked)
+            onClickSignal();
 
         renderTooltip();
 
@@ -82,11 +82,6 @@ namespace mui
         type = t;
         return self();
     }
-    ButtonPtr Button::onClick(std::function<void()> cb)
-    {
-        onClickCb = std::move(cb);
-        return self();
-    }
 
     ButtonPtr Button::setColor(ImVec4 c, ImVec4 hover, ImVec4 active)
     {
@@ -94,6 +89,12 @@ namespace mui
         colorHovered = hover;
         colorActive = active;
         useCustomColor = true;
+        return self();
+    }
+
+    ButtonPtr Button::onClick(std::function<void()> cb)
+    {
+        if (cb) m_connections.push_back(onClickSignal.connect(std::move(cb)));
         return self();
     }
 }

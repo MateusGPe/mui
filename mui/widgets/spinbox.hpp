@@ -2,6 +2,8 @@
 #include "control.hpp"
 #include <functional>
 #include <memory>
+#include "../core/signal.hpp"
+#include "../core/observable.hpp"
 
 namespace mui
 {
@@ -14,9 +16,10 @@ namespace mui
         int minVal;
         int maxVal;
         int value;
-        std::function<void()> onChangedCb;
 
     public:
+        mui::Signal<int> onChangedSignal;
+
         Spinbox(int min, int max);
         static SpinboxPtr create(int min, int max) { return std::make_shared<Spinbox>(min, max); }
 
@@ -24,6 +27,7 @@ namespace mui
 
         int getValue() const;
         SpinboxPtr setValue(int v);
+        SpinboxPtr bind(std::shared_ptr<Observable<int>> observable);
         SpinboxPtr onChanged(std::function<void()> cb);
     };
 } // namespace mui

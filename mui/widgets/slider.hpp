@@ -1,8 +1,8 @@
 #pragma once
 #include "control.hpp"
 #include <string>
-#include <functional>
 #include <memory>
+#include "../core/observable.hpp"
 
 namespace mui
 {
@@ -17,7 +17,6 @@ namespace mui
         int value;
         std::string format;
         bool logarithmic = false;
-        std::function<void()> onChangedCb;
 
     public:
         SliderInt(int min, int max);
@@ -29,6 +28,9 @@ namespace mui
         SliderIntPtr setValue(int v);
         SliderIntPtr setFormat(const std::string &f);
         SliderIntPtr setLogarithmic(bool l);
+
+        mui::Signal<int> onChangedSignal;
+        SliderIntPtr bind(std::shared_ptr<Observable<int>> observable);
         SliderIntPtr onChanged(std::function<void()> cb);
     };
 
@@ -43,7 +45,6 @@ namespace mui
         float value;
         std::string format;
         bool logarithmic = false;
-        std::function<void()> onChangedCb;
 
     public:
         SliderFloat(float min, float max);
@@ -55,6 +56,9 @@ namespace mui
         SliderFloatPtr setValue(float v);
         SliderFloatPtr setFormat(const std::string &f);
         SliderFloatPtr setLogarithmic(bool l);
+
+        mui::Signal<float> onChangedSignal;
+        SliderFloatPtr bind(std::shared_ptr<Observable<float>> observable);
         SliderFloatPtr onChanged(std::function<void()> cb);
     };
 } // namespace mui

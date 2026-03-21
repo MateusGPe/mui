@@ -1,3 +1,4 @@
+// widgets/checkbox.cpp
 #include "checkbox.hpp"
 #include "app.hpp"
 #include <imgui.h>
@@ -56,8 +57,7 @@ namespace mui
         if (pressed)
         {
             checked = !checked;
-            if (onToggledCb)
-                onToggledCb(checked);
+            onToggledSignal(checked);
         }
 
         const float check_y_offset = (h - check_box_size) / 2.0f;
@@ -100,15 +100,35 @@ namespace mui
         checked = c;
         return self();
     }
-    CheckboxPtr Checkbox::onToggled(std::function<void(bool)> cb)
-    {
-        onToggledCb = std::move(cb);
-        return self();
-    }
 
     CheckboxPtr Checkbox::setScale(float s)
     {
         scale = s;
+        return self();
+    }
+
+    CheckboxPtr Checkbox::bind(std::shared_ptr<Observable<bool>> observable)
+    {
+        setChecked(observable->get());
+        
+        m_connections.push_back(
+            observable->onValueChanged.connect([this](const bool& val) {
+                mui::App::queueMain([this, val]() { this->setChecked(val); });
+            })
+        );
+        
+        m_connections.push_back(
+            onToggledSignal.connect([observable](bool val) {
+                observable->set(val);
+            })
+        );
+
+        return self();
+    }
+
+    CheckboxPtr Checkbox::onToggled(std::function<void(bool)> cb)
+    {
+        if (cb) m_connections.push_back(onToggledSignal.connect(std::move(cb)));
         return self();
     }
 } // namespace mui
