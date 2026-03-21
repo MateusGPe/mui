@@ -6,6 +6,7 @@
 #include <functional>
 #include <memory>
 #include <imgui.h>
+#include "entry.hpp"
 
 namespace mui
 {
@@ -19,6 +20,7 @@ namespace mui
         std::vector<std::string> segments;
         char editBuffer[1024] = {0};
         bool isEditing = false;
+        EntryPtr m_editEntry;
 
         std::function<void(const std::string &)> onPathNavigatedCb;
         void parsePath();

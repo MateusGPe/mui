@@ -15,6 +15,8 @@ namespace mui
     protected:
         float minBound, maxBound;
         float currentMin, currentMax;
+        std::string text;
+        std::string format = "%.3f";
         std::function<void(float, float)> onChangedCb;
 
     public:
@@ -23,8 +25,11 @@ namespace mui
 
         void renderControl() override;
 
+        std::string getText() const { return text; }
+        RangeSliderPtr setText(const std::string &t);
         std::pair<float, float> getRange() const { return {currentMin, currentMax}; }
         RangeSliderPtr setRange(float vMin, float vMax);
+        RangeSliderPtr setFormat(const std::string &f);
         RangeSliderPtr onChanged(std::function<void(float, float)> cb);
         RangeSliderPtr setUseContainerWidth(bool use);
     };

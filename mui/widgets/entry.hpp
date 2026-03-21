@@ -25,6 +25,10 @@ namespace mui
         bool isMultiline = false;
         bool autoSelectAll = false;
         bool noSpaces = false;
+        bool withContextMenu = true;
+
+        int selStart = 0;
+        int selEnd = 0;
 
         std::function<void()> onChangedCb;
         std::function<void(const std::string&)> onEnterCb;
@@ -55,6 +59,7 @@ namespace mui
         EntryPtr setAutoSelectAll(bool a);
         EntryPtr setNoSpaces(bool n);
         EntryPtr setWidth(float w);
+        EntryPtr setWithContextMenu(bool c);
         EntryPtr setUseContainerWidth(bool use);
         EntryPtr onChanged(std::function<void()> cb);
         EntryPtr onEnter(std::function<void(const std::string&)> cb);

@@ -39,39 +39,35 @@ int main()
     // Define a docking layout for our windows to arrange them on startup.
     App::setLayoutBuilder([](mui::DockBuilder &builder)
                           {
-            ImGuiID dockspace_id = builder.getID();
-            ImGuiDockNode *root_node = ImGui::DockBuilderGetNode(dockspace_id);
-            bool is_new_layout = (root_node == nullptr || root_node->IsEmpty());
+        ImGuiID dockspace_id = builder.getID();
+        ImGuiDockNode *root_node = ImGui::DockBuilderGetNode(dockspace_id);
+        bool is_new_layout = (root_node == nullptr || root_node->IsEmpty());
 
-            // Part 1: Build the layout only if it doesn't exist (e.g., on first run).
-            if (is_new_layout)
-            {
-                // Start with the full dockspace ID. After the split, this ID will refer to the left node.
-                ImGuiID center_node_id = dockspace_id;
-                ImGuiID right_node_id = builder.splitNode(center_node_id, mui::DockDirection::Right, 0.30f);
+        // Part 1: Build the layout only if it doesn't exist (e.g., on first run).
+        if (is_new_layout) {
+            // Start with the full dockspace ID. After the split, this ID will refer to the left node.
+            ImGuiID center_node_id = dockspace_id;
+            ImGuiID right_node_id = builder.splitNode(center_node_id, mui::DockDirection::Right, 0.30f);
 
-                builder.getNode(center_node_id).setHiddenTabBar(true); // Hide the tab bar for the center node
-                builder.getNode(right_node_id).setHiddenTabBar(true); // Hide the tab bar for the right node
-                // Dock windows. This only needs to be done once.
-                builder.dockWindow("MUI Control Gallery", center_node_id);
-                builder.dockWindow("Inspector", right_node_id);
-            }
+            builder.getNode(center_node_id).setHiddenTabBar(true); // Hide the tab bar for the center node
+            builder.getNode(right_node_id).setHiddenTabBar(true); // Hide the tab bar for the right node
+            // Dock windows. This only needs to be done once.
+            builder.dockWindow("MUI Control Gallery", center_node_id);
+            builder.dockWindow("Inspector", right_node_id);
+        }
 
-            // To create a seamless look without the dockspace's own title bars,
-            // we disable the tab bar on the dock nodes. This needs to run every time,
-            // as these flags are not saved in the .ini file.
-            ImGuiWindow *gallery_window = ImGui::FindWindowByName("MUI Control Gallery");
-            if (gallery_window && gallery_window->DockNode)
-                builder.getNode(gallery_window->DockNode->ID).setNoTabBar(true);
-            ImGuiWindow *inspector_window = ImGui::FindWindowByName("Inspector");
-            if (inspector_window && inspector_window->DockNode)
-                builder.getNode(inspector_window->DockNode->ID).setNoTabBar(true); });
+        // To create a seamless look without the dockspace's own title bars,
+        // we disable the tab bar on the dock nodes. This needs to run every time,
+        // as these flags are not saved in the .ini file.
+        ImGuiWindow *gallery_window = ImGui::FindWindowByName("MUI Control Gallery");
+        if (gallery_window && gallery_window->DockNode)
+            builder.getNode(gallery_window->DockNode->ID).setNoTabBar(true);
+        ImGuiWindow *inspector_window = ImGui::FindWindowByName("Inspector");
+        if (inspector_window && inspector_window->DockNode)
+            builder.getNode(inspector_window->DockNode->ID).setNoTabBar(true); });
 
-    App::setMainLoopCallback(
-        []()
-        {
-            mui::Dialogs::processDialogs();
-        });
+    App::setMainLoopCallback([]()
+                             { mui::Dialogs::processDialogs(); });
     Control<Button>::setGlobalShadowDefaults(false, ImVec2(0.0f, 0.0f), 4.0f, ImVec4(0.12f, 0.53f, 0.90f, 0.08f), 8.0f);
 
     // Create and show the main window with the control gallery
@@ -150,9 +146,9 @@ WindowPtr createInspectorWindow()
     card->defaultShadow()          // setShadow(true, {0.0f, 0.0f}, 18.0f, {0.12f, 0.53f, 0.90f, 0.1f}, 8.0f)
         ->setSpanAvailWidth(true); // Card will fill the width of the parent
 
-    append_all(cardContent, {{Label::create("This is a Card")},
-                             {Separator::create()->setType(SeparatorType::Custom)},
-                             {Label::create("This card is set to fill available width. The text below is wrapped to fit.")->setFormat(LabelFormat::Wrapped)}});
+    cardContent->append({{Label::create("This is a Card")},
+                         {Separator::create()->setType(SeparatorType::Custom)},
+                         {Label::create("This card is set to fill available width. The text below is wrapped to fit.")->setFormat(LabelFormat::Wrapped)}});
     root->append(card, false); // Card has natural height, not stretchy
 
     // --- TreeNode Example ---
@@ -180,6 +176,7 @@ WindowPtr createInspectorWindow()
 IControlPtr createBasicsTab(const LabelPtr &lblStatus)
 {
     auto vbox = VBox::create();
+    vbox->setPadded(true);
 
     // IconStack demonstration (Horizontal Toolbar)
     auto iconStack = IconStack::create()
@@ -193,16 +190,16 @@ IControlPtr createBasicsTab(const LabelPtr &lblStatus)
     auto btnClick = Button::create(ICON_FA_FLOPPY_DISK " Click Me");
     btnClick->onClick([lblStatus]()
                       {
-                          auto currentTime = std::time(nullptr);
-                          char timeStr[100];
-                          std::strftime(timeStr, sizeof(timeStr), "%H:%M:%S", std::localtime(&currentTime));
-                          lblStatus->setText(std::string("Button clicked at ") + timeStr); })
+        auto currentTime = std::time(nullptr);
+        char timeStr[100];
+        std::strftime(timeStr, sizeof(timeStr), "%H:%M:%S", std::localtime(&currentTime));
+        lblStatus->setText(std::string("Button clicked at ") + timeStr); })
         ->defaultShadow();
 
     auto chkToggle = Checkbox::create("Standard Checkbox");
     chkToggle->onToggled([lblStatus](bool checked)
                          { lblStatus->setText(checked ? "Checkbox Enabled" : "Checkbox Disabled"); });
-    chkToggle->setScale(1.2f); // Make the checkbox larger for better visibility
+    chkToggle->setScale(0.6f); // Make the checkbox larger for better visibility
 
     // Modern ToggleSwitch demonstration
     auto modernToggle = ToggleSwitch::create("Modern iOS-Style Toggle");
@@ -227,20 +224,21 @@ IControlPtr createBasicsTab(const LabelPtr &lblStatus)
             lblStatus->setText("Could not find a docked 'Inspector' window.");
         } });
 
-    append_all(vbox, {{Label::create("Media Controls (IconStack):")},
-                      {iconStack},
-                      {Separator::create()->setType(SeparatorType::Native)},
-                      {btnClick},
-                      {chkToggle},
-                      {modernToggle},
-                      {Separator::create()->setType(SeparatorType::Native)},
-                      {btnFindNode}});
+    vbox->append({{Label::create("Media Controls (IconStack):")},
+                  {iconStack},
+                  {Separator::create()->setType(SeparatorType::Native)},
+                  {btnClick},
+                  {chkToggle},
+                  {modernToggle},
+                  {Separator::create()->setType(SeparatorType::Native)},
+                  {btnFindNode, true}});
     return vbox;
 }
 
 IControlPtr createNumbersTab(const LabelPtr &lblStatus)
 {
     auto vbox = VBox::create();
+    vbox->setPadded(true);
 
     auto spinBox = Spinbox::create(0, 100);
     auto slider = SliderInt::create(0, 100);
@@ -274,19 +272,20 @@ IControlPtr createNumbersTab(const LabelPtr &lblStatus)
         snprintf(buf, sizeof(buf), "Range changed: %.1f to %.1f", vMin, vMax);
         lblStatus->setText(buf); });
 
-    append_all(vbox, {{Label::create("Sync Test:"), false},
-                      {spinBox, false},
-                      {slider, false},
-                      {progressBar, false},
-                      {Separator::create()->setType(SeparatorType::Native)},
-                      {Label::create("Dual Handle Range Slider:")},
-                      {rangeSlider, false}});
+    vbox->append({{Label::create("Sync Test:"), false},
+                  {spinBox, true},
+                  {slider, true},
+                  {progressBar, true},
+                  {Separator::create()->setType(SeparatorType::Native)},
+                  {Label::create("Dual Handle Range Slider:")},
+                  {rangeSlider, true}});
     return vbox;
 }
 
 IControlPtr createTextEntriesTab(const LabelPtr &lblStatus)
 {
     auto vbox = VBox::create();
+    vbox->setPadded(true);
 
     auto entryStandard = Entry::create();
     entryStandard->setHint("Type here...");
@@ -304,19 +303,20 @@ IControlPtr createTextEntriesTab(const LabelPtr &lblStatus)
             lblStatus->setText("Searching for: " + entrySearch->getText());
         } });
 
-    append_all(vbox, {{Label::create("Standard Entry:")},
-                      {entryStandard},
-                      {Label::create("Password Entry:")},
-                      {entryPassword, true},
-                      {Label::create("Search Entry:")},
-                      {entrySearch},
-                      {lblMirror}});
+    vbox->append({{Label::create("Standard Entry:")},
+                  {entryStandard, true},
+                  {Label::create("Password Entry:")},
+                  {entryPassword, true},
+                  {Label::create("Search Entry:")},
+                  {entrySearch, true},
+                  {lblMirror}});
     return vbox;
 }
 
 IControlPtr createDialogsTab(const WindowPtr &win, const LabelPtr &lblStatus)
 {
     auto vbox = VBox::create();
+    vbox->setPadded(true);
 
     auto group = Group::create("System Dialogs");
     group->setMargined(true);
@@ -332,76 +332,58 @@ IControlPtr createDialogsTab(const WindowPtr &win, const LabelPtr &lblStatus)
     auto btnCustom = Button::create(ICON_FA_GEARS " Custom");
     auto btnFile = Button::create(ICON_FA_FOLDER_OPEN " Open File");
 
-    btnInfo->onClick(
-               [win, lblStatus]()
-               {
-                   Dialogs::msgBoxInfo("Information", "This is an informational message box, which is the default type.");
-                   lblStatus->setText("Info dialog shown.");
-               })
+    btnInfo->onClick([win, lblStatus]()
+                     {
+        Dialogs::msgBoxInfo("Information", "This is an informational message box, which is the default type.");
+        lblStatus->setText("Info dialog shown."); })
         ->defaultShadow();
 
-    btnWarning->onClick(
-                  [win, lblStatus]()
-                  {
-                      Dialogs::msgBoxWarning("Warning", "This is a warning message. Something might be wrong, so you should pay attention.");
-                      lblStatus->setText("Warning dialog shown.");
-                  })
+    btnWarning->onClick([win, lblStatus]()
+                        {
+        Dialogs::msgBoxWarning("Warning", "This is a warning message. Something might be wrong, so you should pay attention.");
+        lblStatus->setText("Warning dialog shown."); })
         ->defaultShadow();
 
-    btnError->onClick(
-        [win, lblStatus]()
-        {
-            Dialogs::msgBoxError("Critical Error", "Failed to load imaginary resources.");
-            lblStatus->setText("Error dialog shown.");
-        });
+    btnError->onClick([win, lblStatus]()
+                      {
+        Dialogs::msgBoxError("Critical Error", "Failed to load imaginary resources.");
+        lblStatus->setText("Error dialog shown."); });
 
-    btnConfirm->onClick(
-                  [win, lblStatus]()
-                  {
-                      Dialogs::msgBoxConfirm("Confirmation", "This action is permanent. Are you sure you want to proceed?", [lblStatus]()
-                                             { lblStatus->setText("Confirmed!"); }, [lblStatus]()
-                                             { lblStatus->setText("Cancelled."); });
-                  })
+    btnConfirm->onClick([win, lblStatus]()
+                        { Dialogs::msgBoxConfirm("Confirmation", "This action is permanent. Are you sure you want to proceed?", [lblStatus]()
+                                                 { lblStatus->setText("Confirmed!"); }, [lblStatus]()
+                                                 { lblStatus->setText("Cancelled."); }); })
         ->defaultShadow();
 
-    btnQuestion->onClick(
-                   [win, lblStatus]()
-                   {
-                       Dialogs::msgBoxQuestion("Unsaved Work", "Do you want to save your changes before closing?", [lblStatus]()
-                                               { lblStatus->setText("Answered: Yes"); }, [lblStatus]()
-                                               { lblStatus->setText("Answered: No"); });
-                   })
+    btnQuestion->onClick([win, lblStatus]()
+                         { Dialogs::msgBoxQuestion("Unsaved Work", "Do you want to save your changes before closing?", [lblStatus]()
+                                                   { lblStatus->setText("Answered: Yes"); }, [lblStatus]()
+                                                   { lblStatus->setText("Answered: No"); }); })
         ->defaultShadow();
 
-    btnCustom->onClick(
-        [lblStatus]()
-        {
-            Dialogs::msgBoxCustom("File Operation", "The destination file already exists.", MessageBoxType::Warning,
-                                  {{"Overwrite", [lblStatus]()
-                                    { lblStatus->setText("File Overwritten."); }},
-                                   {"Skip", [lblStatus]()
-                                    { lblStatus->setText("File Skipped."); }},
-                                   {"Cancel", [lblStatus]()
-                                    { lblStatus->setText("Operation Cancelled."); }}});
-        });
+    btnCustom->onClick([lblStatus]()
+                       { Dialogs::msgBoxCustom("File Operation", "The destination file already exists.", MessageBoxType::Warning,
+                                               {{"Overwrite", [lblStatus]()
+                                                 { lblStatus->setText("File Overwritten."); }},
+                                                {"Skip", [lblStatus]()
+                                                 { lblStatus->setText("File Skipped."); }},
+                                                {"Cancel", [lblStatus]()
+                                                 { lblStatus->setText("Operation Cancelled."); }}}); });
 
-    btnFile->onClick(
-        [win, lblStatus]()
-        {
-            Dialogs::openFile("Open File", "All Files {*.*}", [lblStatus](const std::string &path)
-                              {
-                    Dialogs::msgBox("File Selected", "Path: " + path);
-                    lblStatus->setText("File selected: " + path); }, [lblStatus]()
-                              { lblStatus->setText("File open dialog was cancelled."); });
-        });
+    btnFile->onClick([win, lblStatus]()
+                     { Dialogs::openFile("Open File", "All Files {*.*}", [lblStatus](const std::string &path)
+                                         {
+                Dialogs::msgBox("File Selected", "Path: " + path);
+                lblStatus->setText("File selected: " + path); }, [lblStatus]()
+                                         { lblStatus->setText("File open dialog was cancelled."); }); });
 
-    append_all(hboxButtons, {{btnInfo, true},
-                             {btnWarning, true},
-                             {btnError, true},
-                             {btnConfirm, true},
-                             {btnQuestion, true},
-                             {btnCustom, true},
-                             {btnFile, true}});
+    hboxButtons->append({{btnInfo, true},
+                         {btnWarning, true},
+                         {btnError, true},
+                         {btnConfirm, true},
+                         {btnQuestion, true},
+                         {btnCustom, true},
+                         {btnFile, true}});
 
     group->setChild(hboxButtons);
     vbox->append(group, true);
@@ -411,6 +393,7 @@ IControlPtr createDialogsTab(const WindowPtr &win, const LabelPtr &lblStatus)
 IControlPtr createLayoutsTab(const LabelPtr &lblStatus)
 {
     auto vbox = VBox::create();
+    vbox->setPadded(true);
 
     auto gridGroup = Group::create("Grid Layout");
     gridGroup->setMargined(true);
@@ -422,15 +405,15 @@ IControlPtr createLayoutsTab(const LabelPtr &lblStatus)
     gridGroup->setChild(grid);
 
     grid->append(Label::create("First Name:"), 0, 0);
-    auto firstNameEntry = Entry::create("John");
+    auto firstNameEntry = Entry::create("John")->setSpanAvailWidth(true);
     grid->append(firstNameEntry, 0, 1);
 
     grid->append(Label::create("Last Name:"), 1, 0);
-    auto lastNameEntry = Entry::create("Doe");
+    auto lastNameEntry = Entry::create("Doe")->setSpanAvailWidth(true);
     grid->append(lastNameEntry, 1, 1);
 
     grid->append(Label::create("Address:"), 2, 0);
-    auto addressEntry = Entry::create("123 Main St, Anytown");
+    auto addressEntry = Entry::create("123 Main St, Anytown")->setSpanAvailWidth(true);
     grid->append(addressEntry, 2, 1);
 
     auto submitButton = Button::create("Submit");
@@ -601,6 +584,7 @@ IControlPtr createAdvancedTab(const LabelPtr &lblStatus)
         lblStatus->setText("Sort requested on column " + std::to_string(colIndex) + " (" + dir + ")"); });
 
     auto rightPanel = VBox::create();
+    rightPanel->setPadded(true);
     rightPanel->append(table, true);
     splitter->setPanel2(rightPanel);
 
@@ -611,6 +595,7 @@ IControlPtr createAdvancedTab(const LabelPtr &lblStatus)
 IControlPtr createMoreControlsTab(const LabelPtr &lblStatus)
 {
     auto vbox = VBox::create();
+    vbox->setPadded(true);
 
     // ComboBox
     vbox->append(Label::create("ComboBox:"), false);
@@ -621,7 +606,7 @@ IControlPtr createMoreControlsTab(const LabelPtr &lblStatus)
     combo->setSelectedIndex(1);
     combo->onChanged([combo, lblStatus]()
                      { lblStatus->setText("Selected fruit: " + combo->getText()); });
-    vbox->append(combo, false);
+    vbox->append(combo, true);
     vbox->append(Separator::create());
 
     // Radio Buttons
@@ -639,8 +624,8 @@ IControlPtr createMoreControlsTab(const LabelPtr &lblStatus)
                       { if(checked) lblStatus->setText("Radio set to FM"); });
     radio3->onToggled([lblStatus](bool checked)
                       { if(checked) lblStatus->setText("Radio set to SW"); });
-    append_all(radioHBox, {{radio1, true}, {radio2, true}, {radio3, true}});
-    vbox->append(radioHBox, false);
+    radioHBox->append({{radio1, true}, {radio2, true}, {radio3, true}});
+    vbox->append(radioHBox, true);
     vbox->append(Separator::create());
 
     // ColorEdit
@@ -652,7 +637,7 @@ IControlPtr createMoreControlsTab(const LabelPtr &lblStatus)
         char buffer[100];
         snprintf(buffer, 100, "Color changed to: (%.2f, %.2f, %.2f, %.2f)", c[0], c[1], c[2], c[3]);
         lblStatus->setText(buffer); });
-    vbox->append(colorEdit, false);
+    vbox->append(colorEdit, true);
     vbox->append(Separator::create());
 
     // Float Slider
@@ -661,7 +646,7 @@ IControlPtr createMoreControlsTab(const LabelPtr &lblStatus)
     sliderFloat->setValue(0.75f);
     sliderFloat->onChanged([lblStatus, sliderFloat]()
                            { lblStatus->setText("Float slider value: " + std::to_string(sliderFloat->getValue())); });
-    vbox->append(sliderFloat, false);
+    vbox->append(sliderFloat, true);
     vbox->append(Separator::create());
 
     // --- Custom Separators ---
@@ -678,19 +663,20 @@ IControlPtr createMoreControlsTab(const LabelPtr &lblStatus)
                                ->setColor({0.8f, 0.2f, 0.2f, 1.0f}));
 
     hboxSeparators->append(Label::create("Right"));
-    vbox->append(hboxSeparators, false);
+    vbox->append(hboxSeparators, true);
 
     // Thick Horizontal Separator as a rectangle
-    vbox->append(Separator::create()->setThickness(5.0f)->setAsRect(true));
-    vbox->append(Separator::create()->setType(SeparatorType::Native));
+    vbox->append(Separator::create()->setThickness(5.0f)->setAsRect(true), true);
+    vbox->append(Separator::create()->setType(SeparatorType::Native), true);
 
     // Text Separator
     vbox->append(Separator::create()
-                     ->setText("Text Separator"));
+                     ->setText("Text Separator"),
+                 true);
 
     // Native Separator
     vbox->append(Label::create("Native Separator below:"));
-    vbox->append(Separator::create()->setType(SeparatorType::Native));
+    vbox->append(Separator::create()->setType(SeparatorType::Native), true);
 
     return vbox;
 }
@@ -698,6 +684,7 @@ IControlPtr createMoreControlsTab(const LabelPtr &lblStatus)
 IControlPtr createThemesTab()
 {
     auto vbox = VBox::create();
+    vbox->setPadded(true);
 
     vbox->append(Label::create("Switch application theme:"));
 
@@ -712,8 +699,8 @@ IControlPtr createThemesTab()
     btnDark->onClick([]()
                      { App::setTheme(ThemeType::Dark); });
 
-    append_all(hbox, {{btnLight, true},
-                      {btnDark, true}});
+    hbox->append({{btnLight, true},
+                  {btnDark, true}});
 
     vbox->append(hbox, true);
     return vbox;

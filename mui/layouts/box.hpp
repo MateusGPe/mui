@@ -8,12 +8,16 @@ namespace mui
     template <class Derived>
     class Box : public Control<Derived>
     {
-    protected:
+    public:
         struct BoxChild
         {
             IControlPtr control;
             bool stretchy;
+
+            BoxChild(IControlPtr c, bool s = false) : control(std::move(c)), stretchy(s) {}
         };
+
+    protected:
         std::vector<BoxChild> children;
         bool padded = true;
         bool scrollable = false;
@@ -33,6 +37,16 @@ namespace mui
         {
             this->verifyState();
             children.push_back({child, stretchy});
+            return this->self();
+        }
+
+        std::shared_ptr<Derived> append(std::initializer_list<BoxChild> items)
+        {
+            this->verifyState();
+            for (const auto &item : items)
+            {
+                children.push_back(item);
+            }
             return this->self();
         }
 
@@ -123,6 +137,16 @@ namespace mui
         static FlowBoxPtr create() { return std::make_shared<FlowBox>(); }
         void renderControl() override;
         FlowBoxPtr append(IControlPtr child, bool stretchy = false);
+        FlowBoxPtr append(std::initializer_list<BoxChild> items)
+        {
+            this->verifyState();
+            for (const auto &item : items)
+            {
+                children.push_back(item);
+                flow_data.push_back({0, 0, 0, 0});
+            }
+            return this->self();
+        }
         FlowBoxPtr setAlign(Align align)
         {
             m_align = align;

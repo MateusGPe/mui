@@ -2,6 +2,7 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include "../core/scoped.hpp"
+#include <cmath>
 
 namespace mui
 {
@@ -117,7 +118,8 @@ namespace mui
 
                 float spacing = lines.back().empty() ? 0.0f : style.ItemSpacing.x;
 
-                if (!lines.back().empty() && current_line_width + spacing + item_width > contentWidth)
+                // Allow a small overflow tolerance to prevent boundary flickering
+                if (!lines.back().empty() && current_line_width + spacing + item_width > contentWidth + 0.5f)
                 {
                     // Doesn't fit, start a new line
                     lines.emplace_back();
@@ -174,14 +176,15 @@ namespace mui
                     }
                     children[child_idx].control->render();
                 }
-
-                // To prevent flickering, we only update the cached "natural" width of an item
-                // when we are not actively stretching it. When an item is stretched (`extra_width_per_item > 0`),
-                // we rely on the last known natural width for layout calculations in the next frame.
-                // This provides a stable layout by breaking the feedback loop that causes flickering.
+                
                 if (extra_width_per_item <= 0.0f)
                 {
-                    flow_data[child_idx].lastKnownWidth = ImGui::GetItemRectSize().x;
+                    float actual_width = ImGui::GetItemRectSize().x;
+                    // Only update if difference is significant to prevent sub-pixel rounding loops
+                    if (std::abs(flow_data[child_idx].lastKnownWidth - actual_width) > 1.0f)
+                    {
+                        flow_data[child_idx].lastKnownWidth = actual_width;
+                    }
                 }
 
                 if (i < line.size() - 1)

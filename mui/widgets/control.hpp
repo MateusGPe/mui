@@ -13,18 +13,6 @@ namespace mui
     class IControl;
     using IControlPtr = std::shared_ptr<IControl>;
 
-    // Helper struct to allow appending controls with an optional 'stretchy' flag.
-    struct AppendedControl
-    {
-        IControlPtr control;
-        bool stretchy;
-
-        // Constructor for {control, stretchy} syntax
-        inline AppendedControl(IControlPtr c, bool s) : control(std::move(c)), stretchy(s) {}
-        // Constructor for {control} syntax, defaulting stretchy to false
-        inline AppendedControl(IControlPtr c) : control(std::move(c)), stretchy(false) {}
-    };
-
     // Non-templated base class for polymorphism.
     class IControl
     {
@@ -33,16 +21,6 @@ namespace mui
         virtual void render() = 0;
         virtual void onHandleDestroyed() = 0;
     };
-
-    // Helper function to append multiple controls to a Box container (VBox, HBox).
-    template <typename T>
-    inline static void append_all(const std::shared_ptr<T> &container, std::initializer_list<AppendedControl> items)
-    {
-        for (const auto &item : items)
-        {
-            container->append(item.control, item.stretchy);
-        }
-    }
 
     template <class Derived>
     class Control : public IControl, public std::enable_shared_from_this<Derived>
