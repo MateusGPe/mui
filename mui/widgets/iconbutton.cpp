@@ -122,7 +122,6 @@ namespace mui
     IconButtonPtr IconButton::setIconTexture(ImTextureID tex) { iconTex = tex; return self(); }
     IconButtonPtr IconButton::setLayout(IconButtonLayout l) { layout = l; return self(); }
     IconButtonPtr IconButton::setSelected(bool s) { selected = s; return self(); }
-    IconButtonPtr IconButton::setSize(float w, float h) { width = w; height = h; return self(); }
     IconButtonPtr IconButton::setIconSize(float w, float h) { iconSize = ImVec2(w, h); return self(); }
     IconButtonPtr IconButton::onClick(std::function<void()> cb) { onClickCb = std::move(cb); return self(); }
     IconButtonPtr IconButton::onDoubleClick(std::function<void()> cb) { onDoubleClickCb = std::move(cb); return self(); }

@@ -76,20 +76,9 @@ namespace mui
         type = t;
         return self();
     }
-    ButtonPtr Button::setSize(float w, float h)
-    {
-        width = w;
-        height = h;
-        return self();
-    }
     ButtonPtr Button::onClick(std::function<void()> cb)
     {
         onClickCb = std::move(cb);
-        return self();
-    }
-    ButtonPtr Button::setUseContainerWidth(bool use)
-    {
-        useContainerWidth = use;
         return self();
     }
 

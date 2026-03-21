@@ -25,8 +25,6 @@ namespace mui
         bool isMultiline = false;
         bool autoSelectAll = false;
         bool noSpaces = false;
-        float height = 0.0f;
-        float width = 0.0f;
 
         std::function<void()> onChangedCb;
         std::function<void(const std::string&)> onEnterCb;

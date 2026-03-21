@@ -98,12 +98,6 @@ namespace mui
         return self();
     }
 
-    ComboBoxPtr ComboBox::setUseContainerWidth(bool use)
-    {
-        useContainerWidth = use;
-        return self();
-    }
-
     ComboBoxPtr ComboBox::setSpanAvailWidth(bool span)
     {
         spanAvailWidth = span;

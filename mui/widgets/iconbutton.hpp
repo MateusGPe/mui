@@ -26,8 +26,6 @@ namespace mui
         IconButtonLayout layout = IconButtonLayout::Horizontal;
         
         bool selected = false;
-        float width = 0.0f;
-        float height = 0.0f;
         ImVec2 iconSize = ImVec2(16.0f, 16.0f);
         
         std::function<void()> onClickCb;
@@ -44,7 +42,6 @@ namespace mui
         IconButtonPtr setIconTexture(ImTextureID tex);
         IconButtonPtr setLayout(IconButtonLayout l);
         IconButtonPtr setSelected(bool s);
-        IconButtonPtr setSize(float w, float h);
         IconButtonPtr setIconSize(float w, float h);
         
         IconButtonPtr onClick(std::function<void()> cb);

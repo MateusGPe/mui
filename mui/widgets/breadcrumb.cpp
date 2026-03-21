@@ -182,13 +182,6 @@ namespace mui
         return self();
     }
 
-    BreadcrumbBarPtr BreadcrumbBar::setSize(float w, float h)
-    {
-        width = w;
-        height = h;
-        return self();
-    }
-
     BreadcrumbBarPtr BreadcrumbBar::setIsEditing(bool editing)
     {
         isEditing = editing;

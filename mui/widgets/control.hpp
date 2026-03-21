@@ -52,6 +52,13 @@ namespace mui
         bool enabled = true;
         bool ownsHandle = true;
         bool spanAvailWidth = false;
+        float width = 0.0f;
+        float height = 0.0f;
+        ImVec2 position = {-1.0f, -1.0f}; // Use -1 to indicate auto-position
+        bool useContainerWidth = false;
+        ImVec2 minSize = {0.0f, 0.0f};
+        ImVec2 maxSize = {FLT_MAX, FLT_MAX};
+
         std::string tooltip;
 
         // Static Global Shadow Defaults
@@ -92,6 +99,12 @@ namespace mui
         {
             if (!visible)
                 return;
+
+            // Apply absolute positioning if specified
+            if (position.x >= 0.0f && position.y >= 0.0f)
+            {
+                ImGui::SetCursorPos(position);
+            }
 
             ImGuiWindow *window = ImGui::GetCurrentWindowRead();
             if (window == nullptr || window->SkipItems)
@@ -198,6 +211,58 @@ namespace mui
             return self();
         }
 
+        std::shared_ptr<Derived> setUseContainerWidth(bool use)
+        {
+            useContainerWidth = use;
+            return self();
+        }
+
+        std::shared_ptr<Derived> setSize(float w, float h)
+        {
+            width = w;
+            height = h;
+            return self();
+        }
+
+        ImVec2 getSize() const
+        {
+            return {width, height};
+        }
+
+        std::shared_ptr<Derived> setPosition(float x, float y)
+        {
+            position = {x, y};
+            return self();
+        }
+
+        ImVec2 getPosition() const
+        {
+            return position;
+        }
+        std::shared_ptr<Derived> setX(float x)
+        {
+            position.x = x;
+            return self();
+        }
+        std::shared_ptr<Derived> setY(float y)
+        {
+            position.y = y;
+            return self();
+        }
+        float getX() const { return position.x; }
+        float getY() const { return position.y; }
+        std::shared_ptr<Derived> setWidth(float w)
+        {
+            width = w;
+            return self();
+        }
+        std::shared_ptr<Derived> setHeight(float h)
+        {
+            height = h;
+            return self();
+        }
+        float getWidth() const { return width; }
+        float getHeight() const { return height; }
         // Shadow Configuration
         std::shared_ptr<Derived> setShadow(bool enable, ImVec2 offset = ImVec2(2, 2), float blur = 4.0f, ImVec4 col = ImVec4(0, 0, 0, 0.25f), float rounding = -1.0f)
         {
@@ -208,7 +273,7 @@ namespace mui
             shadowRounding = rounding;
             return self();
         }
-        
+
         std::shared_ptr<Derived> defaultShadow(bool enable = true)
         {
             hasShadow = s_defaultHasShadow || enable;
@@ -228,8 +293,76 @@ namespace mui
             s_defaultShadowColor = col;
             s_defaultShadowRounding = rounding;
         }
+
+        std::shared_ptr<Derived> addSize(float w, float h)
+        {
+            width += w;
+            height += h;
+            return self();
+        }
+
+        std::shared_ptr<Derived> scaleSize(float factor)
+        {
+            width *= factor;
+            height *= factor;
+            return self();
+        }
+
+        std::shared_ptr<Derived> scaleSize(float factorX, float factorY)
+        {
+            width *= factorX;
+            height *= factorY;
+            return self();
+        }
+
+        std::shared_ptr<Derived> addPosition(float x, float y)
+        {
+            // If auto-positioning, start from 0,0 before adding.
+            if (position.x < 0.0f)
+                position.x = 0.0f;
+            if (position.y < 0.0f)
+                position.y = 0.0f;
+            position.x += x;
+            position.y += y;
+            return self();
+        }
+
+        // Note: Widgets must internally respect these constraints during their renderControl implementation.
+        std::shared_ptr<Derived> setMinSize(float w, float h)
+        {
+            minSize = {w, h};
+            return self();
+        }
+        std::shared_ptr<Derived> setMaxSize(float w, float h)
+        {
+            maxSize = {w, h};
+            return self();
+        }
+        ImVec2 getMinSize() const { return minSize; }
+        ImVec2 getMaxSize() const { return maxSize; }
+
+        std::shared_ptr<Derived> setMinWidth(float w)
+        {
+            minSize.x = w;
+            return self();
+        }
+        std::shared_ptr<Derived> setMinHeight(float h)
+        {
+            minSize.y = h;
+            return self();
+        }
+        std::shared_ptr<Derived> setMaxWidth(float w)
+        {
+            maxSize.x = w;
+            return self();
+        }
+        std::shared_ptr<Derived> setMaxHeight(float h)
+        {
+            maxSize.y = h;
+            return self();
+        }
     };
-    
+
     template <class T>
     bool Control<T>::s_defaultHasShadow = false;
     template <class T>

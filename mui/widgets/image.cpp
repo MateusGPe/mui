@@ -7,7 +7,12 @@
 namespace mui
 {
     Image::Image(ImTextureID tex, float w, float h) 
-        : textureId(tex), width(w), height(h) { App::assertMainThread(); }
+        : textureId(tex)
+    {
+        App::assertMainThread();
+        width = w;
+        height = h;
+    }
 
     void Image::renderControl()
     {
@@ -23,7 +28,6 @@ namespace mui
     }
 
     ImagePtr Image::setTexture(ImTextureID tex) { textureId = tex; return self(); }
-    ImagePtr Image::setSize(float w, float h) { width = w; height = h; return self(); }
     ImagePtr Image::setUV(float u0, float v0, float u1, float v1) { 
         uv0 = ImVec2(u0, v0); 
         uv1 = ImVec2(u1, v1); 

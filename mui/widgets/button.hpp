@@ -24,10 +24,6 @@ namespace mui
     protected:
         std::string text;
         ButtonType type;
-        float width = 0.0f;
-        float height = 0.0f;
-        bool useContainerWidth = false;
-        
         bool useCustomColor = false;
         ImVec4 color;
         ImVec4 colorHovered;
@@ -44,10 +40,7 @@ namespace mui
         std::string getText() const;
         ButtonPtr setText(const std::string &t);
         ButtonPtr setType(ButtonType t);
-        ButtonPtr setSize(float w, float h);
-        
         ButtonPtr onClick(std::function<void()> cb);
-        ButtonPtr setUseContainerWidth(bool use);
         ButtonPtr setColor(ImVec4 c, ImVec4 hover, ImVec4 active);
     };
 } // namespace mui

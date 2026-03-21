@@ -8,9 +8,10 @@ namespace mui
 {
     // String constructor
     Entry::Entry(const std::string &initialText, bool password, bool multiline, float h)
-        : text(initialText), isPassword(password), isMultiline(multiline), height(h)
+        : text(initialText), isPassword(password), isMultiline(multiline)
     {
         App::assertMainThread();
+        height = h;
     }
 
     // Buffer constructor

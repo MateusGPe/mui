@@ -16,7 +16,6 @@ namespace mui
     protected:
         std::vector<std::string> items;
         int selectedIndex;
-        bool useContainerWidth = false;
         std::function<void()> onChangedCb;
 
     public:
@@ -32,7 +31,6 @@ namespace mui
         std::string getText() const;
         ComboBoxPtr setSelectedIndex(int index);
         ComboBoxPtr onChanged(std::function<void()> cb);
-        ComboBoxPtr setUseContainerWidth(bool use);
         ComboBoxPtr setSpanAvailWidth(bool span);
     };
 } // namespace mui

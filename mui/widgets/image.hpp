@@ -13,8 +13,6 @@ namespace mui
     {
     protected:
         ImTextureID textureId;
-        float width;
-        float height;
         ImVec2 uv0 = ImVec2(0, 0);
         ImVec2 uv1 = ImVec2(1, 1);
         ImVec4 tintColor = ImVec4(1, 1, 1, 1);
@@ -27,7 +25,6 @@ namespace mui
         void renderControl() override;
 
         ImagePtr setTexture(ImTextureID tex);
-        ImagePtr setSize(float w, float h);
         ImagePtr setUV(float u0, float v0, float u1, float v1);
         ImagePtr setTint(ImVec4 tint);
         ImagePtr setBorder(ImVec4 border);

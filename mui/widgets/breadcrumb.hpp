@@ -20,9 +20,6 @@ namespace mui
         char editBuffer[1024] = {0};
         bool isEditing = false;
 
-        float width = 0.0f;
-        float height = 0.0f;
-
         std::function<void(const std::string &)> onPathNavigatedCb;
         void parsePath();
 
@@ -35,8 +32,6 @@ namespace mui
         std::string getPath() const;
         BreadcrumbBarPtr setPath(const std::string &path);
         BreadcrumbBarPtr onPathNavigated(std::function<void(const std::string &)> cb);
-
-        BreadcrumbBarPtr setSize(float w, float h);
         
         bool getIsEditing() const { return isEditing; }
         BreadcrumbBarPtr setIsEditing(bool editing);

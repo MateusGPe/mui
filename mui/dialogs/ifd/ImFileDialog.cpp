@@ -91,7 +91,7 @@ namespace ifd
 										{
 				m_filterSelection = m_filterCombo->getSelectedIndex();
 				// A change in filter requires rebuilding the content list
-				m_setDirectory(m_currentDirectory); });
+				m_setDirectory(m_currentDirectory); })->setMinWidth(100.0f);
 
 		m_cancelButton = mui::Button::create("Cancel")->onClick([&]()
 																{ m_isOpen = false; });
@@ -100,7 +100,12 @@ namespace ifd
 														{
 			if (m_inputTextbox[0] != '\0') m_finalize(m_inputTextbox); });
 
-		m_bottomToolbar = mui::HBox::create()->setPadded(false)->append(m_fileNameInput, true)->append(m_filterCombo)->append(m_cancelButton)->append(m_okButton);
+		m_bottomToolbar = mui::HBox::create()
+							  ->setPadded(false)
+							  ->append(m_fileNameInput, true)
+							  ->append(m_filterCombo)
+							  ->append(m_cancelButton)
+							  ->append(m_okButton);
 
 		m_setDirectory(std::filesystem::current_path(), false);
 
