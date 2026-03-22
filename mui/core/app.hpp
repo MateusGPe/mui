@@ -41,14 +41,17 @@ namespace mui
         static ThemeType currentTheme;
         static std::string currentThemeFile;
         static std::string currentThemeName;
+        static bool s_applyGrayscale;
+        static bool s_applyComplementary;
+        static bool s_applySepia;
+        static bool s_applyInvert;
         static bool useTomlTheme;
-        static std::function<void()> mainLoopCallback; 
+        static std::function<void()> mainLoopCallback;
         static void processMessageBoxes();
         static SDL_GLContext glContext;
         static std::string filepath;
 
     public:
-
         static void setMainLoopCallback(std::function<void()> cb);
         static void setLayoutBuilder(std::function<void(DockBuilder &)> cb);
         static void init(bool useOpenGL = false);
@@ -58,8 +61,8 @@ namespace mui
         static void assertMainThread();
         static void queueMain(std::function<void()> callback);
         static void setTheme(ThemeType type);
-        static void setTheme(const std::string& filepath, const std::string& themeName);
-        static void setTheme(const std::string& themeName);
+        static void setTheme(const std::string &filepath, const std::string &themeName);
+        static void setTheme(const std::string &themeName);
         static std::vector<std::string> getAvailableThemes();
         static ThemeType getTheme() { return currentTheme; }
         static void addMessageBox(ActiveMessageBox &&mb);
@@ -70,5 +73,17 @@ namespace mui
         static bool isUsingTomlTheme() { return useTomlTheme; }
         static std::string getCurrentThemeName() { return currentThemeName; }
         static std::string getCurrentThemeFile() { return currentThemeFile; }
+
+        // Color modifier methods
+        static void setApplyGrayscale(bool apply);
+        static bool getApplyGrayscale();
+        static void setApplyComplementary(bool apply);
+        static bool getApplyComplementary();
+        static void setApplySepia(bool apply);
+        static bool getApplySepia();
+        static void setApplyInvert(bool apply);
+        static bool getApplyInvert();
+        static void resetColorModifiers();
     };
+
 } // namespace mui

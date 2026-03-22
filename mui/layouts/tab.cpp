@@ -11,7 +11,7 @@ namespace mui
     {
         if (!visible) return;
         ScopedID id(this);
-        if (ImGui::BeginTabBar("##tabs")) {
+        if (ImGui::BeginTabBar("##tabs", ImGuiTabBarFlags_TabListPopupButton)) {
             for (size_t i = 0; i < pages.size(); ++i) {
                 if (ImGui::BeginTabItem(pages[i].name.c_str())) {
                     if (selectedIndex != (int)i) {

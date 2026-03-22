@@ -31,6 +31,6 @@ namespace mui
         std::array<float, 4> getColor() const;
         ColorEditPtr setColor(float r, float g, float b, float a = 1.0f);
         ColorEditPtr bind(std::shared_ptr<Observable<std::array<float, 4>>> observable);
-        ColorEditPtr onChanged(std::function<void()> cb);
+        ColorEditPtr onChanged(std::function<void(const std::array<float, 4> &)> cb);
     };
 } // namespace mui

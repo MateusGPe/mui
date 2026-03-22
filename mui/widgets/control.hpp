@@ -157,6 +157,12 @@ namespace mui
         void onHandleDestroyed() override { ownsHandle = false; }
         void verifyState() const { App::assertMainThread(); }
 
+        template <typename... Args, typename F>
+        std::shared_ptr<Derived> observe(Signal<Args...> &signal, F cb)
+        {
+            m_connections.push_back(signal.connect(std::function<void(Args...)>(std::move(cb))));
+            return self();
+        }
         std::shared_ptr<Derived> show()
         {
             visible = true;

@@ -59,9 +59,9 @@ namespace mui
         return self();
     }
 
-    ColorEditPtr ColorEdit::onChanged(std::function<void()> cb)
+    ColorEditPtr ColorEdit::onChanged(std::function<void(const std::array<float, 4> &)> cb)
     {
-        if (cb) m_connections.push_back(onChangedSignal.connect([cb](const std::array<float, 4> &) { cb(); }));
+        if (cb) m_connections.push_back(onChangedSignal.connect([cb](const std::array<float, 4> &val) { cb(val); }));
         return self();
     }
 } // namespace mui

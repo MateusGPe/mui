@@ -9,16 +9,8 @@
 #include <algorithm>
 #include <ctime>
 #include <imgui_internal.h>
+#include "mui/core/observable.hpp"
 #include "mui/core/docking.hpp"
-
-// Include the newly created advanced controls
-#include "mui/widgets/toggleswitch.hpp"
-#include "mui/widgets/rangeslider.hpp"
-#include "mui/widgets/iconstack.hpp"
-#include "mui/layouts/splitter.hpp"
-#include "mui/widgets/table.hpp"
-#include "mui/widgets/breadcrumb.hpp"
-
 using namespace mui;
 
 // Forward declarations for UI creation functions
@@ -29,6 +21,7 @@ IControlPtr createDialogsTab(const WindowPtr &parentWindow, const LabelPtr &stat
 IControlPtr createLayoutsTab(const LabelPtr &statusLabel);
 IControlPtr createMoreControlsTab(const LabelPtr &statusLabel);
 IControlPtr createAdvancedTab(const LabelPtr &statusLabel);
+IControlPtr createPropertyGridTab(const LabelPtr &statusLabel);
 IControlPtr createThemesTab();
 WindowPtr createMainGalleryWindow();
 WindowPtr createInspectorWindow();
@@ -36,7 +29,7 @@ WindowPtr createInspectorWindow();
 int main()
 {
     App::init();
-    App::setTheme("OceanLight");
+    App::setTheme("Comfortable Dark Cyan");
 
     // Define a docking layout for our windows to arrange them on startup.
     App::setLayoutBuilder(
@@ -106,6 +99,7 @@ WindowPtr createMainGalleryWindow()
     tabs->append("Text", createTextEntriesTab(lblStatus));
     tabs->append("Dialogs", createDialogsTab(win, lblStatus));
     tabs->append("Layouts", createLayoutsTab(lblStatus));
+    tabs->append("Properties", createPropertyGridTab(lblStatus));
     tabs->append("Advanced", createAdvancedTab(lblStatus)); // Added Advanced Tab for new widgets
     tabs->append("More", createMoreControlsTab(lblStatus));
     tabs->append("Themes", createThemesTab());
@@ -129,12 +123,13 @@ WindowPtr createInspectorWindow()
     // --- Theme Controls ---
     auto themeGroup = Group::create("Theme Controls");
     themeGroup->setMargined(true);
-    auto themeHBox = HBox::create();
-    themeHBox->setPadded(true);
+    auto themeFlowBox = FlowBox::create();
+    themeFlowBox->setPadded(true)->setAlign(FlowBox::Align::Center);
 
     auto btnPrev = Button::create(ICON_FA_ARROW_LEFT " Prev");
     auto btnNext = Button::create(ICON_FA_ARROW_RIGHT " Next");
     auto btnRandom = Button::create(ICON_FA_SHUFFLE " Random");
+    auto lblTheme = Label::create("Current Theme: " + App::getCurrentThemeName())->setSpanAvailWidth(true);
 
     // Logic for theme switching
     static std::vector<std::string> allThemes;
@@ -170,7 +165,7 @@ WindowPtr createInspectorWindow()
         }
     }
 
-    auto applyTheme = [&](int index)
+    auto applyTheme = [lblTheme](int index)
     {
         if (index >= 0 && index < allThemes.size())
         {
@@ -179,29 +174,32 @@ WindowPtr createInspectorWindow()
             if (themeName == "Light")
             {
                 App::setTheme(ThemeType::Light);
+                lblTheme->setText("Current Theme: " + themeName);
             }
             else if (themeName == "Dark")
             {
                 App::setTheme(ThemeType::Dark);
+                lblTheme->setText("Current Theme: " + themeName);
             }
             else
             {
                 App::setTheme(themeName);
+                lblTheme->setText("Current Theme: " + themeName);
             }
         }
     };
 
-    btnPrev->onClick([&]()
+    btnPrev->onClick([applyTheme]()
                      {
         int newIndex = (currentThemeIndex - 1 + allThemes.size()) % allThemes.size();
         applyTheme(newIndex); });
 
-    btnNext->onClick([&]()
+    btnNext->onClick([applyTheme]()
                      {
         int newIndex = (currentThemeIndex + 1) % allThemes.size();
         applyTheme(newIndex); });
 
-    btnRandom->onClick([&]()
+    btnRandom->onClick([applyTheme]()
                        {
         if (allThemes.size() > 1)
         {
@@ -216,8 +214,8 @@ WindowPtr createInspectorWindow()
             applyTheme(newIndex);
         } });
 
-    themeHBox->append({{btnPrev, true}, {btnRandom, true}, {btnNext, true}});
-    themeGroup->setChild(themeHBox);
+    themeFlowBox->append({{btnPrev, true}, {lblTheme, true}, {btnRandom, true}, {btnNext, true}});
+    themeGroup->setChild(themeFlowBox);
     root->append(themeGroup, false);
 
     // --- Card Example ---
@@ -324,23 +322,23 @@ IControlPtr createNumbersTab(const LabelPtr &lblStatus)
     auto slider = SliderInt::create(0, 100);
     auto progressBar = ProgressBar::create();
 
-    // Synchronize all three controls
-    auto syncFunc = [lblStatus, spinBox, slider, progressBar](int value)
-    {
-        spinBox->setValue(value);
-        slider->setValue(value);
+    // Create an observable to hold the shared value
+    auto valueObservable = std::make_shared<Observable<int>>(50);
+
+    // Bind the spinbox and slider to the observable
+    spinBox->bind(valueObservable);
+    slider->bind(valueObservable);
+
+    // Update the progress bar and status label when the value changes.
+    // The connection is stored on the spinBox, but it could be any control in this scope.
+    spinBox->observe(valueObservable->onValueChanged, [lblStatus, progressBar](int value)
+                     {
         progressBar->setValue(static_cast<float>(value) / 100.0f);
-        lblStatus->setText("Numeric controls synced to: " + std::to_string(value));
-    };
+        lblStatus->setText("Numeric controls synced to: " + std::to_string(value)); });
 
-    spinBox->onChanged([spinBox, syncFunc]()
-                       { syncFunc(spinBox->getValue()); })
-        ->defaultShadow();
-    slider->onChanged([slider, syncFunc]()
-                      { syncFunc(slider->getValue()); })
-        ->defaultShadow();
-
-    syncFunc(50); // Initialize to 50
+    // Manually trigger the update for the initial state
+    progressBar->setValue(static_cast<float>(valueObservable->get()) / 100.0f);
+    lblStatus->setText("Numeric controls synced to: " + std::to_string(valueObservable->get()));
 
     // Range Slider Demonstration
     auto rangeSlider = RangeSlider::create(0.0f, 100.0f);
@@ -375,13 +373,17 @@ IControlPtr createTextEntriesTab(const LabelPtr &lblStatus)
     entrySearch->setHint("Search...");
     auto lblMirror = Label::create("Mirror: ");
 
-    entryStandard->onChanged([entryStandard, lblMirror]()
-                             { lblMirror->setText("Mirror: " + entryStandard->getText()); });
-    entrySearch->onChanged([entrySearch, lblStatus]()
-                           {
-        if (!entrySearch->getText().empty()) {
-            lblStatus->setText("Searching for: " + entrySearch->getText());
-        } });
+    auto textObservable = std::make_shared<Observable<std::string>>(entryStandard->getText());
+    entryStandard->bind(textObservable);
+    entryStandard->observe(textObservable->onValueChanged, [lblMirror](const std::string &text)
+                           { lblMirror->setText("Mirror: " + text); });
+    lblMirror->setText("Mirror: " + textObservable->get()); // Initial value
+
+    auto searchObservable = std::make_shared<Observable<std::string>>(entrySearch->getText());
+    entrySearch->bind(searchObservable); // This bind already stores connections
+    entrySearch->observe(searchObservable->onValueChanged, [lblStatus](const std::string &text)
+                         {
+        if (!text.empty()) { lblStatus->setText("Searching for: " + text); } });
 
     vbox->append({{Label::create("Standard Entry:")},
                   {entryStandard, true},
@@ -694,6 +696,72 @@ IControlPtr createAdvancedTab(const LabelPtr &lblStatus)
     return vbox;
 }
 
+IControlPtr createPropertyGridTab(const LabelPtr &statusLabel)
+{
+    auto vbox = VBox::create();
+    vbox->setPadded(true);
+
+    auto pg = PropertyGrid::create();
+    pg->setNameColumnWidth(120.0f);
+
+    // --- Category 1: Appearance ---
+    pg->addCategory("Appearance");
+
+    auto nameEntry = Entry::create("My Widget");
+    auto nameObservable = std::make_shared<Observable<std::string>>(nameEntry->getText());
+    nameEntry->bind(nameObservable);
+    nameEntry->observe(
+        nameObservable->onValueChanged,
+        [statusLabel](const std::string &text)
+        {
+            statusLabel->setText("Name changed to: " + text);
+        });
+    pg->addProperty("Name", nameEntry);
+
+    auto visibleCheck = Checkbox::create(""); // Label is provided by the grid
+    visibleCheck->setChecked(true);
+    visibleCheck->onToggled([statusLabel](bool checked)
+                            { statusLabel->setText(checked ? "Set to Visible" : "Set to Hidden"); });
+    pg->addProperty("Visible", visibleCheck);
+
+    auto colorPicker = ColorEdit::create(0.9f, 0.2f, 0.2f, 1.0f);
+    pg->addProperty("Color", colorPicker);
+
+    auto opacitySlider = SliderFloat::create(0.0f, 1.0f);
+    opacitySlider->setValue(1.0f);
+    pg->addProperty("Opacity", opacitySlider);
+
+    // --- Category 2: Behavior ---
+    pg->addCategory("Behavior");
+
+    auto enabledToggle = ToggleSwitch::create("");
+    enabledToggle->setChecked(true);
+    enabledToggle->onToggled([statusLabel](bool checked)
+                             { statusLabel->setText(checked ? "Control Enabled" : "Control Disabled"); });
+    pg->addProperty("Enabled", enabledToggle);
+
+    auto modeCombo = ComboBox::create();
+    modeCombo->append("Mode A")->append("Mode B")->append("Mode C");
+    auto comboObservable = std::make_shared<Observable<int>>(modeCombo->getSelectedIndex());
+    modeCombo->bind(comboObservable); // This bind already stores connections
+    modeCombo->observe(
+        comboObservable->onValueChanged,
+        [modeCombo, statusLabel](int)
+        {
+            statusLabel->setText("Mode set to: " + modeCombo->getText());
+        });
+    pg->addProperty("Mode", modeCombo);
+
+    // --- Category 3: Advanced (starts closed) ---
+    pg->addCategory("Advanced", false);
+    pg->addProperty("ID", Label::create("0xDEADBEEF")->setColor({0.6f, 0.6f, 0.6f, 1.0f}));
+    pg->addProperty("File Path", Entry::create("C:/path/to/resource.dat"));
+
+    vbox->append(pg, true);
+
+    return vbox;
+}
+
 IControlPtr createMoreControlsTab(const LabelPtr &lblStatus)
 {
     auto vbox = VBox::create();
@@ -706,8 +774,10 @@ IControlPtr createMoreControlsTab(const LabelPtr &lblStatus)
     combo->append("Banana");
     combo->append("Cherry");
     combo->setSelectedIndex(1);
-    combo->onChanged([combo, lblStatus]()
-                     { lblStatus->setText("Selected fruit: " + combo->getText()); });
+    auto comboObservable = std::make_shared<Observable<int>>(combo->getSelectedIndex());
+    combo->bind(comboObservable); // This bind already stores connections
+    combo->observe(comboObservable->onValueChanged, [combo, lblStatus](int)
+                   { lblStatus->setText("Selected fruit: " + combo->getText()); });
     vbox->append(combo, true);
     vbox->append(Separator::create());
 
@@ -733,21 +803,25 @@ IControlPtr createMoreControlsTab(const LabelPtr &lblStatus)
     // ColorEdit
     vbox->append(Label::create("Color Picker:"), false);
     auto colorEdit = ColorEdit::create(0.2f, 0.8f, 0.4f, 1.0f);
-    colorEdit->onChanged([lblStatus, colorEdit]()
-                         {
-        auto c = colorEdit->getColor();
+    auto colorObservable = std::make_shared<Observable<std::array<float, 4>>>(colorEdit->getColor());
+    colorEdit->bind(colorObservable); // This bind already stores connections
+    colorEdit->observe(colorObservable->onValueChanged, [lblStatus](const std::array<float, 4> &val)
+                       {
         char buffer[100];
-        snprintf(buffer, 100, "Color changed to: (%.2f, %.2f, %.2f, %.2f)", c[0], c[1], c[2], c[3]);
+        snprintf(buffer, 100, "Color changed to: (%.2f, %.2f, %.2f, %.2f)", val[0], val[1], val[2], val[3]);
         lblStatus->setText(buffer); });
+
     vbox->append(colorEdit, true);
     vbox->append(Separator::create());
 
-    // Float Slider
+    // Float Slider (assuming SliderFloat has bind)
     vbox->append(Label::create("Float Slider:"), false);
     auto sliderFloat = SliderFloat::create(0.0f, 1.0f);
     sliderFloat->setValue(0.75f);
-    sliderFloat->onChanged([lblStatus, sliderFloat]()
-                           { lblStatus->setText("Float slider value: " + std::to_string(sliderFloat->getValue())); });
+    auto sliderObservable = std::make_shared<Observable<float>>(sliderFloat->getValue());
+    sliderFloat->bind(sliderObservable); // This bind already stores connections
+    sliderFloat->observe(sliderObservable->onValueChanged, [lblStatus](float value)
+                         { lblStatus->setText("Float slider value: " + std::to_string(value)); });
     vbox->append(sliderFloat, true);
     vbox->append(Separator::create());
 
@@ -788,33 +862,61 @@ IControlPtr createThemesTab()
     auto vbox = VBox::create();
     vbox->setPadded(true);
 
-    vbox->append(Label::create("Built-in Themes:"), false);
+    // Create toggles first so they can be captured by button/theme change lambdas.
+    auto tglGrayscale = ToggleSwitch::create("Grayscale");
+    auto tglComplementary = ToggleSwitch::create("Complementary");
+    auto tglSepia = ToggleSwitch::create("Sepia");
+    auto tglInvert = ToggleSwitch::create("Invert");
 
-    auto hbox = HBox::create();
-    hbox->setPadded(true);
+    // A lambda to reset all toggles. This is called when a new theme is selected,
+    // as App::setTheme() resets all underlying modifier flags.
+    auto reset_toggles = [=]()
+    {
+        tglGrayscale->setChecked(false);
+        tglComplementary->setChecked(false);
+        tglSepia->setChecked(false);
+        tglInvert->setChecked(false);
+    };
+
+    vbox->append(Label::create("Built-in Themes:"), false);
+    auto hboxThemes = HBox::create()->setPadded(true);
 
     auto btnLight = Button::create("Light Theme");
-    btnLight->onClick([]()
-                      { App::setTheme(ThemeType::Light); });
-
+    btnLight->onClick([=]()
+                      { App::setTheme(ThemeType::Light); reset_toggles(); });
     auto btnDark = Button::create("Dark Theme");
-    btnDark->onClick([]()
-                     { App::setTheme(ThemeType::Dark); });
+    btnDark->onClick([=]()
+                     { App::setTheme(ThemeType::Dark); reset_toggles(); });
+    hboxThemes->append({{btnLight, true}, {btnDark, true}});
+    vbox->append(hboxThemes, false);
 
-    hbox->append({{btnLight, true},
-                  {btnDark, true}});
+    vbox->append(Label::create("Color Modifiers:"), false);
+    auto hboxModifiers = HBox::create()->setPadded(true);
 
-    vbox->append(hbox, false);
+    tglGrayscale->onToggled([](bool checked) { App::setApplyGrayscale(checked); });
+    tglComplementary->onToggled([](bool checked) { App::setApplyComplementary(checked); });
+    tglSepia->onToggled([](bool checked) { App::setApplySepia(checked); });
+    tglInvert->onToggled([](bool checked) { App::setApplyInvert(checked); });
+
+    hboxModifiers->append({
+        {tglGrayscale, true}, {tglComplementary, true}, {tglSepia, true}, {tglInvert, true}});
+    vbox->append(hboxModifiers, false);
+
+    auto btnClearModifiers = Button::create("Clear Modifiers");
+    btnClearModifiers->onClick([=]() { App::resetColorModifiers(); reset_toggles(); });
+    vbox->append(btnClearModifiers, false);
     vbox->append(Separator::create(), false);
     vbox->append(Label::create("TOML Themes (from themes.toml):"), false);
-    
-    auto tomlFlowBox = FlowBox::create()->setAlign(FlowBox::Align::Left);
-    for (const auto& themeName : App::getAvailableThemes()) {
+
+    auto tomlFlowBox = FlowBox::create()->setAlign(FlowBox::Align::Justify);
+    for (const auto &themeName : App::getAvailableThemes())
+    {
         auto btn = Button::create(themeName);
-        btn->onClick([themeName]() { App::setTheme(themeName); });
+        btn->onClick([themeName, reset_toggles]()
+                     { App::setTheme(themeName); reset_toggles(); });
         tomlFlowBox->append(btn);
     }
-    
+
     vbox->append(tomlFlowBox, true);
     return vbox;
 }

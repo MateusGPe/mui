@@ -4,6 +4,7 @@
 #include <string>
 #include <cstdio>
 #include <unordered_map>
+#include <cmath>
 #include <toml++/toml.hpp>
 #include <algorithm>
 #if defined(_WIN32)
@@ -15,6 +16,7 @@
 
 #include "IconsFontAwesome6.h"
 #include "fa_solid_900.hpp"
+#include <imgui_internal.h>
 
 namespace mui
 {
@@ -144,7 +146,7 @@ namespace mui
         style.ChildRounding = 8.0f;
         style.FrameRounding = 6.0f;
         style.PopupRounding = 6.0f;
-        style.ScrollbarRounding = 12.0f;
+        style.ScrollbarRounding = 8.0f;
         style.GrabRounding = 6.0f;
         style.TabRounding = 6.0f;
 
@@ -157,7 +159,7 @@ namespace mui
 
         // Spacing & Padding
         style.ItemSpacing = ImVec2(8.0f, 4.0f);
-        style.FramePadding = ImVec2(8.0f, 8.0f);
+        style.FramePadding = ImVec2(8.0f, 6.0f);
         style.WindowPadding = ImVec2(8.0f, 8.0f);
 
         // --- APPLY DPI SCALE ---
@@ -238,7 +240,7 @@ namespace mui
         style.ChildRounding = 8.0f;
         style.FrameRounding = 6.0f;
         style.PopupRounding = 6.0f;
-        style.ScrollbarRounding = 12.0f;
+        style.ScrollbarRounding = 8.0f;
         style.GrabRounding = 6.0f;
         style.TabRounding = 6.0f;
 
@@ -364,6 +366,7 @@ namespace mui
 
     bool Theme::loadThemeFromToml(const std::string &filepath, const std::string &themeName, float dpiScale)
     {
+        applyDarkStyle(dpiScale); // Start with a base style to ensure all properties are initialized
         try
         {
             toml::table config = toml::parse_file(filepath);
@@ -698,6 +701,71 @@ namespace mui
         catch (const toml::parse_error &)
         {
             return false;
+        }
+    }
+
+    void Theme::applyComplementary()
+    {
+        ImGuiStyle& style = ImGui::GetStyle();
+        ImVec4* colors = style.Colors;
+
+        for (int i = 0; i < ImGuiCol_COUNT; i++)
+        {
+            ImVec4& col = colors[i];
+            float h, s, v;
+            ImGui::ColorConvertRGBtoHSV(col.x, col.y, col.z, h, s, v);
+            
+            h = fmod(h + 0.5f, 1.0f);
+            
+            ImGui::ColorConvertHSVtoRGB(h, s, v, col.x, col.y, col.z);
+        }
+    }
+
+    void Theme::applyGrayscale()
+    {
+        ImGuiStyle& style = ImGui::GetStyle();
+        ImVec4* colors = style.Colors;
+
+        for (int i = 0; i < ImGuiCol_COUNT; i++)
+        {
+            ImVec4& col = colors[i];
+            // Perceptual luminance formula
+            float gray = 0.299f * col.x + 0.587f * col.y + 0.114f * col.z;
+            col.x = gray;
+            col.y = gray;
+            col.z = gray;
+        }
+    }
+
+    void Theme::applySepia()
+    {
+        ImGuiStyle& style = ImGui::GetStyle();
+        ImVec4* colors = style.Colors;
+
+        for (int i = 0; i < ImGuiCol_COUNT; i++)
+        {
+            ImVec4& col = colors[i];
+            float r = col.x;
+            float g = col.y;
+            float b = col.z;
+
+            col.x = ImMin(1.0f, (r * 0.393f) + (g * 0.769f) + (b * 0.189f));
+            col.y = ImMin(1.0f, (r * 0.349f) + (g * 0.686f) + (b * 0.168f));
+            col.z = ImMin(1.0f, (r * 0.272f) + (g * 0.534f) + (b * 0.131f));
+        }
+    }
+
+    void Theme::applyInvert()
+    {
+        ImGuiStyle& style = ImGui::GetStyle();
+        ImVec4* colors = style.Colors;
+
+        for (int i = 0; i < ImGuiCol_COUNT; i++)
+        {
+            ImVec4& col = colors[i];
+            col.x = 1.0f - col.x;
+            col.y = 1.0f - col.y;
+            col.z = 1.0f - col.z;
         }
     }
 } // namespace mui

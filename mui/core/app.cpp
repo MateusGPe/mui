@@ -42,6 +42,10 @@ namespace mui
     ThemeType App::currentTheme = ThemeType::Dark;
     std::string App::currentThemeFile = "";
     std::string App::currentThemeName = "";
+    bool App::s_applyGrayscale = false;
+    bool App::s_applyComplementary = false;
+    bool App::s_applySepia = false;
+    bool App::s_applyInvert = false;
     bool App::useTomlTheme = false;
 
     void App::setLayoutBuilder(std::function<void(DockBuilder &)> cb)
@@ -52,7 +56,8 @@ namespace mui
     void App::init(bool useOpenGL)
     {
         const char *base_path = SDL_GetBasePath();
-        if (base_path) {
+        if (base_path)
+        {
             filepath = base_path;
             SDL_free((void *)base_path);
         }
@@ -117,13 +122,17 @@ namespace mui
         (void)io;
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-        io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+        // io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
         // Apply initial theme and load fonts directly for the first frame
         if (useTomlTheme)
         {
             if (!mui::Theme::loadThemeFromToml(currentThemeFile, currentThemeName, currentDpiScale))
+            {
+                // If TOML fails, fallback to dark and reset modifiers
+                App::resetColorModifiers();
                 mui::Theme::applyDarkStyle(currentDpiScale);
+            }
         }
         else
         {
@@ -242,18 +251,33 @@ namespace mui
                 ImGui::GetStyle() = ImGuiStyle();
 
                 // Apply the current theme
-            if (useTomlTheme)
-            {
-                if (!mui::Theme::loadThemeFromToml(currentThemeFile, currentThemeName, currentDpiScale))
-                    mui::Theme::applyDarkStyle(currentDpiScale);
-            }
-            else
-            {
-                if (currentTheme == ThemeType::Dark)
-                    mui::Theme::applyDarkStyle(currentDpiScale);
+                if (useTomlTheme)
+                {
+                    if (!mui::Theme::loadThemeFromToml(currentThemeFile, currentThemeName, currentDpiScale))
+                    {
+                        // If TOML fails, fallback to dark and reset modifiers
+                        resetColorModifiers();
+                        mui::Theme::applyDarkStyle(currentDpiScale);
+                    }
+                }
                 else
-                    mui::Theme::applyStyle(currentDpiScale);
-            }
+                {
+                    if (currentTheme == ThemeType::Dark)
+                        mui::Theme::applyDarkStyle(currentDpiScale);
+                    else
+                        mui::Theme::applyStyle(currentDpiScale);
+                }
+
+                // Apply color modifiers if enabled
+                if (s_applyGrayscale)
+                    Theme::applyGrayscale();
+                if (s_applySepia)
+                    Theme::applySepia();
+                if (s_applyInvert)
+                    Theme::applyInvert();
+                if (s_applyComplementary)
+                    Theme::applyComplementary();
+
                 mui::Theme::loadSystemFont(18.0f * currentDpiScale);
 
                 io.Fonts->Build();
@@ -424,23 +448,25 @@ namespace mui
     void App::setTheme(ThemeType type)
     {
         if (currentTheme == type && !useTomlTheme)
-            return; // No change needed
+            return;            // No change needed for base theme
+        resetColorModifiers(); // Reset modifiers when changing base theme
         currentTheme = type;
         useTomlTheme = false;
         dpiNeedsUpdate = true; // Signal the main loop to reapply theme and rebuild fonts
     }
 
-    void App::setTheme(const std::string& filepath, const std::string& themeName)
+    void App::setTheme(const std::string &filepath, const std::string &themeName)
     {
         if (useTomlTheme && currentThemeFile == filepath && currentThemeName == themeName)
-            return; // No change needed
+            return;            // No change needed for TOML theme
+        resetColorModifiers(); // Reset modifiers when changing TOML theme
         currentThemeFile = filepath;
         currentThemeName = themeName;
         useTomlTheme = true;
         dpiNeedsUpdate = true; // Signal the main loop to reapply theme and rebuild fonts
     }
 
-    void App::setTheme(const std::string& themeName)
+    void App::setTheme(const std::string &themeName)
     {
         setTheme(filepath + "themes.toml", themeName);
     }
@@ -453,5 +479,58 @@ namespace mui
     SDL_GLContext App::getGLContext()
     {
         return glContext;
+    }
+
+    void App::resetColorModifiers()
+    {
+        s_applyGrayscale = false;
+        s_applyComplementary = false;
+        s_applySepia = false;
+        s_applyInvert = false;
+        dpiNeedsUpdate = true;
+    }
+
+    void App::setApplyGrayscale(bool apply)
+    {
+        s_applyGrayscale = apply;
+        dpiNeedsUpdate = true;
+    }
+
+    bool App::getApplyGrayscale()
+    {
+        return s_applyGrayscale;
+    }
+
+    void App::setApplyComplementary(bool apply)
+    {
+        s_applyComplementary = apply;
+        dpiNeedsUpdate = true;
+    }
+
+    bool App::getApplyComplementary()
+    {
+        return s_applyComplementary;
+    }
+
+    void App::setApplySepia(bool apply)
+    {
+        s_applySepia = apply;
+        dpiNeedsUpdate = true;
+    }
+
+    bool App::getApplySepia()
+    {
+        return s_applySepia;
+    }
+
+    void App::setApplyInvert(bool apply)
+    {
+        s_applyInvert = apply;
+        dpiNeedsUpdate = true;
+    }
+
+    bool App::getApplyInvert()
+    {
+        return s_applyInvert;
     }
 } // namespace mui
