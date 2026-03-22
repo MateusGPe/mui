@@ -6,8 +6,11 @@
 
 namespace mui
 {
-    ComboBox::ComboBox() : selectedIndex(-1) { App::assertMainThread(); }
-
+    ComboBox::ComboBox() : selectedIndex(-1)
+    {
+        App::assertMainThread();
+        m_flags = 0;
+    }
     void ComboBox::renderControl()
     {
         if (!visible)
@@ -26,9 +29,8 @@ namespace mui
             item_width.push(w);
         else if (minSize.x > 0)
             ImGui::SetNextItemWidth(minSize.x);
-        // useContainerWidth is handled by not pushing a width.
 
-        if (ImGui::BeginCombo("##combo", preview.c_str()))
+        if (ImGui::BeginCombo("##combo", preview.c_str(), m_flags))
         {
             for (int i = 0; i < (int)items.size(); ++i)
             {
@@ -45,9 +47,7 @@ namespace mui
             }
             ImGui::EndCombo();
         }
-
         renderTooltip();
-
         ImGui::EndDisabled();
     }
 
@@ -97,11 +97,11 @@ namespace mui
         return self();
     }
 
-    ComboBoxPtr ComboBox::onChanged(std::function<void()> cb)
+    ComboBoxPtr ComboBox::onChanged(std::function<void(int)> cb)
     {
         if (cb)
-            m_connections.push_back(onChangedSignal.connect([cb](int)
-                                                            { cb(); }));
+            m_connections.push_back(onChangedSignal.connect(cb));
+
         return self();
     }
 
@@ -114,6 +114,69 @@ namespace mui
     ComboBoxPtr ComboBox::setMinWidth(float w)
     {
         minSize.x = w;
+        return self();
+    }
+
+    ComboBoxPtr ComboBox::setPopupAlignLeft(bool b)
+    {
+        if (b)
+            m_flags |= ImGuiComboFlags_PopupAlignLeft;
+        else
+            m_flags &= ~ImGuiComboFlags_PopupAlignLeft;
+        return self();
+    }
+
+    ComboBoxPtr ComboBox::setHeightSmall(bool b)
+    {
+        if (b)
+            m_flags |= ImGuiComboFlags_HeightSmall;
+        else
+            m_flags &= ~ImGuiComboFlags_HeightSmall;
+        return self();
+    }
+
+    ComboBoxPtr ComboBox::setHeightRegular(bool b)
+    {
+        if (b)
+            m_flags |= ImGuiComboFlags_HeightRegular;
+        else
+            m_flags &= ~ImGuiComboFlags_HeightRegular;
+        return self();
+    }
+
+    ComboBoxPtr ComboBox::setHeightLarge(bool b)
+    {
+        if (b)
+            m_flags |= ImGuiComboFlags_HeightLarge;
+        else
+            m_flags &= ~ImGuiComboFlags_HeightLarge;
+        return self();
+    }
+
+    ComboBoxPtr ComboBox::setHeightLargest(bool b)
+    {
+        if (b)
+            m_flags |= ImGuiComboFlags_HeightLargest;
+        else
+            m_flags &= ~ImGuiComboFlags_HeightLargest;
+        return self();
+    }
+
+    ComboBoxPtr ComboBox::setNoArrowButton(bool b)
+    {
+        if (b)
+            m_flags |= ImGuiComboFlags_NoArrowButton;
+        else
+            m_flags &= ~ImGuiComboFlags_NoArrowButton;
+        return self();
+    }
+
+    ComboBoxPtr ComboBox::setNoPreview(bool b)
+    {
+        if (b)
+            m_flags |= ImGuiComboFlags_NoPreview;
+        else
+            m_flags &= ~ImGuiComboFlags_NoPreview;
         return self();
     }
 } // namespace mui

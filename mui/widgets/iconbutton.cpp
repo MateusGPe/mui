@@ -37,14 +37,13 @@ namespace mui
         ImVec2 actualSize(w, height);
 
         float contentWidth = 0.0f;
-        float calculatedIconWidth = iconSize.x;
-
-        if (!iconText.empty())
-        {
+        float calculatedIconWidth = 0.0f;
+        if (iconTex)
+            calculatedIconWidth = iconSize.x;
+        else if (!iconText.empty())
             calculatedIconWidth = ImGui::GetFont()->CalcTextSizeA(iconSize.y, FLT_MAX, 0.0f, iconText.c_str()).x;
-        }
 
-        if (iconTex || !iconText.empty())
+        if (calculatedIconWidth > 0.0f)
             contentWidth += calculatedIconWidth;
         if (!text.empty())
         {

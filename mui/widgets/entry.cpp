@@ -11,16 +11,20 @@
 namespace mui
 {
     Entry::Entry(const std::string &initialText, bool password, bool multiline, float h)
-        : text(initialText), isPassword(password), isMultiline(multiline)
+        : text(initialText), isMultiline(multiline)
     {
         App::assertMainThread();
         height = h;
+        m_flags = 0;
+        if (password)
+            m_flags |= ImGuiInputTextFlags_Password;
     }
 
     Entry::Entry(char *buf, size_t buf_size)
         : buffer(buf), bufferSize(buf_size)
     {
         App::assertMainThread();
+        m_flags = 0;
     }
 
     void Entry::renderControl()
@@ -30,15 +34,7 @@ namespace mui
         ScopedID id(this);
         ImGui::BeginDisabled(!enabled);
 
-        ImGuiInputTextFlags flags = 0;
-        if (isPassword)
-            flags |= ImGuiInputTextFlags_Password;
-        if (readOnly)
-            flags |= ImGuiInputTextFlags_ReadOnly;
-        if (autoSelectAll)
-            flags |= ImGuiInputTextFlags_AutoSelectAll;
-        if (noSpaces)
-            flags |= ImGuiInputTextFlags_CharsNoBlank;
+        ImGuiInputTextFlags flags = m_flags;
         if (onEnterSignal.slot_count() > 0)
             flags |= ImGuiInputTextFlags_EnterReturnsTrue;
 
@@ -96,7 +92,7 @@ namespace mui
                     std::swap(start, end);
                 bool has_selection = (start != end);
 
-                if (ImGui::MenuItem("Cut", "CTRL+X", false, has_selection && !readOnly))
+                if (ImGui::MenuItem("Cut", "CTRL+X", false, has_selection && !(m_flags & ImGuiInputTextFlags_ReadOnly)))
                 {
                     std::string selected_text = current_text.substr(start, end - start);
                     ImGui::SetClipboardText(selected_text.c_str());
@@ -110,7 +106,7 @@ namespace mui
                     std::string selected_text = current_text.substr(start, end - start);
                     ImGui::SetClipboardText(selected_text.c_str());
                 }
-                if (ImGui::MenuItem("Paste", "CTRL+V", false, !readOnly && ImGui::GetClipboardText() != nullptr))
+                if (ImGui::MenuItem("Paste", "CTRL+V", false, !(m_flags & ImGuiInputTextFlags_ReadOnly) && ImGui::GetClipboardText() != nullptr))
                 {
                     const char *clipboard_text = ImGui::GetClipboardText();
                     if (clipboard_text)
@@ -122,11 +118,11 @@ namespace mui
 
                         if (!isMultiline)
                         {
-                            if (noSpaces)
+                            if (m_flags & ImGuiInputTextFlags_CharsNoBlank)
                                 clipboard_str.erase(std::remove_if(clipboard_str.begin(), clipboard_str.end(), [](char c)
                                                                    { return c == '\n' || c == '\r' || c == ' ' || c == '\t'; }),
                                                     clipboard_str.end());
-                            else if (isPassword)
+                            else if (m_flags & ImGuiInputTextFlags_Password)
                                 clipboard_str.erase(std::remove_if(clipboard_str.begin(), clipboard_str.end(), [](char c)
                                                                    { return c == '\n' || c == '\r'; }),
                                                     clipboard_str.end());
@@ -146,7 +142,7 @@ namespace mui
 
                 ImGui::Separator();
 
-                if (ImGui::MenuItem("Clear", nullptr, false, !readOnly && has_text))
+                if (ImGui::MenuItem("Clear", nullptr, false, !(m_flags & ImGuiInputTextFlags_ReadOnly) && has_text))
                 {
                     setText("");
                     changed = true;
@@ -197,7 +193,10 @@ namespace mui
     }
     EntryPtr Entry::setReadOnly(bool r)
     {
-        readOnly = r;
+        if (r)
+            m_flags |= ImGuiInputTextFlags_ReadOnly;
+        else
+            m_flags &= ~ImGuiInputTextFlags_ReadOnly;
         return self();
     }
     EntryPtr Entry::setMultiline(bool m, float h)
@@ -208,12 +207,18 @@ namespace mui
     }
     EntryPtr Entry::setAutoSelectAll(bool a)
     {
-        autoSelectAll = a;
+        if (a)
+            m_flags |= ImGuiInputTextFlags_AutoSelectAll;
+        else
+            m_flags &= ~ImGuiInputTextFlags_AutoSelectAll;
         return self();
     }
     EntryPtr Entry::setNoSpaces(bool n)
     {
-        noSpaces = n;
+        if (n)
+            m_flags |= ImGuiInputTextFlags_CharsNoBlank;
+        else
+            m_flags &= ~ImGuiInputTextFlags_CharsNoBlank;
         return self();
     }
     EntryPtr Entry::setWidth(float w)
@@ -229,6 +234,47 @@ namespace mui
     EntryPtr Entry::setUseContainerWidth(bool use)
     {
         useContainerWidth = use;
+        return self();
+    }
+
+    EntryPtr Entry::setCharsDecimal(bool b)
+    {
+        if (b)
+            m_flags |= ImGuiInputTextFlags_CharsDecimal;
+        else
+            m_flags &= ~ImGuiInputTextFlags_CharsDecimal;
+        return self();
+    }
+    EntryPtr Entry::setCharsHexadecimal(bool b)
+    {
+        if (b)
+            m_flags |= ImGuiInputTextFlags_CharsHexadecimal;
+        else
+            m_flags &= ~ImGuiInputTextFlags_CharsHexadecimal;
+        return self();
+    }
+    EntryPtr Entry::setCharsUppercase(bool b)
+    {
+        if (b)
+            m_flags |= ImGuiInputTextFlags_CharsUppercase;
+        else
+            m_flags &= ~ImGuiInputTextFlags_CharsUppercase;
+        return self();
+    }
+    EntryPtr Entry::setAllowTabInput(bool b)
+    {
+        if (b)
+            m_flags |= ImGuiInputTextFlags_AllowTabInput;
+        else
+            m_flags &= ~ImGuiInputTextFlags_AllowTabInput;
+        return self();
+    }
+    EntryPtr Entry::setCtrlEnterForNewLine(bool b)
+    {
+        if (b)
+            m_flags |= ImGuiInputTextFlags_CtrlEnterForNewLine;
+        else
+            m_flags &= ~ImGuiInputTextFlags_CtrlEnterForNewLine;
         return self();
     }
 
@@ -258,6 +304,6 @@ namespace mui
         return self();
     }
 
-    PasswordEntry::PasswordEntry() : Entry() { isPassword = true; }
+    PasswordEntry::PasswordEntry() : Entry() { m_flags |= ImGuiInputTextFlags_Password; }
     SearchEntry::SearchEntry() : Entry() {}
 } // namespace mui

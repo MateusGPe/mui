@@ -1,6 +1,6 @@
 // filepath: widgets/slider.cpp
 #include "slider.hpp"
-#include "app.hpp"
+#include "../core/app.hpp"
 #include <imgui.h>
 #include "../core/scoped.hpp"
 

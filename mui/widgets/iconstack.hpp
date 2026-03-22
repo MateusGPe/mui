@@ -18,6 +18,7 @@ namespace mui
         {
             std::string icon;
             std::string tooltip;
+            bool text_hover;
         };
         std::vector<IconBtn> icons;
 
@@ -28,6 +29,6 @@ namespace mui
         static IconStackPtr create() { return std::make_shared<IconStack>(); }
 
         void renderControl() override;
-        IconStackPtr add(const std::string &icon, std::function<void()> onClick, const std::string &tip = "");
+        IconStackPtr add(const std::string &icon, std::function<void()> onClick, const std::string &tip = "", bool textHover = false);
     };
 }

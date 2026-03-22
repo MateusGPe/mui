@@ -23,15 +23,16 @@ namespace mui
         };
         std::vector<TabPage> pages;
         int selectedIndex = 0;
-
+        ImGuiTabBarFlags m_flags;
+    
     public:
         mui::Signal<int> onSelectedSignal;
-
+    
         Tab();
         static TabPtr create() { return std::make_shared<Tab>(); }
-
+    
         void renderControl() override;
-
+    
         TabPtr append(const std::string &name, IControlPtr child);
         TabPtr setMargined(int page, bool margined)
         {
@@ -44,8 +45,14 @@ namespace mui
         TabPtr onSelected(std::function<void(int)> cb);
         int getNumPages() const;
         int getSelected() const;
-
+    
         TabPtr setSelected(int index);
         TabPtr bindSelected(std::shared_ptr<Observable<int>> observable);
-    };
-} // namespace mui
+    
+        TabPtr setReorderable(bool b);
+        TabPtr setAutoSelectNewTabs(bool b);
+        TabPtr setNoCloseWithMiddleMouseButton(bool b);
+        TabPtr setNoTabListScrollingButtons(bool b);
+        TabPtr setNoTooltip(bool b);
+        TabPtr setFittingPolicyScroll(bool b);
+    };} // namespace mui

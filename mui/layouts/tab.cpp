@@ -1,17 +1,20 @@
 #include "tab.hpp"
-#include "app.hpp"
+#include "../core/app.hpp"
 #include <imgui.h>
 #include "../core/scoped.hpp"
 
 namespace mui
 {
-    Tab::Tab() { App::assertMainThread(); }
+    Tab::Tab() { 
+        App::assertMainThread();
+        m_flags = ImGuiTabBarFlags_TabListPopupButton;
+    }
 
     void Tab::renderControl()
     {
         if (!visible) return;
         ScopedID id(this);
-        if (ImGui::BeginTabBar("##tabs", ImGuiTabBarFlags_TabListPopupButton)) {
+        if (ImGui::BeginTabBar("##tabs", m_flags)) {
             for (size_t i = 0; i < pages.size(); ++i) {
                 if (ImGui::BeginTabItem(pages[i].name.c_str())) {
                     if (selectedIndex != (int)i) {
@@ -65,6 +68,48 @@ namespace mui
         setSelected(observable->get());
         m_connections.push_back(observable->onValueChanged.connect([this](const int &val) { mui::App::queueMain([this, val]() { this->setSelected(val); }); }));
         m_connections.push_back(onSelectedSignal.connect([observable](int val) { observable->set(val); }));
+        return self();
+    }
+
+    TabPtr Tab::setReorderable(bool b)
+    {
+        if (b) m_flags |= ImGuiTabBarFlags_Reorderable;
+        else m_flags &= ~ImGuiTabBarFlags_Reorderable;
+        return self();
+    }
+
+    TabPtr Tab::setAutoSelectNewTabs(bool b)
+    {
+        if (b) m_flags |= ImGuiTabBarFlags_AutoSelectNewTabs;
+        else m_flags &= ~ImGuiTabBarFlags_AutoSelectNewTabs;
+        return self();
+    }
+
+    TabPtr Tab::setNoCloseWithMiddleMouseButton(bool b)
+    {
+        if (b) m_flags |= ImGuiTabBarFlags_NoCloseWithMiddleMouseButton;
+        else m_flags &= ~ImGuiTabBarFlags_NoCloseWithMiddleMouseButton;
+        return self();
+    }
+
+    TabPtr Tab::setNoTabListScrollingButtons(bool b)
+    {
+        if (b) m_flags |= ImGuiTabBarFlags_NoTabListScrollingButtons;
+        else m_flags &= ~ImGuiTabBarFlags_NoTabListScrollingButtons;
+        return self();
+    }
+
+    TabPtr Tab::setNoTooltip(bool b)
+    {
+        if (b) m_flags |= ImGuiTabBarFlags_NoTooltip;
+        else m_flags &= ~ImGuiTabBarFlags_NoTooltip;
+        return self();
+    }
+
+    TabPtr Tab::setFittingPolicyScroll(bool b)
+    {
+        if (b) m_flags |= ImGuiTabBarFlags_FittingPolicyScroll;
+        else m_flags &= ~ImGuiTabBarFlags_FittingPolicyScroll;
         return self();
     }
 } // namespace mui

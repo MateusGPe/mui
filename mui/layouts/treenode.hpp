@@ -21,32 +21,31 @@ namespace mui
         std::string iconText;
         ImTextureID iconTex = 0;
         std::vector<IControlPtr> children;
-        
-        bool defaultOpen = false;
-        bool framed = false;
-        bool selected = false;
-
+        ImGuiTreeNodeFlags m_flags;
+    
     public:
         mui::Signal<> onClickSignal;
         mui::Signal<> onDoubleClickSignal;
-
+    
         explicit TreeNode(const std::string& label);
         static TreeNodePtr create(const std::string& label) { return std::make_shared<TreeNode>(label); }
-
+    
         void onHandleDestroyed() override;
         void renderControl() override;
-
+    
         TreeNodePtr append(IControlPtr child);
         TreeNodePtr setDefaultOpen(bool open);
         TreeNodePtr setFramed(bool f);
         TreeNodePtr setSelected(bool s);
         TreeNodePtr setIconText(const std::string& t);
         TreeNodePtr setIconTexture(ImTextureID tex);
+        TreeNodePtr setAllowOverlap(bool b);
+        TreeNodePtr setBullet(bool b);
+        TreeNodePtr setSpanFullWidth(bool b);
         
         TreeNodePtr onClick(std::function<void()> cb);
         TreeNodePtr onDoubleClick(std::function<void()> cb);
-
+    
         bool isSelected() const;
         TreeNodePtr bindSelected(std::shared_ptr<Observable<bool>> observable);
-    };
-} // namespace mui
+    };} // namespace mui

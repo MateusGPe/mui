@@ -6,7 +6,11 @@
 
 namespace mui
 {
-    Table::Table() { App::assertMainThread(); }
+    Table::Table()
+    {
+        App::assertMainThread();
+        m_flags = ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY;
+    }
 
     void Table::renderControl()
     {
@@ -14,9 +18,7 @@ namespace mui
             return;
         ScopedID id(this);
 
-        ImGuiTableFlags flags = ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY;
-        if (sortable)
-            flags |= ImGuiTableFlags_Sortable;
+        ImGuiTableFlags flags = m_flags;
         if (spanAvailWidth)
             flags |= ImGuiTableFlags_SizingStretchProp;
 
@@ -33,7 +35,7 @@ namespace mui
             ImGui::TableHeadersRow();
 
             // Handle Sorting
-            if (sortable)
+            if (m_flags & ImGuiTableFlags_Sortable)
             {
                 if (ImGuiTableSortSpecs *sorts_specs = ImGui::TableGetSortSpecs())
                 {
@@ -120,7 +122,10 @@ namespace mui
 
     TablePtr Table::setSortable(bool s)
     {
-        sortable = s;
+        if (s)
+            m_flags |= ImGuiTableFlags_Sortable;
+        else
+            m_flags &= ~ImGuiTableFlags_Sortable;
         return self();
     }
     TablePtr Table::onRowSelected(std::function<void(int)> cb)
@@ -136,6 +141,60 @@ namespace mui
     TablePtr Table::onSortRequested(std::function<void(int, bool)> cb)
     {
         if (cb) m_connections.push_back(onSortRequestedSignal.connect(std::move(cb)));
+        return self();
+    }
+
+    TablePtr Table::setResizable(bool b)
+    {
+        if (b)
+            m_flags |= ImGuiTableFlags_Resizable;
+        else
+            m_flags &= ~ImGuiTableFlags_Resizable;
+        return self();
+    }
+
+    TablePtr Table::setReorderable(bool b)
+    {
+        if (b)
+            m_flags |= ImGuiTableFlags_Reorderable;
+        else
+            m_flags &= ~ImGuiTableFlags_Reorderable;
+        return self();
+    }
+
+    TablePtr Table::setHideable(bool b)
+    {
+        if (b)
+            m_flags |= ImGuiTableFlags_Hideable;
+        else
+            m_flags &= ~ImGuiTableFlags_Hideable;
+        return self();
+    }
+
+    TablePtr Table::setNoSavedSettings(bool b)
+    {
+        if (b)
+            m_flags |= ImGuiTableFlags_NoSavedSettings;
+        else
+            m_flags &= ~ImGuiTableFlags_NoSavedSettings;
+        return self();
+    }
+
+    TablePtr Table::setContextMenuInBody(bool b)
+    {
+        if (b)
+            m_flags |= ImGuiTableFlags_ContextMenuInBody;
+        else
+            m_flags &= ~ImGuiTableFlags_ContextMenuInBody;
+        return self();
+    }
+
+    TablePtr Table::setScrollX(bool b)
+    {
+        if (b)
+            m_flags |= ImGuiTableFlags_ScrollX;
+        else
+            m_flags &= ~ImGuiTableFlags_ScrollX;
         return self();
     }
 } // namespace mui

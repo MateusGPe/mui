@@ -47,8 +47,10 @@ namespace mui_dlg
 			m_setDirectory(m_forwardHistory.top(), false);
 			m_forwardHistory.pop(); });
 
-		m_upButton = mui::IconButton::create(ICON_FA_ARROW_UP)->onClick([&]()
-																		{
+		m_upButton = mui::IconButton::create(
+						 ICON_FA_ARROW_UP)
+						 ->onClick([&]()
+								   {
 			if (!m_currentDirectory.has_parent_path())
 				return;
 			m_setDirectory(m_currentDirectory.parent_path()); });
@@ -56,8 +58,11 @@ namespace mui_dlg
 		m_pathBox = mui::BreadcrumbBar::create("")->onPathNavigated([&](const std::string &newPath)
 																	{ m_setDirectory(std::filesystem::path(newPath)); });
 
-		m_favoriteButton = mui::IconButton::create(ICON_FA_STAR)->onClick([&]()
-																		  {
+		m_favoriteButton = mui::IconButton::create(
+							   ICON_FA_STAR)
+							   ->onClick(
+								   [&]()
+								   {
 			auto path = m_currentDirectory.string();
 			bool isFavorite = std::count(m_favorites.begin(), m_favorites.end(), path) > 0;
 			if (isFavorite) RemoveFavorite(path);
@@ -68,7 +73,12 @@ namespace mui_dlg
 						  ->onChanged([&]()
 									  { m_setDirectory(m_currentDirectory, false); });
 
-		m_toolbar = mui::HBox::create()->setPadded(false)->append(m_backButton)->append(m_forwardButton)->append(m_upButton)->append(m_pathBox, true) // stretchy
+		m_toolbar = mui::HBox::create()
+						->setPadded(false)
+						->append(m_backButton)
+						->append(m_forwardButton)
+						->append(m_upButton)
+						->append(m_pathBox, true) // stretchy
 						->append(m_favoriteButton)
 						->append(m_searchBox);
 
@@ -78,11 +88,12 @@ namespace mui_dlg
 				if (m_inputTextbox[0] != '\0') m_finalize(m_inputTextbox); });
 
 		m_filterCombo = mui::ComboBox::create()
-							->onChanged([&]()
+							->onChanged([&](int val)
 										{
-				m_filterSelection = m_filterCombo->getSelectedIndex();
+				m_filterSelection = val;
 				// A change in filter requires rebuilding the content list
-				m_setDirectory(m_currentDirectory); })->setMinWidth(160.0f);
+				m_setDirectory(m_currentDirectory); })
+							->setMinWidth(160.0f);
 
 		m_cancelButton = mui::Button::create("Cancel")->onClick([&]()
 																{ m_isOpen = false; });

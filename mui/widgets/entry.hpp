@@ -19,36 +19,33 @@ namespace mui
         std::string text;
         char *buffer = nullptr;
         size_t bufferSize = 0;
-
+        ImGuiInputTextFlags m_flags;
+    
         std::string hint;
-        bool readOnly = false;
-        bool isPassword = false;
         bool isMultiline = false;
-        bool autoSelectAll = false;
-        bool noSpaces = false;
         bool withContextMenu = true;
-
+    
         int selStart = 0;
         int selEnd = 0;
-
+    
     public:
         mui::Signal<std::string> onChangedSignal;
         mui::Signal<std::string> onEnterSignal;
-
+    
         Entry(const std::string &initialText = "", bool password = false, bool multiline = false, float h = 0.0f);
         static EntryPtr create(const std::string &initialText = "", bool password = false, bool multiline = false, float h = 0.0f)
         {
             return std::make_shared<Entry>(initialText, password, multiline, h);
         }
-
+    
         Entry(char *buf, size_t buf_size);
         static EntryPtr create(char *buf, size_t buf_size)
         {
             return std::make_shared<Entry>(buf, buf_size);
         }
-
+    
         void renderControl() override;
-
+    
         std::string getText() const;
         EntryPtr setText(const std::string &t);
         EntryPtr setHint(const std::string &h);
@@ -60,13 +57,18 @@ namespace mui
         EntryPtr setWithContextMenu(bool c);
         EntryPtr setUseContainerWidth(bool use);
         
+        EntryPtr setCharsDecimal(bool b);
+        EntryPtr setCharsHexadecimal(bool b);
+        EntryPtr setCharsUppercase(bool b);
+        EntryPtr setAllowTabInput(bool b);
+        EntryPtr setCtrlEnterForNewLine(bool b);
+    
         EntryPtr bind(std::shared_ptr<Observable<std::string>> observable);
-
+    
         // Backward compatibility
         EntryPtr onChanged(std::function<void()> cb);
         EntryPtr onEnter(std::function<void(const std::string &)> cb);
     };
-
     class PasswordEntry;
     using PasswordEntryPtr = std::shared_ptr<PasswordEntry>;
 

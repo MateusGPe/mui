@@ -6,7 +6,12 @@
 
 namespace mui
 {
-    TreeNode::TreeNode(const std::string& label) : label(label) { App::assertMainThread(); }
+    TreeNode::TreeNode(const std::string& label) 
+        : label(label)
+    { 
+        App::assertMainThread();
+        m_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
+    }
 
     void TreeNode::onHandleDestroyed()
     {
@@ -22,11 +27,8 @@ namespace mui
         ScopedID id(this);
         ImGui::BeginDisabled(!enabled);
 
-        ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
-        if (defaultOpen) flags |= ImGuiTreeNodeFlags_DefaultOpen;
-        if (framed) flags |= ImGuiTreeNodeFlags_Framed;
+        ImGuiTreeNodeFlags flags = m_flags;
         if (spanAvailWidth) flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
-        if (selected) flags |= ImGuiTreeNodeFlags_Selected;
         if (children.empty()) flags |= ImGuiTreeNodeFlags_Leaf;
 
         // Smart string formatting to make room for icons
@@ -67,11 +69,38 @@ namespace mui
     }
 
     TreeNodePtr TreeNode::append(IControlPtr child) { verifyState(); children.push_back(child); return self(); }
-    TreeNodePtr TreeNode::setDefaultOpen(bool open) { defaultOpen = open; return self(); }
-    TreeNodePtr TreeNode::setFramed(bool f) { framed = f; return self(); }
-    TreeNodePtr TreeNode::setSelected(bool s) { selected = s; return self(); }
+    TreeNodePtr TreeNode::setDefaultOpen(bool open) {
+        if (open) m_flags |= ImGuiTreeNodeFlags_DefaultOpen;
+        else m_flags &= ~ImGuiTreeNodeFlags_DefaultOpen;
+        return self();
+    }
+    TreeNodePtr TreeNode::setFramed(bool f) {
+        if (f) m_flags |= ImGuiTreeNodeFlags_Framed;
+        else m_flags &= ~ImGuiTreeNodeFlags_Framed;
+        return self();
+    }
+    TreeNodePtr TreeNode::setSelected(bool s) {
+        if (s) m_flags |= ImGuiTreeNodeFlags_Selected;
+        else m_flags &= ~ImGuiTreeNodeFlags_Selected;
+        return self();
+    }
     TreeNodePtr TreeNode::setIconText(const std::string& t) { iconText = t; return self(); }
     TreeNodePtr TreeNode::setIconTexture(ImTextureID tex) { iconTex = tex; return self(); }
+    TreeNodePtr TreeNode::setAllowOverlap(bool b) {
+        if (b) m_flags |= ImGuiTreeNodeFlags_AllowOverlap;
+        else m_flags &= ~ImGuiTreeNodeFlags_AllowOverlap;
+        return self();
+    }
+    TreeNodePtr TreeNode::setBullet(bool b) {
+        if (b) m_flags |= ImGuiTreeNodeFlags_Bullet;
+        else m_flags &= ~ImGuiTreeNodeFlags_Bullet;
+        return self();
+    }
+    TreeNodePtr TreeNode::setSpanFullWidth(bool b) {
+        if (b) m_flags |= ImGuiTreeNodeFlags_SpanFullWidth;
+        else m_flags &= ~ImGuiTreeNodeFlags_SpanFullWidth;
+        return self();
+    }
     TreeNodePtr TreeNode::onClick(std::function<void()> cb)
     {
         if (cb) m_connections.push_back(onClickSignal.connect(std::move(cb)));
@@ -83,7 +112,7 @@ namespace mui
         return self();
     }
 
-    bool TreeNode::isSelected() const { return selected; }
+    bool TreeNode::isSelected() const { return m_flags & ImGuiTreeNodeFlags_Selected; }
     TreeNodePtr TreeNode::bindSelected(std::shared_ptr<Observable<bool>> observable)
     {
         setSelected(observable->get());

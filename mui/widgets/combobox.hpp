@@ -18,24 +18,31 @@ namespace mui
     protected:
         std::vector<std::string> items;
         int selectedIndex;
-        std::function<void()> onChangedCb;
-
+        ImGuiComboFlags m_flags;
+    
     public:
         mui::Signal<int> onChangedSignal;
         ComboBox();
         static ComboBoxPtr create() { return std::make_shared<ComboBox>(); }
-
+    
         void renderControl() override;
-
+    
         ComboBoxPtr append(const std::string &item);
         ComboBoxPtr clear();
-
+    
         int getSelectedIndex() const;
         std::string getText() const;
         ComboBoxPtr setSelectedIndex(int index);
         ComboBoxPtr bind(std::shared_ptr<Observable<int>> observable);
-        ComboBoxPtr onChanged(std::function<void()> cb);
+        ComboBoxPtr onChanged(std::function<void(int)> cb);
         ComboBoxPtr setSpanAvailWidth(bool span);
         ComboBoxPtr setMinWidth(float w);
-    };
-} // namespace mui
+    
+        ComboBoxPtr setPopupAlignLeft(bool b);
+        ComboBoxPtr setHeightSmall(bool b);
+        ComboBoxPtr setHeightRegular(bool b);
+        ComboBoxPtr setHeightLarge(bool b);
+        ComboBoxPtr setHeightLargest(bool b);
+        ComboBoxPtr setNoArrowButton(bool b);
+        ComboBoxPtr setNoPreview(bool b);
+    };} // namespace mui
