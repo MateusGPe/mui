@@ -22,6 +22,7 @@ namespace mui
     bool isOpen = true;
     bool margined = true;
     IControlPtr child;
+    bool noTabBar = false;
     std::function<bool()> onClosingCb;
     bool _needs_focus;
     Identifier dockId;
@@ -35,6 +36,8 @@ namespace mui
     WindowPtr setChild(IControlPtr child);
     WindowPtr setMargined(bool margined);
     WindowPtr onClosing(std::function<bool()> cb);
+    WindowPtr setNoTabBar(bool b);
+    bool getNoTabBar() const;
     std::string getTitle() const;
     WindowPtr setTitle(const std::string &title);
     std::pair<int, int> getContentSize() const;

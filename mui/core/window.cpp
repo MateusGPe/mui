@@ -46,6 +46,13 @@ namespace mui
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
         }
 
+        ImGuiWindowClass window_class;
+        if (noTabBar)
+        {
+            window_class.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoTabBar;
+            ImGui::SetNextWindowClass(&window_class);
+        }
+
         bool openCache = isOpen;
         if (ImGui::Begin(title.c_str(), &openCache, m_flags))
         {
@@ -103,6 +110,14 @@ namespace mui
         dockId = id;
         return self();
     }
+
+    WindowPtr Window::setNoTabBar(bool b)
+    {
+        verifyState();
+        noTabBar = b;
+        return self();
+    }
+    bool Window::getNoTabBar() const { return noTabBar; }
 
     WindowPtr Window::onClosing(std::function<bool()> cb)
     {

@@ -19,6 +19,12 @@ FetchContent_Declare(
   GIT_TAG docking)
 FetchContent_MakeAvailable(imgui)
 
+FetchContent_Declare(
+  tomlplusplus
+  GIT_REPOSITORY https://github.com/marzer/tomlplusplus.git
+  GIT_TAG v3.4.0)
+FetchContent_MakeAvailable(tomlplusplus)
+
 # --- Source Definitions ---
 
 file(GLOB CORE_SOURCES CONFIGURE_DEPENDS "core/*.cpp")
@@ -57,7 +63,7 @@ target_include_directories(mui PRIVATE ${imgui_SOURCE_DIR}
                                        ${imgui_SOURCE_DIR}/backends)
 
 # --- Linking ---
-target_link_libraries(mui PUBLIC SDL3::SDL3 OpenGL::GL)
+target_link_libraries(mui PUBLIC SDL3::SDL3 OpenGL::GL tomlplusplus::tomlplusplus)
 
 if(Fontconfig_FOUND)
   target_link_libraries(mui PRIVATE Fontconfig::Fontconfig)

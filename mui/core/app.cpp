@@ -23,6 +23,7 @@
 namespace mui
 {
     std::thread::id App::mainThreadId;
+    std::string App::filepath = "";
 
     static SDL_Window *g_window = nullptr;
     SDL_Renderer *g_renderer = nullptr;
@@ -38,7 +39,10 @@ namespace mui
     // Initialize DPI variables
     float App::currentDpiScale = 1.0f;
     bool App::dpiNeedsUpdate = false;
-    ThemeType App::currentTheme = ThemeType::Light;
+    ThemeType App::currentTheme = ThemeType::Dark;
+    std::string App::currentThemeFile = "";
+    std::string App::currentThemeName = "";
+    bool App::useTomlTheme = false;
 
     void App::setLayoutBuilder(std::function<void(DockBuilder &)> cb)
     {
@@ -47,6 +51,12 @@ namespace mui
 
     void App::init(bool useOpenGL)
     {
+        const char *base_path = SDL_GetBasePath();
+        if (base_path) {
+            filepath = base_path;
+            SDL_free((void *)base_path);
+        }
+
         mainThreadId = std::this_thread::get_id();
         g_use_opengl = useOpenGL;
 
@@ -110,10 +120,18 @@ namespace mui
         io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
         // Apply initial theme and load fonts directly for the first frame
-        if (currentTheme == ThemeType::Dark)
-            mui::Theme::applyDarkStyle(currentDpiScale);
+        if (useTomlTheme)
+        {
+            if (!mui::Theme::loadThemeFromToml(currentThemeFile, currentThemeName, currentDpiScale))
+                mui::Theme::applyDarkStyle(currentDpiScale);
+        }
         else
-            mui::Theme::applyStyle(currentDpiScale);
+        {
+            if (currentTheme == ThemeType::Dark)
+                mui::Theme::applyDarkStyle(currentDpiScale);
+            else
+                mui::Theme::applyStyle(currentDpiScale);
+        }
         mui::Theme::loadSystemFont(16.0f * currentDpiScale); // Default font size
 
         if (g_use_opengl)
@@ -224,10 +242,18 @@ namespace mui
                 ImGui::GetStyle() = ImGuiStyle();
 
                 // Apply the current theme
+            if (useTomlTheme)
+            {
+                if (!mui::Theme::loadThemeFromToml(currentThemeFile, currentThemeName, currentDpiScale))
+                    mui::Theme::applyDarkStyle(currentDpiScale);
+            }
+            else
+            {
                 if (currentTheme == ThemeType::Dark)
                     mui::Theme::applyDarkStyle(currentDpiScale);
                 else
                     mui::Theme::applyStyle(currentDpiScale);
+            }
                 mui::Theme::loadSystemFont(18.0f * currentDpiScale);
 
                 io.Fonts->Build();
@@ -260,14 +286,17 @@ namespace mui
 
             if (layoutNeedsInit && layoutBuilderCb)
             {
-                ImGui::DockBuilderRemoveNode(dockspace_id);
-                ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace);
-                ImGui::DockBuilderSetNodeSize(dockspace_id, viewport->Size);
+                if (ImGui::DockBuilderGetNode(dockspace_id) == nullptr)
+                {
+                    ImGui::DockBuilderRemoveNode(dockspace_id);
+                    ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace);
+                    ImGui::DockBuilderSetNodeSize(dockspace_id, viewport->Size);
 
-                DockBuilder builder(dockspace_id);
-                layoutBuilderCb(builder);
+                    DockBuilder builder(dockspace_id);
+                    layoutBuilderCb(builder);
 
-                ImGui::DockBuilderFinish(dockspace_id);
+                    ImGui::DockBuilderFinish(dockspace_id);
+                }
                 layoutNeedsInit = false;
             }
 
@@ -394,10 +423,31 @@ namespace mui
 
     void App::setTheme(ThemeType type)
     {
-        if (currentTheme == type)
+        if (currentTheme == type && !useTomlTheme)
             return; // No change needed
         currentTheme = type;
+        useTomlTheme = false;
         dpiNeedsUpdate = true; // Signal the main loop to reapply theme and rebuild fonts
+    }
+
+    void App::setTheme(const std::string& filepath, const std::string& themeName)
+    {
+        if (useTomlTheme && currentThemeFile == filepath && currentThemeName == themeName)
+            return; // No change needed
+        currentThemeFile = filepath;
+        currentThemeName = themeName;
+        useTomlTheme = true;
+        dpiNeedsUpdate = true; // Signal the main loop to reapply theme and rebuild fonts
+    }
+
+    void App::setTheme(const std::string& themeName)
+    {
+        setTheme(filepath + "themes.toml", themeName);
+    }
+
+    std::vector<std::string> App::getAvailableThemes()
+    {
+        return Theme::getAvailableThemes(filepath + "themes.toml");
     }
 
     SDL_GLContext App::getGLContext()

@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+#include <vector>
+
 namespace mui
 {
     class Theme
@@ -8,5 +11,7 @@ namespace mui
         static void applyStyle(float dpiScale = 1.0f);
         static void applyDarkStyle(float dpiScale = 1.0f);
         static void loadSystemFont(float fontSize = 16.0f);
+        static bool loadThemeFromToml(const std::string& filepath, const std::string& themeName, float dpiScale = 1.0f);
+        static std::vector<std::string> getAvailableThemes(const std::string& filepath);
     };
 } // namespace mui

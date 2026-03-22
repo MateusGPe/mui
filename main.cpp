@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 #include <cstdio>
+#include <random>
+#include <algorithm>
 #include <ctime>
 #include <imgui_internal.h>
 #include "mui/core/docking.hpp"
@@ -34,37 +36,22 @@ WindowPtr createInspectorWindow();
 int main()
 {
     App::init();
-    App::setTheme(ThemeType::Light);
+    App::setTheme("OceanLight");
 
     // Define a docking layout for our windows to arrange them on startup.
-    App::setLayoutBuilder([](mui::DockBuilder &builder)
-                          {
-        ImGuiID dockspace_id = builder.getID();
-        ImGuiDockNode *root_node = ImGui::DockBuilderGetNode(dockspace_id);
-        bool is_new_layout = (root_node == nullptr || root_node->IsEmpty());
+    App::setLayoutBuilder(
+        [](mui::DockBuilder &builder)
+        {
+            ImGuiID dockspace_id = builder.getID();
 
-        // Part 1: Build the layout only if it doesn't exist (e.g., on first run).
-        if (is_new_layout) {
             // Start with the full dockspace ID. After the split, this ID will refer to the left node.
             ImGuiID center_node_id = dockspace_id;
             ImGuiID right_node_id = builder.splitNode(center_node_id, mui::DockDirection::Right, 0.30f);
 
-            builder.getNode(center_node_id).setHiddenTabBar(true); // Hide the tab bar for the center node
-            builder.getNode(right_node_id).setHiddenTabBar(true); // Hide the tab bar for the right node
             // Dock windows. This only needs to be done once.
             builder.dockWindow("MUI Control Gallery", center_node_id);
             builder.dockWindow("Inspector", right_node_id);
-        }
-
-        // To create a seamless look without the dockspace's own title bars,
-        // we disable the tab bar on the dock nodes. This needs to run every time,
-        // as these flags are not saved in the .ini file.
-        ImGuiWindow *gallery_window = ImGui::FindWindowByName("MUI Control Gallery");
-        if (gallery_window && gallery_window->DockNode)
-            builder.getNode(gallery_window->DockNode->ID).setNoTabBar(true);
-        ImGuiWindow *inspector_window = ImGui::FindWindowByName("Inspector");
-        if (inspector_window && inspector_window->DockNode)
-            builder.getNode(inspector_window->DockNode->ID).setNoTabBar(true); });
+        });
 
     App::setMainLoopCallback([]()
                              { mui::Dialogs::processDialogs(); });
@@ -72,10 +59,12 @@ int main()
 
     // Create and show the main window with the control gallery
     auto mainWin = createMainGalleryWindow();
+    mainWin->setNoTabBar(true);
     mainWin->show();
 
     // Create and show a second, independent "Inspector" window
     auto inspectorWin = createInspectorWindow();
+    inspectorWin->setNoTabBar(true);
     inspectorWin->show();
 
     // Run the application's main loop
@@ -136,6 +125,100 @@ WindowPtr createInspectorWindow()
     auto root = VBox::create();
     root->setPadded(false); // Window margin is enough.
     win->setChild(root);
+
+    // --- Theme Controls ---
+    auto themeGroup = Group::create("Theme Controls");
+    themeGroup->setMargined(true);
+    auto themeHBox = HBox::create();
+    themeHBox->setPadded(true);
+
+    auto btnPrev = Button::create(ICON_FA_ARROW_LEFT " Prev");
+    auto btnNext = Button::create(ICON_FA_ARROW_RIGHT " Next");
+    auto btnRandom = Button::create(ICON_FA_SHUFFLE " Random");
+
+    // Logic for theme switching
+    static std::vector<std::string> allThemes;
+    if (allThemes.empty())
+    {
+        allThemes.push_back("Light");
+        allThemes.push_back("Dark");
+        auto tomlThemes = App::getAvailableThemes();
+        allThemes.insert(allThemes.end(), tomlThemes.begin(), tomlThemes.end());
+    }
+
+    static int currentThemeIndex = -1;
+    if (currentThemeIndex == -1)
+    {
+        // Find initial theme
+        std::string current;
+        if (App::isUsingTomlTheme())
+        {
+            current = App::getCurrentThemeName();
+        }
+        else
+        {
+            current = (App::getTheme() == ThemeType::Dark ? "Dark" : "Light");
+        }
+        auto it = std::find(allThemes.begin(), allThemes.end(), current);
+        if (it != allThemes.end())
+        {
+            currentThemeIndex = std::distance(allThemes.begin(), it);
+        }
+        else
+        {
+            currentThemeIndex = 0; // Default to first if not found
+        }
+    }
+
+    auto applyTheme = [&](int index)
+    {
+        if (index >= 0 && index < allThemes.size())
+        {
+            currentThemeIndex = index;
+            const auto &themeName = allThemes[currentThemeIndex];
+            if (themeName == "Light")
+            {
+                App::setTheme(ThemeType::Light);
+            }
+            else if (themeName == "Dark")
+            {
+                App::setTheme(ThemeType::Dark);
+            }
+            else
+            {
+                App::setTheme(themeName);
+            }
+        }
+    };
+
+    btnPrev->onClick([&]()
+                     {
+        int newIndex = (currentThemeIndex - 1 + allThemes.size()) % allThemes.size();
+        applyTheme(newIndex); });
+
+    btnNext->onClick([&]()
+                     {
+        int newIndex = (currentThemeIndex + 1) % allThemes.size();
+        applyTheme(newIndex); });
+
+    btnRandom->onClick([&]()
+                       {
+        if (allThemes.size() > 1)
+        {
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_int_distribution<> distrib(0, allThemes.size() - 1);
+            int newIndex = currentThemeIndex;
+            while (newIndex == currentThemeIndex)
+            {
+                newIndex = distrib(gen);
+            }
+            applyTheme(newIndex);
+        } });
+
+    themeHBox->append({{btnPrev, true}, {btnRandom, true}, {btnNext, true}});
+    themeGroup->setChild(themeHBox);
+    root->append(themeGroup, false);
 
     // --- Card Example ---
     auto card = Card::create();
@@ -705,7 +788,7 @@ IControlPtr createThemesTab()
     auto vbox = VBox::create();
     vbox->setPadded(true);
 
-    vbox->append(Label::create("Switch application theme:"));
+    vbox->append(Label::create("Built-in Themes:"), false);
 
     auto hbox = HBox::create();
     hbox->setPadded(true);
@@ -721,6 +804,17 @@ IControlPtr createThemesTab()
     hbox->append({{btnLight, true},
                   {btnDark, true}});
 
-    vbox->append(hbox, true);
+    vbox->append(hbox, false);
+    vbox->append(Separator::create(), false);
+    vbox->append(Label::create("TOML Themes (from themes.toml):"), false);
+    
+    auto tomlFlowBox = FlowBox::create()->setAlign(FlowBox::Align::Left);
+    for (const auto& themeName : App::getAvailableThemes()) {
+        auto btn = Button::create(themeName);
+        btn->onClick([themeName]() { App::setTheme(themeName); });
+        tomlFlowBox->append(btn);
+    }
+    
+    vbox->append(tomlFlowBox, true);
     return vbox;
 }

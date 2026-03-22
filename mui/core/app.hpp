@@ -39,11 +39,16 @@ namespace mui
         static float currentDpiScale;
         static bool dpiNeedsUpdate;
         static ThemeType currentTheme;
+        static std::string currentThemeFile;
+        static std::string currentThemeName;
+        static bool useTomlTheme;
         static std::function<void()> mainLoopCallback; 
         static void processMessageBoxes();
         static SDL_GLContext glContext;
+        static std::string filepath;
 
     public:
+
         static void setMainLoopCallback(std::function<void()> cb);
         static void setLayoutBuilder(std::function<void(DockBuilder &)> cb);
         static void init(bool useOpenGL = false);
@@ -53,8 +58,17 @@ namespace mui
         static void assertMainThread();
         static void queueMain(std::function<void()> callback);
         static void setTheme(ThemeType type);
+        static void setTheme(const std::string& filepath, const std::string& themeName);
+        static void setTheme(const std::string& themeName);
+        static std::vector<std::string> getAvailableThemes();
         static ThemeType getTheme() { return currentTheme; }
         static void addMessageBox(ActiveMessageBox &&mb);
         static SDL_GLContext getGLContext();
+        static std::string getFilepath() { return filepath; }
+        static float getDpiScale() { return currentDpiScale; }
+        static void requestDpiUpdate() { dpiNeedsUpdate = true; }
+        static bool isUsingTomlTheme() { return useTomlTheme; }
+        static std::string getCurrentThemeName() { return currentThemeName; }
+        static std::string getCurrentThemeFile() { return currentThemeFile; }
     };
 } // namespace mui
