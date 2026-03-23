@@ -179,4 +179,12 @@ namespace mui
             m_flags &= ~ImGuiComboFlags_NoPreview;
         return self();
     }
+    ComboBoxPtr ComboBox::setCustomPreview(bool b)
+    {
+        if (b)
+            m_flags |= ImGuiComboFlags_WidthFitPreview;
+        else
+            m_flags &= ~ImGuiComboFlags_WidthFitPreview;
+        return self();
+    }
 } // namespace mui

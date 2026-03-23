@@ -28,8 +28,10 @@ namespace mui
     Identifier dockId;
     ImGuiWindowFlags m_flags;
 
-  public:
+  protected:
     Window(const std::string &title, int width, int height, bool hasMenubar = false);
+
+  public:
     ~Window();
 
     void renderControl() override;
@@ -93,7 +95,10 @@ namespace mui
     WindowPtr setDocking(bool b);
     bool getDocking() const;
 
-    static WindowPtr create(const std::string &title, int width, int height, bool hasMenubar = false) { return std::make_shared<Window>(title, width, height, hasMenubar); }
+    static WindowPtr create(const std::string &title, int width, int height, bool hasMenubar = false) 
+    { 
+        return std::shared_ptr<Window>(new Window(title, width, height, hasMenubar)); 
+    }
   };
 
 } // namespace mui

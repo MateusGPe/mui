@@ -19,11 +19,12 @@ namespace mui
         bool checked;
         float scale = 1.0f;
 
+        explicit Checkbox(const std::string &text);
+
     public:
         mui::Signal<bool> onToggledSignal;
 
-        explicit Checkbox(const std::string &text);
-        static CheckboxPtr create(const std::string &text) { return std::make_shared<Checkbox>(text); }
+        static CheckboxPtr create(const std::string &text) { return std::shared_ptr<Checkbox>(new Checkbox(text)); }
 
         void renderControl() override;
 

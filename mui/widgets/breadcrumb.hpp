@@ -24,10 +24,12 @@ namespace mui
 
         void parsePath();
 
+        explicit BreadcrumbBar(const std::string &path = "");
+
     public:
         mui::Signal<std::string> onPathNavigatedSignal;
-        explicit BreadcrumbBar(const std::string &path = "");
-        static BreadcrumbBarPtr create(const std::string &path = "") { return std::make_shared<BreadcrumbBar>(path); }
+
+        static BreadcrumbBarPtr create(const std::string &path = "") { return std::shared_ptr<BreadcrumbBar>(new BreadcrumbBar(path)); }
 
         void renderControl() override;
 

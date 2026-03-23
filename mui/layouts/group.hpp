@@ -11,17 +11,19 @@ namespace mui
 
     class Group : public Control<Group>
     {
+    protected:
         std::string title;
         IControlPtr child;
         bool margined = false;
         bool m_open = true;
         int m_flags = 0;
 
+        Group(const std::string &title);
+
     public:
         mui::Signal<bool> onToggledSignal;
 
-        Group(const std::string &title);
-        static GroupPtr create(const std::string &title) { return std::make_shared<Group>(title); }
+        static GroupPtr create(const std::string &title) { return std::shared_ptr<Group>(new Group(title)); }
 
         void renderControl() override;
         GroupPtr setChild(IControlPtr c);
@@ -45,5 +47,13 @@ namespace mui
         GroupPtr setSpanAvailWidth(bool span);
         GroupPtr setSpanFullWidth(bool span);
         GroupPtr setNavLeftJumpsToParent(bool allow);
+
+        // ImGuiTreeNodeFlags additions
+        GroupPtr setFramed(bool b);
+        GroupPtr setSelected(bool b);
+        GroupPtr setNoTreePushOnOpen(bool b);
+        GroupPtr setNoAutoOpenOnLog(bool b);
+        GroupPtr setLeaf(bool b);
+        GroupPtr setSpanAllColumns(bool b);
     };
 } // namespace mui

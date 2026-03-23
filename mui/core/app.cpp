@@ -48,6 +48,10 @@ namespace mui
     bool App::s_applyInvert = false;
     bool App::useTomlTheme = false;
 
+    // Initialize thread-safe queue components
+    std::queue<std::function<void()>> App::m_mainQueue;
+    std::mutex App::m_mainQueueMutex;
+
     void App::setLayoutBuilder(std::function<void(DockBuilder &)> cb)
     {
         layoutBuilderCb = std::move(cb);
@@ -234,6 +238,9 @@ namespace mui
                 }
             }
 
+            // Drain cross-thread UI tasks before starting the new ImGui frame
+            drainMainQueue();
+
             // --- REBUILD FONTS & STYLE IF DPI CHANGED OR THEME SWITCHED ---
             if (dpiNeedsUpdate)
             {
@@ -398,7 +405,25 @@ namespace mui
 
     void App::queueMain(std::function<void()> callback)
     {
-        callback();
+        if (!callback)
+            return;
+        std::lock_guard<std::mutex> lock(m_mainQueueMutex);
+        m_mainQueue.push(std::move(callback));
+    }
+
+    void App::drainMainQueue()
+    {
+        std::queue<std::function<void()>> currentQueue;
+        {
+            std::lock_guard<std::mutex> lock(m_mainQueueMutex);
+            std::swap(currentQueue, m_mainQueue);
+        }
+
+        while (!currentQueue.empty())
+        {
+            currentQueue.front()();
+            currentQueue.pop();
+        }
     }
 
     void App::addMessageBox(ActiveMessageBox &&mb)

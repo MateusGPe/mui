@@ -48,6 +48,7 @@ namespace mui
         ImVec2 maxSize = {FLT_MAX, FLT_MAX};
 
         std::string tooltip;
+        std::string m_customId; // Stable ID to prevent ImGui state loss on reallocation
 
         // Static Global Shadow Defaults
         static bool s_defaultHasShadow;
@@ -69,6 +70,18 @@ namespace mui
             {
                 ImGui::SetTooltip("%s", tooltip.c_str());
             }
+        }
+
+        // Helper for derived controls to push a stable ID instead of their memory address
+        void pushControlID()
+        {
+            if (!m_customId.empty()) ImGui::PushID(m_customId.c_str());
+            else ImGui::PushID(this);
+        }
+
+        void popControlID()
+        {
+            ImGui::PopID();
         }
 
         // ALL WIDGETS MUST NOW IMPLEMENT THIS INSTEAD OF render()
@@ -163,6 +176,18 @@ namespace mui
             m_connections.push_back(signal.connect(std::function<void(Args...)>(std::move(cb))));
             return self();
         }
+
+        std::shared_ptr<Derived> setID(const std::string& id)
+        {
+            m_customId = id;
+            return self();
+        }
+
+        std::string getID() const 
+        { 
+            return m_customId; 
+        }
+
         std::shared_ptr<Derived> show()
         {
             visible = true;

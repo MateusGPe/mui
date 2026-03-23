@@ -116,6 +116,9 @@ namespace mui_dlg
 
 	FileDialog::~FileDialog()
 	{
+		// PROPER FIX: Stop the thread before destroying the object
+		m_stopPreviewLoader();
+
 		m_clearIconPreview();
 		m_clearIcons();
 

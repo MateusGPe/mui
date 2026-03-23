@@ -25,11 +25,12 @@ namespace mui
         int selectedIndex = 0;
         ImGuiTabBarFlags m_flags;
     
+        Tab();
+    
     public:
         mui::Signal<int> onSelectedSignal;
     
-        Tab();
-        static TabPtr create() { return std::make_shared<Tab>(); }
+        static TabPtr create() { return std::shared_ptr<Tab>(new Tab()); }
     
         void renderControl() override;
     
@@ -55,4 +56,6 @@ namespace mui
         TabPtr setNoTabListScrollingButtons(bool b);
         TabPtr setNoTooltip(bool b);
         TabPtr setFittingPolicyScroll(bool b);
-    };} // namespace mui
+        TabPtr setFittingPolicyResizeDown(bool b);
+    };
+} // namespace mui

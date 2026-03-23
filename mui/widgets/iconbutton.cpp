@@ -1,11 +1,13 @@
 // widgets/iconbutton.cpp
-#include "iconbutton.hpp"
-#include "../core/app.hpp"
-#include <imgui.h>
-#include "../core/scoped.hpp"
-#include <imgui_internal.h>
 #include <algorithm>
 #include <cfloat>
+
+#include <imgui.h>
+#include <imgui_internal.h>
+
+#include "../core/app.hpp"
+#include "../core/scoped.hpp"
+#include "iconbutton.hpp"
 
 namespace mui
 {

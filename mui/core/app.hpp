@@ -5,6 +5,8 @@
 #include <string>
 #include <imgui.h>
 #include <filesystem>
+#include <queue>
+#include <mutex>
 
 // Forward declare SDL_GLContext to avoid including SDL.h in the header
 typedef struct SDL_GLContextState *SDL_GLContext;
@@ -50,6 +52,11 @@ namespace mui
         static void processMessageBoxes();
         static SDL_GLContext glContext;
         static std::string filepath;
+
+        // Thread-safe main queue components
+        static std::queue<std::function<void()>> m_mainQueue;
+        static std::mutex m_mainQueueMutex;
+        static void drainMainQueue();
 
     public:
         static void setMainLoopCallback(std::function<void()> cb);

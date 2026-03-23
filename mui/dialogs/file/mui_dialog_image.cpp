@@ -51,47 +51,57 @@ namespace mui_dlg
 		}
 	}
 
+	void FileDialog::m_startPreviewLoaderIfNeeded()
+	{
+		if (m_previewLoader == nullptr)
+		{
+			m_previewThreadExit = false;
+			m_previewLoaderRunning = true;
+			m_previewLoader = new std::thread(&FileDialog::m_loadPreview, this);
+		}
+	}
+
 	void FileDialog::m_refreshIconPreview()
 	{
-		m_stopPreviewLoader(); // Stop any existing loader
-
 		if (m_zoom >= 5.0f)
 		{
-			if (m_previewLoader == nullptr)
+			m_startPreviewLoaderIfNeeded();
+
+			// Populate the queue of files to load previews for
 			{
-				// Populate the queue of files to load previews for
+				std::lock_guard<std::recursive_mutex> lock(m_contentMutex);
+				std::lock_guard<std::mutex> qLock(m_previewQueueMutex);
+
+				m_previewQueue.clear();
+				for (const auto &data : m_content)
 				{
-					std::lock_guard<std::recursive_mutex> lock(m_contentMutex);
-					m_previewQueue.clear();
-					for (const auto &data : m_content)
+					if (!data.IsDirectory && !data.HasIconPreview)
 					{
-						if (!data.IsDirectory && !data.HasIconPreview)
+						std::string ext = data.Path.extension().string();
+						if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".bmp" || ext == ".tga")
 						{
-							std::string ext = data.Path.extension().string();
-							if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".bmp" || ext == ".tga")
-							{
-								m_previewQueue.push_back(data.Path);
-							}
+							m_previewQueue.push_back(data.Path);
 						}
 					}
 				}
-
-				if (!m_previewQueue.empty())
-				{
-					m_previewLoaderRunning = true;
-					m_previewLoader = new std::thread(&FileDialog::m_loadPreview, this);
-				}
 			}
+
+			// Wake up the worker thread
+			m_previewCv.notify_one();
 		}
 		else
 		{
-			m_clearIconPreview(); // This also stops the loader
+			m_clearIconPreview();
 		}
 	}
 
 	void FileDialog::m_clearIconPreview()
 	{
-		m_stopPreviewLoader();
+		// Stop fetching new items immediately
+		{
+			std::lock_guard<std::mutex> qLock(m_previewQueueMutex);
+			m_previewQueue.clear();
+		}
 
 		std::lock_guard<std::recursive_mutex> lock(m_contentMutex);
 		// Clear any pending results that haven't been processed
@@ -117,42 +127,65 @@ namespace mui_dlg
 	{
 		if (m_previewLoader != nullptr)
 		{
-			m_previewLoaderRunning = false;
+			// PROPER FIX: Lock the mutex before signaling the exit condition
+			// so the thread doesn't miss the notify_all() while sleeping.
+			{
+				std::lock_guard<std::mutex> lock(m_previewQueueMutex);
+				m_previewThreadExit = true;
+			}
+			m_previewCv.notify_all();
 
 			if (m_previewLoader->joinable())
 				m_previewLoader->join();
 
 			delete m_previewLoader;
 			m_previewLoader = nullptr;
+			m_previewLoaderRunning = false;
 		}
 	}
 
 	void FileDialog::m_loadPreview()
 	{
-		for (const auto &path : m_previewQueue)
+		while (!m_previewThreadExit)
 		{
-			if (!m_previewLoaderRunning)
-				break;
+			std::filesystem::path path;
 
-			std::string ext = path.extension().string();
-			if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".bmp" || ext == ".tga")
 			{
-				int width, height, nrChannels;
-				unsigned char *image = stbi_load(path.string().c_str(), &width, &height, &nrChannels, STBI_rgb_alpha);
+				std::unique_lock<std::mutex> lock(m_previewQueueMutex);
+				m_previewCv.wait(lock, [this]()
+								 { return m_previewThreadExit || !m_previewQueue.empty(); });
 
-				if (image != nullptr && width > 0 && height > 0)
+				if (m_previewThreadExit)
+					break;
+
+				if (!m_previewQueue.empty())
 				{
-					PreviewResult result;
-					result.Path = path;
-					result.IconPreviewData = image;
-					result.IconPreviewWidth = width;
-					result.IconPreviewHeight = height;
+					path = m_previewQueue.back(); // LIFO for faster apparent responsiveness
+					m_previewQueue.pop_back();
+				}
+			}
 
-					std::lock_guard<std::mutex> lock(m_previewResultsMutex);
-					m_previewResults.push(result);
+			if (!path.empty())
+			{
+				std::string ext = path.extension().string();
+				if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".bmp" || ext == ".tga")
+				{
+					int width, height, nrChannels;
+					unsigned char *image = stbi_load(path.string().c_str(), &width, &height, &nrChannels, STBI_rgb_alpha);
+
+					if (image != nullptr && width > 0 && height > 0)
+					{
+						PreviewResult result;
+						result.Path = path;
+						result.IconPreviewData = image;
+						result.IconPreviewWidth = width;
+						result.IconPreviewHeight = height;
+
+						std::lock_guard<std::mutex> lock(m_previewResultsMutex);
+						m_previewResults.push(result);
+					}
 				}
 			}
 		}
-		m_previewLoaderRunning = false;
 	}
 }

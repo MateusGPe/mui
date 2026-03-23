@@ -160,4 +160,52 @@ namespace mui
             m_flags &= ~ImGuiTreeNodeFlags_NavLeftJumpsToParent;
         return self();
     }
+    GroupPtr Group::setFramed(bool b)
+    {
+        if (b)
+            m_flags |= ImGuiTreeNodeFlags_Framed;
+        else
+            m_flags &= ~ImGuiTreeNodeFlags_Framed;
+        return self();
+    }
+    GroupPtr Group::setSelected(bool b)
+    {
+        if (b)
+            m_flags |= ImGuiTreeNodeFlags_Selected;
+        else
+            m_flags &= ~ImGuiTreeNodeFlags_Selected;
+        return self();
+    }
+    GroupPtr Group::setNoTreePushOnOpen(bool b)
+    {
+        if (b)
+            m_flags |= ImGuiTreeNodeFlags_NoTreePushOnOpen;
+        else
+            m_flags &= ~ImGuiTreeNodeFlags_NoTreePushOnOpen;
+        return self();
+    }
+    GroupPtr Group::setNoAutoOpenOnLog(bool b)
+    {
+        if (b)
+            m_flags |= ImGuiTreeNodeFlags_NoAutoOpenOnLog;
+        else
+            m_flags &= ~ImGuiTreeNodeFlags_NoAutoOpenOnLog;
+        return self();
+    }
+    GroupPtr Group::setLeaf(bool b)
+    {
+        if (b)
+            m_flags |= ImGuiTreeNodeFlags_Leaf;
+        else
+            m_flags &= ~ImGuiTreeNodeFlags_Leaf;
+        return self();
+    }
+    GroupPtr Group::setSpanAllColumns(bool b)
+    {
+        if (b)
+            m_flags |= ImGuiTreeNodeFlags_SpanAllColumns;
+        else
+            m_flags &= ~ImGuiTreeNodeFlags_SpanAllColumns;
+        return self();
+    }
 } // namespace mui

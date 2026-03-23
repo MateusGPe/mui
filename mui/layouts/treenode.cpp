@@ -121,4 +121,65 @@ namespace mui
         // The app can use the onClick signal to update the observable.
         return self();
     }
+    TreeNodePtr TreeNode::setOpenOnDoubleClick(bool b)
+    {
+        if (b) m_flags |= ImGuiTreeNodeFlags_OpenOnDoubleClick;
+        else m_flags &= ~ImGuiTreeNodeFlags_OpenOnDoubleClick;
+        return self();
+    }
+    TreeNodePtr TreeNode::setOpenOnArrow(bool b)
+    {
+        if (b) m_flags |= ImGuiTreeNodeFlags_OpenOnArrow;
+        else m_flags &= ~ImGuiTreeNodeFlags_OpenOnArrow;
+        return self();
+    }
+    TreeNodePtr TreeNode::setLeaf(bool b)
+    {
+        if (b) m_flags |= ImGuiTreeNodeFlags_Leaf;
+        else m_flags &= ~ImGuiTreeNodeFlags_Leaf;
+        return self();
+    }
+    TreeNodePtr TreeNode::setNoTreePushOnOpen(bool b)
+    {
+        if (b) m_flags |= ImGuiTreeNodeFlags_NoTreePushOnOpen;
+        else m_flags &= ~ImGuiTreeNodeFlags_NoTreePushOnOpen;
+        return self();
+    }
+    TreeNodePtr TreeNode::setNoAutoOpenOnLog(bool b)
+    {
+        if (b) m_flags |= ImGuiTreeNodeFlags_NoAutoOpenOnLog;
+        else m_flags &= ~ImGuiTreeNodeFlags_NoAutoOpenOnLog;
+        return self();
+    }
+    TreeNodePtr TreeNode::setCollapsingHeader(bool b)
+    {
+        if (b) m_flags |= ImGuiTreeNodeFlags_Framed; // CollapsingHeader is essentially a framed TreeNode with no tree push
+        else m_flags &= ~ImGuiTreeNodeFlags_Framed;
+        return self();
+    }
+    TreeNodePtr TreeNode::setSpanAvailWidth(bool b)
+    {
+        if (b) m_flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
+        else m_flags &= ~ImGuiTreeNodeFlags_SpanAvailWidth;
+        return self();
+    }
+    TreeNodePtr TreeNode::setSpanAllColumns(bool b)
+    {
+        if (b) m_flags |= ImGuiTreeNodeFlags_SpanAllColumns;
+        else m_flags &= ~ImGuiTreeNodeFlags_SpanAllColumns;
+        return self();
+    }
+    TreeNodePtr TreeNode::setNavLeftJumpsToParent(bool b)
+    {
+        if (b) m_flags |= ImGuiTreeNodeFlags_NavLeftJumpsToParent;
+        else m_flags &= ~ImGuiTreeNodeFlags_NavLeftJumpsToParent;
+        return self();
+    }
+    TreeNodePtr TreeNode::setFramePadding(bool b)
+    {
+        if (b) m_flags |= ImGuiTreeNodeFlags_FramePadding;
+        else m_flags &= ~ImGuiTreeNodeFlags_FramePadding;
+        return self();
+    }
+    
 } // namespace mui

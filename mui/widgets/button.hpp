@@ -31,11 +31,12 @@ namespace mui
         ImVec4 colorHovered;
         ImVec4 colorActive;
 
+        explicit Button(const std::string &text);
+
     public:
         mui::Signal<> onClickSignal;
 
-        explicit Button(const std::string &text);
-        static ButtonPtr create(const std::string &text) { return std::make_shared<Button>(text); }
+        static ButtonPtr create(const std::string &text) { return std::shared_ptr<Button>(new Button(text)); }
 
         void renderControl() override;
 

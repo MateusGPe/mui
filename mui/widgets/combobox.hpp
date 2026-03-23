@@ -20,10 +20,12 @@ namespace mui
         int selectedIndex;
         ImGuiComboFlags m_flags;
     
+        ComboBox();
+
     public:
         mui::Signal<int> onChangedSignal;
-        ComboBox();
-        static ComboBoxPtr create() { return std::make_shared<ComboBox>(); }
+        
+        static ComboBoxPtr create() { return std::shared_ptr<ComboBox>(new ComboBox()); }
     
         void renderControl() override;
     
@@ -45,4 +47,6 @@ namespace mui
         ComboBoxPtr setHeightLargest(bool b);
         ComboBoxPtr setNoArrowButton(bool b);
         ComboBoxPtr setNoPreview(bool b);
-    };} // namespace mui
+        ComboBoxPtr setCustomPreview(bool b);
+    };
+} // namespace mui

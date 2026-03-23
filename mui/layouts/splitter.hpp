@@ -25,11 +25,15 @@ namespace mui
         float splitRatio = 0.25f; // Default 25% / 75%
         float thickness = 4.0f;
 
+        SplitterView(SplitterOrientation o = SplitterOrientation::Horizontal);
+
     public:
         mui::Signal<float> onSplitRatioChangedSignal;
 
-        SplitterView(SplitterOrientation o = SplitterOrientation::Horizontal);
-        static SplitterViewPtr create(SplitterOrientation o = SplitterOrientation::Horizontal) { return std::make_shared<SplitterView>(o); }
+        static SplitterViewPtr create(SplitterOrientation o = SplitterOrientation::Horizontal)
+        {
+            return std::shared_ptr<SplitterView>(new SplitterView(o));
+        }
 
         void renderControl() override;
 

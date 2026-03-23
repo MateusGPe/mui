@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <mutex>
 #include <atomic>
+#include <condition_variable>
 
 #define IFD_DIALOG_FILE 0
 #define IFD_DIALOG_DIRECTORY 1
@@ -67,9 +68,10 @@ namespace mui_dlg
 		std::function<void(void *)> DeleteTexture;
 
 	private:
-		struct PreviewResult {
+		struct PreviewResult
+		{
 			std::filesystem::path Path;
-			unsigned char* IconPreviewData;
+			unsigned char *IconPreviewData;
 			int IconPreviewWidth, IconPreviewHeight;
 		};
 
@@ -88,7 +90,7 @@ namespace mui_dlg
 		mui::ComboBoxPtr m_filterCombo;
 		mui::ButtonPtr m_cancelButton;
 		mui::ButtonPtr m_okButton;
-		
+
 		std::string m_currentKey;
 		std::string m_currentTitle;
 		std::filesystem::path m_currentDirectory;
@@ -126,12 +128,17 @@ namespace mui_dlg
 		void m_refreshIconPreview();
 		void m_clearIconPreview();
 
+		// Async Preview Loader Components
 		std::thread *m_previewLoader;
 		std::atomic<bool> m_previewLoaderRunning;
-		void m_stopPreviewLoader();
+		std::atomic<bool> m_previewThreadExit{false};
+		std::condition_variable m_previewCv;
+		std::mutex m_previewQueueMutex;
 		std::vector<std::filesystem::path> m_previewQueue;
 		std::queue<PreviewResult> m_previewResults;
 		std::mutex m_previewResultsMutex;
+		void m_startPreviewLoaderIfNeeded();
+		void m_stopPreviewLoader();
 		void m_loadPreview();
 
 		std::vector<FileTreeNode *> m_treeCache;
@@ -142,7 +149,7 @@ namespace mui_dlg
 		unsigned int m_sortDirection;
 		std::vector<FileData> m_content;
 		std::recursive_mutex m_contentMutex;
-		
+
 		void m_setDirectory(const std::filesystem::path &p, bool addHistory = true);
 		void m_sortContent(unsigned int column, unsigned int sortDirection);
 

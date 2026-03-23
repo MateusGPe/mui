@@ -14,9 +14,10 @@ namespace mui
         float padding = 8.0f;
         bool fillHeight = false;
 
-    public:
         Card();
-        static CardPtr create() { return std::make_shared<Card>(); }
+
+    public:
+        static CardPtr create() { return std::shared_ptr<Card>(new Card()); }
 
         void renderControl() override;
 

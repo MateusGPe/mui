@@ -10,6 +10,7 @@ namespace mui
 
     class Grid : public Control<Grid>
     {
+    protected:
         struct Cell
         {
             IControlPtr control;
@@ -20,9 +21,10 @@ namespace mui
         int m_maxRow = 0;
         int m_maxCol = 0;
 
-    public:
         Grid();
-        static GridPtr create() { return std::make_shared<Grid>(); }
+
+    public:
+        static GridPtr create() { return std::shared_ptr<Grid>(new Grid()); }
 
         GridPtr setColumnWeight(int col, float weight);
         void renderControl() override;

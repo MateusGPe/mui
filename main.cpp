@@ -51,7 +51,7 @@ int main()
         {
             mui::Dialogs::processDialogs();
         });
-    Control<Button>::setGlobalShadowDefaults(false, ImVec2(0.0f, 0.0f), 4.0f, ImVec4(0.12f, 0.53f, 0.90f, 0.08f), 8.0f);
+    // Control<Button>::setGlobalShadowDefaults(false, ImVec2(0.0f, 0.0f), 4.0f, ImVec4(0.12f, 0.53f, 0.90f, 0.08f), 8.0f);
 
     // Create and show the main window with the control gallery
     auto mainWin = createMainGalleryWindow();
@@ -235,8 +235,8 @@ WindowPtr createInspectorWindow()
     cardContent->setPadded(true);
     card->setChild(cardContent);
     card->setFillHeight(false);
-    card->defaultShadow()          // setShadow(true, {0.0f, 0.0f}, 18.0f, {0.12f, 0.53f, 0.90f, 0.1f}, 8.0f)
-        ->setSpanAvailWidth(true); // Card will fill the width of the parent
+    // card->defaultShadow()          // setShadow(true, {0.0f, 0.0f}, 18.0f, {0.12f, 0.53f, 0.90f, 0.1f}, 8.0f)
+    card->setSpanAvailWidth(true); // Card will fill the width of the parent
 
     cardContent->append(
         {{Label::create("This is a Card")},
@@ -280,14 +280,14 @@ IControlPtr createBasicsTab(const LabelPtr &lblStatus)
 
     auto btnClick = Button::create(ICON_FA_FLOPPY_DISK " Click Me");
     btnClick->onClick(
-                [lblStatus]()
-                {
-                    auto currentTime = std::time(nullptr);
-                    char timeStr[100];
-                    std::strftime(timeStr, sizeof(timeStr), "%H:%M:%S", std::localtime(&currentTime));
-                    lblStatus->setText(std::string("Button clicked at ") + timeStr);
-                })
-        ->defaultShadow();
+        [lblStatus]()
+        {
+            auto currentTime = std::time(nullptr);
+            char timeStr[100];
+            std::strftime(timeStr, sizeof(timeStr), "%H:%M:%S", std::localtime(&currentTime));
+            lblStatus->setText(std::string("Button clicked at ") + timeStr);
+        });
+    //->defaultShadow();
 
     auto chkToggle = Checkbox::create("Standard Checkbox");
     chkToggle->onToggled(
@@ -457,20 +457,21 @@ IControlPtr createDialogsTab(const WindowPtr &win, const LabelPtr &lblStatus)
     auto btnFile = Button::create(ICON_FA_FOLDER_OPEN " Open File");
 
     btnInfo->onClick(
-               [win, lblStatus]()
-               {
-                   Dialogs::msgBoxInfo("Information", "This is an informational message box, which is the default type.");
-                   lblStatus->setText("Info dialog shown.");
-               })
-        ->defaultShadow();
+        [win, lblStatus]()
+        {
+            Dialogs::msgBoxInfo("Information", "This is an informational message box, which is the default type.");
+            lblStatus->setText("Info dialog shown.");
+        })
+        //->defaultShadow();
+        ;
 
     btnWarning->onClick(
-                  [win, lblStatus]()
-                  {
-                      Dialogs::msgBoxWarning("Warning", "This is a warning message. Something might be wrong, so you should pay attention.");
-                      lblStatus->setText("Warning dialog shown.");
-                  })
-        ->defaultShadow();
+        [win, lblStatus]()
+        {
+            Dialogs::msgBoxWarning("Warning", "This is a warning message. Something might be wrong, so you should pay attention.");
+            lblStatus->setText("Warning dialog shown.");
+        });
+    // ->defaultShadow();
 
     btnError->onClick(
         [win, lblStatus]()
@@ -480,38 +481,39 @@ IControlPtr createDialogsTab(const WindowPtr &win, const LabelPtr &lblStatus)
         });
 
     btnConfirm->onClick(
-                  [win, lblStatus]()
-                  {
-                      Dialogs::msgBoxConfirm(
-                          "Confirmation",
-                          "This action is permanent. Are you sure you want to proceed?",
-                          [lblStatus]()
-                          {
-                              lblStatus->setText("Confirmed!");
-                          },
-                          [lblStatus]()
-                          {
-                              lblStatus->setText("Cancelled.");
-                          });
-                  })
-        ->defaultShadow();
+        [win, lblStatus]()
+        {
+            Dialogs::msgBoxConfirm(
+                "Confirmation",
+                "This action is permanent. Are you sure you want to proceed?",
+                [lblStatus]()
+                {
+                    lblStatus->setText("Confirmed!");
+                },
+                [lblStatus]()
+                {
+                    lblStatus->setText("Cancelled.");
+                });
+        });
+    //->defaultShadow();
 
-    btnQuestion->onClick(
-                   [win, lblStatus]()
-                   {
-                       Dialogs::msgBoxQuestion(
-                           "Unsaved Work",
-                           "Do you want to save your changes before closing?",
-                           [lblStatus]()
-                           {
-                               lblStatus->setText("Answered: Yes");
-                           },
-                           [lblStatus]()
-                           {
-                               lblStatus->setText("Answered: No");
-                           });
-                   })
-        ->defaultShadow();
+    btnQuestion
+        ->onClick(
+            [win, lblStatus]()
+            {
+                Dialogs::msgBoxQuestion(
+                    "Unsaved Work",
+                    "Do you want to save your changes before closing?",
+                    [lblStatus]()
+                    {
+                        lblStatus->setText("Answered: Yes");
+                    },
+                    [lblStatus]()
+                    {
+                        lblStatus->setText("Answered: No");
+                    });
+            });
+    // ->defaultShadow();
 
     btnCustom->onClick(
         [lblStatus]()

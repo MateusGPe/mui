@@ -23,12 +23,13 @@ namespace mui
         std::vector<IControlPtr> children;
         ImGuiTreeNodeFlags m_flags;
     
+        explicit TreeNode(const std::string& label);
+
     public:
         mui::Signal<> onClickSignal;
         mui::Signal<> onDoubleClickSignal;
     
-        explicit TreeNode(const std::string& label);
-        static TreeNodePtr create(const std::string& label) { return std::make_shared<TreeNode>(label); }
+        static TreeNodePtr create(const std::string& label) { return std::shared_ptr<TreeNode>(new TreeNode(label)); }
     
         void onHandleDestroyed() override;
         void renderControl() override;
@@ -48,4 +49,17 @@ namespace mui
     
         bool isSelected() const;
         TreeNodePtr bindSelected(std::shared_ptr<Observable<bool>> observable);
-    };} // namespace mui
+
+        // ImGuiTreeNodeFlags additions
+        TreeNodePtr setOpenOnDoubleClick(bool b);
+        TreeNodePtr setOpenOnArrow(bool b);
+        TreeNodePtr setLeaf(bool b);
+        TreeNodePtr setNoTreePushOnOpen(bool b);
+        TreeNodePtr setNoAutoOpenOnLog(bool b);
+        TreeNodePtr setCollapsingHeader(bool b);
+        TreeNodePtr setSpanAvailWidth(bool b);
+        TreeNodePtr setSpanAllColumns(bool b);
+        TreeNodePtr setNavLeftJumpsToParent(bool b);
+        TreeNodePtr setFramePadding(bool b);
+    };
+} // namespace mui

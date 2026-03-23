@@ -112,4 +112,10 @@ namespace mui
         else m_flags &= ~ImGuiTabBarFlags_FittingPolicyScroll;
         return self();
     }
+    TabPtr Tab::setFittingPolicyResizeDown(bool b)
+    {
+        if (b) m_flags |= ImGuiTabBarFlags_FittingPolicyResizeDown;
+        else m_flags &= ~ImGuiTabBarFlags_FittingPolicyResizeDown;
+        return self();
+    }
 } // namespace mui

@@ -23,9 +23,9 @@ namespace mui
         bool scrollable = false;
         bool autoScroll = false;
 
-    public:
         Box() { this->verifyState(); }
 
+    public:
         void onHandleDestroyed() override
         {
             Control<Derived>::onHandleDestroyed();
@@ -89,9 +89,10 @@ namespace mui
 
     class VBox : public Box<VBox>
     {
-    public:
+    protected:
         VBox();
-        static VBoxPtr create() { return std::make_shared<VBox>(); }
+    public:
+        static VBoxPtr create() { return VBoxPtr(new VBox()); }
         void renderControl() override;
     };
 
@@ -100,9 +101,10 @@ namespace mui
 
     class HBox : public Box<HBox>
     {
-    public:
+    protected:
         HBox();
-        static HBoxPtr create() { return std::make_shared<HBox>(); }
+    public:
+        static HBoxPtr create() { return HBoxPtr(new HBox()); }
         void renderControl() override;
     };
 
@@ -117,8 +119,7 @@ namespace mui
             Left,
             Center,
             Right,
-            Justify,
-            //Fill
+            Justify
         };
 
     protected:
@@ -132,9 +133,10 @@ namespace mui
         std::vector<flow_internal> flow_data;
         Align m_align = Align::Left;
 
-    public:
         FlowBox();
-        static FlowBoxPtr create() { return std::make_shared<FlowBox>(); }
+
+    public:
+        static FlowBoxPtr create() { return std::shared_ptr<FlowBox>(new FlowBox()); }
         void renderControl() override;
         FlowBoxPtr append(IControlPtr child, bool stretchy = false);
         FlowBoxPtr append(std::initializer_list<BoxChild> items)

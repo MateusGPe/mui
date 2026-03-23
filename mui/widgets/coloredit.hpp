@@ -17,13 +17,14 @@ namespace mui
     protected:
         float color[4];
 
+        ColorEdit(float r = 1.0f, float g = 1.0f, float b = 1.0f, float a = 1.0f);
+
     public:
         mui::Signal<std::array<float, 4>> onChangedSignal;
 
-        ColorEdit(float r = 1.0f, float g = 1.0f, float b = 1.0f, float a = 1.0f);
         static ColorEditPtr create(float r = 1.0f, float g = 1.0f, float b = 1.0f, float a = 1.0f)
         {
-            return std::make_shared<ColorEdit>(r, g, b, a);
+            return std::shared_ptr<ColorEdit>(new ColorEdit(r, g, b, a));
         }
 
         void renderControl() override;
