@@ -72,3 +72,5 @@ Testing/
 .DS_Store
 *.md
 *.sh
+
+!/README.md
