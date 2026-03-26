@@ -27,21 +27,22 @@ namespace mui
     
         int selStart = 0;
         int selEnd = 0;
+
+		Entry(const std::string &initialText = "", bool password = false, bool multiline = false, float h = 0.0f);
+        Entry(char *buf, size_t buf_size);
     
     public:
         mui::Signal<std::string> onChangedSignal;
         mui::Signal<std::string> onEnterSignal;
     
-        Entry(const std::string &initialText = "", bool password = false, bool multiline = false, float h = 0.0f);
         static EntryPtr create(const std::string &initialText = "", bool password = false, bool multiline = false, float h = 0.0f)
         {
-            return std::make_shared<Entry>(initialText, password, multiline, h);
+            return std::shared_ptr<Entry>(new Entry(initialText, password, multiline, h));
         }
     
-        Entry(char *buf, size_t buf_size);
         static EntryPtr create(char *buf, size_t buf_size)
         {
-            return std::make_shared<Entry>(buf, buf_size);
+            return std::shared_ptr<Entry>(new Entry(buf, buf_size));
         }
     
         void renderControl() override;
@@ -74,9 +75,10 @@ namespace mui
 
     class PasswordEntry : public Entry
     {
-    public:
+    protected:
         PasswordEntry();
-        static PasswordEntryPtr create() { return std::make_shared<PasswordEntry>(); }
+    public:
+        static PasswordEntryPtr create() { return std::shared_ptr<PasswordEntry>(new PasswordEntry()); }
     };
 
     class SearchEntry;
@@ -84,8 +86,9 @@ namespace mui
 
     class SearchEntry : public Entry
     {
-    public:
+    protected:
         SearchEntry();
-        static SearchEntryPtr create() { return std::make_shared<SearchEntry>(); }
+    public:
+        static SearchEntryPtr create() { return std::shared_ptr<SearchEntry>(new SearchEntry()); }
     };
 } // namespace mui

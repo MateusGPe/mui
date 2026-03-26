@@ -17,10 +17,10 @@ namespace mui
         int value;
         std::string format;
         bool logarithmic = false;
+        SliderInt(int min, int max);
 
     public:
-        SliderInt(int min, int max);
-        static SliderIntPtr create(int min, int max) { return std::make_shared<SliderInt>(min, max); }
+        static SliderIntPtr create(int min, int max) { return std::shared_ptr<SliderInt>(new SliderInt(min, max)); }
 
         void renderControl() override;
 
@@ -45,10 +45,10 @@ namespace mui
         float value;
         std::string format;
         bool logarithmic = false;
+        SliderFloat(float min, float max);
 
     public:
-        SliderFloat(float min, float max);
-        static SliderFloatPtr create(float min, float max) { return std::make_shared<SliderFloat>(min, max); }
+        static SliderFloatPtr create(float min, float max) { return std::shared_ptr<SliderFloat>(new SliderFloat(min, max)); }
 
         void renderControl() override;
 

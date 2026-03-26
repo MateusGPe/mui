@@ -27,14 +27,14 @@ namespace mui
         std::vector<std::vector<IControlPtr>> rows;
         int selectedRow = -1;
         ImGuiTableFlags m_flags;
+        Table();
     
     public:
         mui::Signal<int> onRowSelectedSignal;
         mui::Signal<int> onRowDoubleClickedSignal;
         mui::Signal<int, bool> onSortRequestedSignal; // Column index, Ascending
     
-        Table();
-        static TablePtr create() { return std::make_shared<Table>(); }
+        static TablePtr create() { return std::shared_ptr<Table>(new Table()); }
     
         void renderControl() override;
     

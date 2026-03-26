@@ -16,12 +16,12 @@ namespace mui
         int minVal;
         int maxVal;
         int value;
+        Spinbox(int min, int max);
 
     public:
         mui::Signal<int> onChangedSignal;
 
-        Spinbox(int min, int max);
-        static SpinboxPtr create(int min, int max) { return std::make_shared<Spinbox>(min, max); }
+        static SpinboxPtr create(int min, int max) { return std::shared_ptr<Spinbox>(new Spinbox(min, max)); }
 
         void renderControl() override;
 

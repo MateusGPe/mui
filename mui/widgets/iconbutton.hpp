@@ -29,12 +29,13 @@ namespace mui
         bool selected = false;
         ImVec2 iconSize = ImVec2(16.0f, 16.0f);
 
+        explicit IconButton(const std::string &text = "");
+
     public:
         mui::Signal<> onClickSignal;
         mui::Signal<> onDoubleClickSignal;
 
-        explicit IconButton(const std::string &text = "");
-        static IconButtonPtr create(const std::string &text = "") { return std::make_shared<IconButton>(text); }
+        static IconButtonPtr create(const std::string &text = "") { return std::shared_ptr<IconButton>(new IconButton(text)); }
 
         void renderControl() override;
 

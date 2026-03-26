@@ -20,11 +20,12 @@ namespace mui
         bool checked;
         float scale = 1.0f;
 
+        explicit ToggleSwitch(const std::string &label);
+
     public:
         mui::Signal<bool> onToggledSignal;
 
-        explicit ToggleSwitch(const std::string &label);
-        static ToggleSwitchPtr create(const std::string &label) { return std::make_shared<ToggleSwitch>(label); }
+        static ToggleSwitchPtr create(const std::string &label) { return std::shared_ptr<ToggleSwitch>(new ToggleSwitch(label)); }
 
         void renderControl() override;
 

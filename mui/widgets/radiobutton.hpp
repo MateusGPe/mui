@@ -22,13 +22,14 @@ namespace mui
         int m_button_value = -1;
         bool m_checked = false;
 
+        explicit RadioButton(const std::string &text);
+
     public:
         mui::Signal<bool> onToggledSignal;
 
-        explicit RadioButton(const std::string &text);
         static RadioButtonPtr create(const std::string &text)
         {
-            return std::make_shared<RadioButton>(text);
+            return std::shared_ptr<RadioButton>(new RadioButton(text));
         }
 
         void renderControl() override;

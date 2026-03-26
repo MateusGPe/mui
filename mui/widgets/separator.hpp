@@ -33,9 +33,10 @@ namespace mui
         bool isRect = false;
         bool useCustomColor = false;
         ImVec4 color;
+        Separator() = default;
 
     public:
-        static SeparatorPtr create() { return std::make_shared<Separator>(); }
+        static SeparatorPtr create() { return std::shared_ptr<Separator>(new Separator()); }
         void renderControl() override;
 
         SeparatorPtr setType(SeparatorType t);

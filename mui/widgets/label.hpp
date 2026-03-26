@@ -25,10 +25,10 @@ namespace mui
 
         bool useCustomColor = false;
         ImVec4 color;
+        explicit Label(const std::string &text);
 
     public:
-        explicit Label(const std::string &text);
-        static LabelPtr create(const std::string &text) { return std::make_shared<Label>(text); }
+        static LabelPtr create(const std::string &text) { return std::shared_ptr<Label>(new Label(text)); }
 
         void renderControl() override;
 

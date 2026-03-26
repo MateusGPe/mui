@@ -17,10 +17,10 @@ namespace mui
         ImVec2 uv1 = ImVec2(1, 1);
         ImVec4 tintColor = ImVec4(1, 1, 1, 1);
         ImVec4 borderColor = ImVec4(0, 0, 0, 0);
+        Image(ImTextureID tex, float w, float h);
 
     public:
-        Image(ImTextureID tex, float w, float h);
-        static ImagePtr create(ImTextureID tex, float w, float h) { return std::make_shared<Image>(tex, w, h); }
+        static ImagePtr create(ImTextureID tex, float w, float h) { return std::shared_ptr<Image>(new Image(tex, w, h)); }
 
         void renderControl() override;
 

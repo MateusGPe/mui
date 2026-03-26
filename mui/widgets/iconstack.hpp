@@ -21,12 +21,12 @@ namespace mui
             bool text_hover;
         };
         std::vector<IconBtn> icons;
+        IconStack();
 
     public:
         mui::Signal<int> onIconClickedSignal;
 
-        IconStack();
-        static IconStackPtr create() { return std::make_shared<IconStack>(); }
+        static IconStackPtr create() { return std::shared_ptr<IconStack>(new IconStack()); }
 
         void renderControl() override;
         IconStackPtr add(const std::string &icon, std::function<void()> onClick, const std::string &tip = "", bool textHover = false);

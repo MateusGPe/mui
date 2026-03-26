@@ -28,10 +28,10 @@ namespace mui
 
         std::vector<PropertyCategory> categories;
         float nameColumnWidth = 150.0f;
+        PropertyGrid();
 
     public:
-        PropertyGrid();
-        static PropertyGridPtr create() { return std::make_shared<PropertyGrid>(); }
+        static PropertyGridPtr create() { return std::shared_ptr<PropertyGrid>(new PropertyGrid()); }
 
         void renderControl() override;
 

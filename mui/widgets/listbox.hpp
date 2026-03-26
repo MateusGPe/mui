@@ -19,13 +19,13 @@ namespace mui
         std::vector<std::string> items;
         int selectedIndex;
         int visibleItemsCount;
+        ListBox();
 
     public:
         mui::Signal<int> onSelectedSignal;
         mui::Signal<int> onDoubleClickSignal;
 
-        ListBox();
-        static ListBoxPtr create() { return std::make_shared<ListBox>(); }
+        static ListBoxPtr create() { return std::shared_ptr<ListBox>(new ListBox()); }
 
         void renderControl() override;
 

@@ -13,10 +13,10 @@ namespace mui
     protected:
         float value;
         std::string overlayText;
+        ProgressBar();
 
     public:
-        ProgressBar();
-        static ProgressBarPtr create() { return std::make_shared<ProgressBar>(); }
+        static ProgressBarPtr create() { return std::shared_ptr<ProgressBar>(new ProgressBar()); }
 
         void renderControl() override;
 

@@ -20,12 +20,12 @@ namespace mui
         float currentMin, currentMax;
         std::string text;
         std::string format = "%.3f";
+        RangeSlider(float min, float max);
 
     public:
         mui::Signal<float, float> onChangedSignal;
 
-        RangeSlider(float min, float max);
-        static RangeSliderPtr create(float min, float max) { return std::make_shared<RangeSlider>(min, max); }
+        static RangeSliderPtr create(float min, float max) { return std::shared_ptr<RangeSlider>(new RangeSlider(min, max)); }
 
         void renderControl() override;
 

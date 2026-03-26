@@ -92,7 +92,7 @@ namespace mui
     protected:
         VBox();
     public:
-        static VBoxPtr create() { return VBoxPtr(new VBox()); }
+        static VBoxPtr create() { return std::shared_ptr<VBox>(new VBox()); }
         void renderControl() override;
     };
 
@@ -104,7 +104,7 @@ namespace mui
     protected:
         HBox();
     public:
-        static HBoxPtr create() { return HBoxPtr(new HBox()); }
+        static HBoxPtr create() { return std::shared_ptr<HBox>(new HBox()); }
         void renderControl() override;
     };
 
