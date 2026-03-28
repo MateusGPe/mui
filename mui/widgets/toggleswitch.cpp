@@ -54,18 +54,48 @@ namespace mui
         const ImRect switch_bb(ImVec2(total_bb.Min.x, total_bb.Min.y + switch_y_offset), ImVec2(total_bb.Min.x + switch_width, total_bb.Min.y + switch_y_offset + switch_height));
         const float radius = switch_height * 0.50f;
 
-        ImU32 col_bg = ImGui::GetColorU32(checked ? ((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered
-                                                                                                         : ImGuiCol_Button)
-                                                  : ((held && hovered) ? ImGuiCol_FrameBgActive : hovered ? ImGuiCol_FrameBgHovered
-                                                                                                          : ImGuiCol_FrameBg));
+        ImGuiCol col_idx;
+        // Create a bitmask from the boolean states to use in a switch.
+        // bit 0: hovered, bit 1: held, bit 2: checked
+        int state = (checked << 2) | (held << 1) | hovered;
+        switch (state)
+        {
+        case 0:
+            col_idx = ImGuiCol_FrameBg;
+            break; // OFF
+        case 1:
+            col_idx = ImGuiCol_FrameBgHovered;
+            break; // OFF, Hovered
+        case 3:
+            col_idx = ImGuiCol_FrameBgActive;
+            break; // OFF, Active
+        case 4:
+            col_idx = ImGuiCol_Header;
+            break; // ON
+        case 5:
+            col_idx = ImGuiCol_HeaderHovered;
+            break; // ON, Hovered
+        case 7:
+            col_idx = ImGuiCol_HeaderActive;
+            break; // ON, Active
+        default:
+            col_idx = ImGuiCol_FrameBg;
+            break; // Should not happen
+        }
+        const ImU32 col_bg = ImGui::GetColorU32(col_idx);
         window->DrawList->AddRectFilled(switch_bb.Min, switch_bb.Max, col_bg, radius);
         float t = checked ? 1.0f : 0.0f;
-        window->DrawList->AddCircleFilled(ImVec2(switch_bb.Min.x + radius + t * (switch_width - radius * 2.0f), switch_bb.Min.y + radius), radius - 2.0f, ImGui::GetColorU32(ImGuiCol_Text));
+        window->DrawList->AddCircleFilled(
+            ImVec2(switch_bb.Min.x + radius + t * (switch_width - radius * 2.0f), switch_bb.Min.y + radius),
+            radius - 2.0f,
+            ImGui::GetColorU32(ImGuiCol_Text));
 
         if (label_size.x > 0.0f)
         {
             const float label_y_offset = (frame_height - label_size.y) / 2.0f;
-            ImGui::RenderText(ImVec2(switch_bb.Max.x + style.ItemInnerSpacing.x, total_bb.Min.y + label_y_offset), label.c_str());
+            ImGui::RenderText(
+                ImVec2(switch_bb.Max.x + style.ItemInnerSpacing.x, total_bb.Min.y + label_y_offset),
+                label.c_str());
         }
 
         renderTooltip();
@@ -87,25 +117,32 @@ namespace mui
     ToggleSwitchPtr ToggleSwitch::bind(std::shared_ptr<Observable<bool>> observable)
     {
         setChecked(observable->get());
-        
+
         m_connections.push_back(
-            observable->onValueChanged.connect([this](const bool& val) {
-                mui::App::queueMain([this, val]() { this->setChecked(val); });
-            })
-        );
-        
+            observable->onValueChanged.connect(
+                [this](const bool &val)
+                {
+                    mui::App::queueMain(
+                        [this, val]()
+                        {
+                            this->setChecked(val);
+                        });
+                }));
+
         m_connections.push_back(
-            onToggledSignal.connect([observable](bool val) {
-                observable->set(val);
-            })
-        );
+            onToggledSignal.connect(
+                [observable](bool val)
+                {
+                    observable->set(val);
+                }));
 
         return self();
     }
 
     ToggleSwitchPtr ToggleSwitch::onToggled(std::function<void(bool)> cb)
     {
-        if (cb) m_connections.push_back(onToggledSignal.connect(std::move(cb)));
+        if (cb)
+            m_connections.push_back(onToggledSignal.connect(std::move(cb)));
         return self();
     }
 }
