@@ -18,7 +18,7 @@ namespace mui
     protected:
         std::string label;
         bool checked;
-        float scale = 1.0f;
+        float scale = 0.6f;
 
         explicit ToggleSwitch(const std::string &label);
 

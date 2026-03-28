@@ -5,7 +5,7 @@
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "mui_dialog_ui.h"
-#include "IconsFontAwesome6.h"
+#include "../../include/IconsFontAwesome6.h"
 #include "../../widgets/iconbutton.hpp"
 #include <imgui_internal.h>
 #include <unordered_map>

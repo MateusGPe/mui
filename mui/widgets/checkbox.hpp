@@ -17,7 +17,7 @@ namespace mui
     protected:
         std::string text;
         bool checked;
-        float scale = 1.0f;
+        float scale = 0.6f;
 
         explicit Checkbox(const std::string &text);
 

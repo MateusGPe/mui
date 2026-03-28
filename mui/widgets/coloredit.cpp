@@ -19,7 +19,7 @@ namespace mui
     {
         if (!visible)
             return;
-        ScopedID id(this);
+        ScopedControlID id(this);
         ImGui::BeginDisabled(!enabled);
 
         if (ImGui::ColorEdit4("##color", color, ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreviewHalf))

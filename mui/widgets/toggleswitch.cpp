@@ -13,7 +13,7 @@ namespace mui
     {
         if (!visible)
             return;
-        ScopedID sid(this);
+        ScopedControlID sid(this);
         ImGui::BeginDisabled(!enabled);
 
         ImGuiWindow *window = ImGui::GetCurrentWindow();

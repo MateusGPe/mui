@@ -34,3 +34,15 @@ target_include_directories(theme_editor PRIVATE
     ${CMAKE_BINARY_DIR}/_deps/imgui-src
     mui
 )
+
+# --- THEME EDITOR EXECUTABLE ---
+add_executable(sample sample.cpp)
+
+# Link theme editor against the mui library.
+target_link_libraries(sample PUBLIC mui)
+
+# Add include directories for the theme editor.
+target_include_directories(sample PRIVATE
+    ${CMAKE_BINARY_DIR}/_deps/imgui-src
+    mui
+)

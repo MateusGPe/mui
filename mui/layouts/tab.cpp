@@ -13,7 +13,7 @@ namespace mui
     void Tab::renderControl()
     {
         if (!visible) return;
-        ScopedID id(this);
+        ScopedControlID id(this);
         if (ImGui::BeginTabBar("##tabs", m_flags)) {
             for (size_t i = 0; i < pages.size(); ++i) {
                 if (ImGui::BeginTabItem(pages[i].name.c_str())) {
@@ -21,6 +21,9 @@ namespace mui
                         selectedIndex = (int)i;
                         onSelectedSignal(selectedIndex);
                     }
+
+                    bool needsIndexId = pages[i].control->getID().empty();
+                    if (needsIndexId) ImGui::PushID(static_cast<int>(i));
 
                     if (pages[i].margined)
                     {
@@ -35,6 +38,9 @@ namespace mui
                     {
                         pages[i].control->render();
                     }
+
+                    if (needsIndexId) ImGui::PopID();
+
                     ImGui::EndTabItem();
                 }
             }

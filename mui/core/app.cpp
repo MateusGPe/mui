@@ -10,9 +10,9 @@
 #include <backends/imgui_impl_opengl3.h>
 #include <stdexcept>
 #include <algorithm>
-#include "file/mui_dialog.h"
+#include "../dialogs/file/mui_dialog.h"
 #include "../dialogs/dialogs.hpp"
-#include "IconsFontAwesome6.h"
+#include "../include/IconsFontAwesome6.h"
 
 #if defined(IMGUI_IMPL_OPENGL_LOADER_GLAD)
 #include <glad/glad.h>

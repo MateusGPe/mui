@@ -31,7 +31,7 @@ namespace mui
     {
         if (!visible)
             return;
-        ScopedID id(this);
+        ScopedControlID id(this);
         ImGui::BeginDisabled(!enabled);
 
         ImGuiInputTextFlags flags = m_flags;

@@ -9,8 +9,6 @@
 #include <algorithm>
 #include <ctime>
 #include <imgui_internal.h>
-#include "mui/core/observable.hpp"
-#include "mui/core/docking.hpp"
 using namespace mui;
 
 // Forward declarations for UI creation functions
@@ -51,7 +49,6 @@ int main()
         {
             mui::Dialogs::processDialogs();
         });
-    // Control<Button>::setGlobalShadowDefaults(false, ImVec2(0.0f, 0.0f), 4.0f, ImVec4(0.12f, 0.53f, 0.90f, 0.08f), 8.0f);
 
     // Create and show the main window with the control gallery
     auto mainWin = createMainGalleryWindow();
@@ -75,39 +72,31 @@ int main()
  */
 WindowPtr createMainGalleryWindow()
 {
-    auto win = Window::create("MUI Control Gallery", 800, 600);
-    win->setMargined(true); // Let the window handle the main padding.
-    win->onClosing(
-        []()
-        {
-            App::quit();
-            return true;
-        });
+    auto lblStatus = UI::Label("Waiting for action...");
 
-    // Root container for the window, allows for a status bar
-    auto rootVBox = VBox::create();
-    rootVBox->setPadded(false); // Window margin is enough.
-    win->setChild(rootVBox);
+    auto win = UI::Window("MUI Control Gallery", 800, 600)
+                   ->setMargined(true)
+                   ->onClosing(
+                       []()
+                       {
+                           App::quit();
+                           return true;
+                       });
 
-    // Tabs for the main content area
-    auto tabs = Tab::create();
-    rootVBox->append(tabs, true); // Stretchy, fills available space
-
-    // Status bar at the bottom, with a separator for visual clarity.
-    auto lblStatus = Label::create("Waiting for action...");
-    rootVBox->append(Separator::create()->setType(SeparatorType::Native), false);
-    rootVBox->append(lblStatus, false);
-
-    // Now, create and add the content for each tab
-    tabs->append("Basics", createBasicsTab(lblStatus));
-    tabs->append("Numbers", createNumbersTab(lblStatus));
-    tabs->append("Text", createTextEntriesTab(lblStatus));
-    tabs->append("Dialogs", createDialogsTab(win, lblStatus));
-    tabs->append("Layouts", createLayoutsTab(lblStatus));
-    tabs->append("Properties", createPropertyGridTab(lblStatus));
-    tabs->append("Advanced", createAdvancedTab(lblStatus)); // Added Advanced Tab for new widgets
-    tabs->append("More", createMoreControlsTab(lblStatus));
-    tabs->append("Themes", createThemesTab());
+    win << (UI::VBox(false)
+            << Stretch(
+                   UI::Tab()
+                   << TabPage("Basics", createBasicsTab(lblStatus))
+                   << TabPage("Numbers", createNumbersTab(lblStatus))
+                   << TabPage("Text", createTextEntriesTab(lblStatus))
+                   << TabPage("Dialogs", createDialogsTab(win, lblStatus))
+                   << TabPage("Layouts", createLayoutsTab(lblStatus))
+                   << TabPage("Properties", createPropertyGridTab(lblStatus))
+                   << TabPage("Advanced", createAdvancedTab(lblStatus))
+                   << TabPage("More", createMoreControlsTab(lblStatus))
+                   << TabPage("Themes", createThemesTab()))
+            << UI::Separator(SeparatorType::Native)
+            << lblStatus);
 
     return win;
 }
@@ -118,23 +107,13 @@ WindowPtr createMainGalleryWindow()
  */
 WindowPtr createInspectorWindow()
 {
-    auto win = Window::create("Inspector", 300, 400);
-    win->setMargined(true);
-
-    auto root = VBox::create();
-    root->setPadded(false); // Window margin is enough.
-    win->setChild(root);
+    auto win = UI::Window("Inspector", 300, 400)->setMargined(true);
 
     // --- Theme Controls ---
-    auto themeGroup = Group::create("Theme Controls");
-    themeGroup->setMargined(true);
-    auto themeFlowBox = FlowBox::create();
-    themeFlowBox->setPadded(true)->setAlign(FlowBox::Align::Center);
-
-    auto btnPrev = Button::create(ICON_FA_ARROW_LEFT " Prev");
-    auto btnNext = Button::create(ICON_FA_ARROW_RIGHT " Next");
-    auto btnRandom = Button::create(ICON_FA_SHUFFLE " Random");
-    auto lblTheme = Label::create("Current Theme: " + App::getCurrentThemeName())->setSpanAvailWidth(true);
+    auto btnPrev = UI::Button(ICON_FA_ARROW_LEFT " Prev");
+    auto btnNext = UI::Button(ICON_FA_ARROW_RIGHT " Next");
+    auto btnRandom = UI::Button(ICON_FA_SHUFFLE " Random");
+    auto lblTheme = UI::Label("Current Theme: " + App::getCurrentThemeName())->setSpanAvailWidth(true);
 
     // Logic for theme switching
     static std::vector<std::string> allThemes;
@@ -225,262 +204,231 @@ WindowPtr createInspectorWindow()
             }
         });
 
-    themeFlowBox->append({{btnPrev, true}, {lblTheme, true}, {btnRandom, true}, {btnNext, true}});
-    themeGroup->setChild(themeFlowBox);
-    root->append(themeGroup, false);
-
     // --- Card Example ---
-    auto card = Card::create();
-    auto cardContent = VBox::create();
-    cardContent->setPadded(true);
-    card->setChild(cardContent);
-    card->setFillHeight(false);
-    // card->defaultShadow()          // setShadow(true, {0.0f, 0.0f}, 18.0f, {0.12f, 0.53f, 0.90f, 0.1f}, 8.0f)
-    card->setSpanAvailWidth(true); // Card will fill the width of the parent
-
-    cardContent->append(
-        {{Label::create("This is a Card")},
-         {Separator::create()->setType(SeparatorType::Custom)},
-         {Label::create("This card is set to fill available width. The text below is wrapped to fit.")
-              ->setFormat(LabelFormat::Wrapped)}});
-    root->append(card, false); // Card has natural height, not stretchy
+    auto card = UI::Card()
+                    ->setFillHeight(false)
+                    ->setSpanAvailWidth(true)
+                << (UI::VBox(true)
+                    << UI::Label("This is a Card")
+                    << UI::Separator(SeparatorType::Custom)
+                    << UI::Label("This card is set to fill available width. The text below is wrapped to fit.")
+                           ->setFormat(LabelFormat::Wrapped));
 
     // --- TreeNode Example ---
-    root->append(Separator::create()->setType(SeparatorType::Native));
-    auto tree = TreeNode::create(ICON_FA_FOLDER " Project Files")
-                    ->setSpanAvailWidth(true);
-    tree->append(Label::create(ICON_FA_FILE_CODE " main.cpp")
-                     ->setSpanAvailWidth(true));
-    auto subTree = TreeNode::create(ICON_FA_FOLDER " core")
-                       ->setSpanAvailWidth(true);
-    subTree->append(Button::create(ICON_FA_FILE_CODE " app.cpp")
+    auto tree = UI::TreeNode(ICON_FA_FOLDER " Project Files")
+                    ->setSpanAvailWidth(true)
+                << (UI::Label(ICON_FA_FILE_CODE " main.cpp")
+                        ->setSpanAvailWidth(true))
+                << (UI::TreeNode(ICON_FA_FOLDER " core")
+                        ->setSpanAvailWidth(true)
+                    << (UI::Button(ICON_FA_FILE_CODE " app.cpp")
+                            ->setSpanAvailWidth(true))
+                    << (UI::Label(ICON_FA_FILE_CODE " window.cpp")
+                            ->setSpanAvailWidth(true)))
+                << (UI::Label(ICON_FA_FILE_IMAGE " icon.png")
                         ->setSpanAvailWidth(true));
-    subTree->append(Label::create(ICON_FA_FILE_CODE " window.cpp")
-                        ->setSpanAvailWidth(true));
-    tree->append(subTree);
-    tree->append(Label::create(ICON_FA_FILE_IMAGE " icon.png")
-                     ->setSpanAvailWidth(true));
-    root->append(tree, true);
+
+    // --- Main Layout ---
+    win << (UI::VBox(false)
+            << (UI::Group("Theme Controls")
+                    ->setMargined(true)
+                << (UI::FlowBox(mui::FlowBox::Align::Center)
+                        ->setPadded(true)
+                    << btnPrev
+                    << lblTheme
+                    << btnRandom
+                    << btnNext))
+            << card
+            << UI::Separator(SeparatorType::Native)
+            << Stretch(tree));
 
     return win;
 }
 
 IControlPtr createBasicsTab(const LabelPtr &lblStatus)
 {
-    auto vbox = VBox::create();
-    vbox->setPadded(true);
+    auto btnClick =
+        UI::Button(
+            ICON_FA_FLOPPY_DISK " Click Me",
+            [lblStatus]()
+            {
+                auto currentTime = std::time(nullptr);
+                char timeStr[100];
+                std::strftime(timeStr, sizeof(timeStr), "%H:%M:%S", std::localtime(&currentTime));
+                lblStatus->setText(std::string("Button clicked at ") + timeStr);
+            });
 
-    auto iconStack = IconStack::create()
-                         ->add(ICON_FA_PLAY, [lblStatus]()
-                               { lblStatus->setText("Play clicked"); }, "Play Action", true)
-                         ->add(ICON_FA_PAUSE, [lblStatus]()
-                               { lblStatus->setText("Pause clicked"); }, "Pause Action")
-                         ->add(ICON_FA_STOP, [lblStatus]()
-                               { lblStatus->setText("Stop clicked"); }, "Stop Action");
-
-    auto btnClick = Button::create(ICON_FA_FLOPPY_DISK " Click Me");
-    btnClick->onClick(
-        [lblStatus]()
-        {
-            auto currentTime = std::time(nullptr);
-            char timeStr[100];
-            std::strftime(timeStr, sizeof(timeStr), "%H:%M:%S", std::localtime(&currentTime));
-            lblStatus->setText(std::string("Button clicked at ") + timeStr);
-        });
-    //->defaultShadow();
-
-    auto chkToggle = Checkbox::create("Standard Checkbox");
-    chkToggle->onToggled(
-        [lblStatus](bool checked)
-        {
-            lblStatus->setText(checked ? "Checkbox Enabled" : "Checkbox Disabled");
-        });
-    chkToggle->setScale(0.6f); // Make the checkbox larger for better visibility
+    auto chkToggle =
+        UI::Checkbox(
+            "Standard Checkbox",
+            false,
+            [lblStatus](bool checked)
+            {
+                lblStatus->setText(checked ? "Checkbox Enabled" : "Checkbox Disabled");
+            })
+            ->setScale(0.6f); // Make the checkbox larger for better visibility
 
     // Modern ToggleSwitch demonstration
-    auto modernToggle = ToggleSwitch::create("Modern iOS-Style Toggle");
-    modernToggle->onToggled(
-        [lblStatus](bool state)
-        {
-            lblStatus->setText(state ? "Modern Toggle is ON" : "Modern Toggle is OFF");
-        });
-    modernToggle->setScale(0.6f); // Make the toggle larger for better visibility
-
-    auto btnFindNode = Button::create(ICON_FA_MAGNIFYING_GLASS " Find Inspector Dock Node");
-    btnFindNode->onClick(
-        [lblStatus]()
-        {
-            const char *window_title = "Inspector";
-            // Use ImGui's internal API to find the window by its title.
-            ImGuiWindow *window = ImGui::FindWindowByName(window_title);
-
-            // If the window is found and it is docked, get its DockNode.
-            if (window && window->DockNode)
+    auto modernToggle =
+        UI::ToggleSwitch(
+            "Modern iOS-Style Toggle",
+            false,
+            [lblStatus](bool state)
             {
-                ImGuiDockNode *node = window->DockNode;
-                char buffer[256];
-                snprintf(buffer, sizeof(buffer), "Inspector is in DockNode ID: 0x%08X. Tabs in this node: %d", node->ID, node->TabBar ? node->TabBar->Tabs.Size : 0);
-                lblStatus->setText(buffer);
-            }
-            else
-            {
-                lblStatus->setText("Could not find a docked 'Inspector' window.");
-            }
-        });
+                lblStatus->setText(state ? "Modern Toggle is ON" : "Modern Toggle is OFF");
+            })
+            ->setScale(0.6f); // Make the toggle larger for better visibility
 
-    vbox->append({{Label::create("Media Controls (IconStack):")},
-                  {iconStack},
-                  {Separator::create()->setType(SeparatorType::Native)},
-                  {btnClick},
-                  {chkToggle},
-                  {modernToggle},
-                  {Separator::create()->setType(SeparatorType::Native)},
-                  {btnFindNode, true}});
-    return vbox;
+    auto btnFindNode =
+        UI::Button(
+            ICON_FA_MAGNIFYING_GLASS " Find Inspector Dock Node",
+            [lblStatus]()
+            {
+                const char *window_title = "Inspector";
+                // Use ImGui's internal API to find the window by its title.
+                ImGuiWindow *window = ImGui::FindWindowByName(window_title);
+
+                // If the window is found and it is docked, get its DockNode.
+                if (window && window->DockNode)
+                {
+                    ImGuiDockNode *node = window->DockNode;
+                    char buffer[256];
+                    snprintf(buffer, sizeof(buffer), "Inspector is in DockNode ID: 0x%08X. Tabs in this node: %d", node->ID, node->TabBar ? node->TabBar->Tabs.Size : 0);
+                    lblStatus->setText(buffer);
+                }
+                else
+                {
+                    lblStatus->setText("Could not find a docked 'Inspector' window.");
+                }
+            });
+
+    return UI::VBox(true)
+           << UI::Label("Media Controls (IconStack):")
+           << (UI::IconStack()
+               << IconDef(
+                      ICON_FA_PLAY,
+                      [lblStatus]()
+                      {
+                          lblStatus->setText("Play clicked");
+                      },
+                      "Play Action", true)
+               << IconDef(
+                      ICON_FA_PAUSE,
+                      [lblStatus]()
+                      {
+                          lblStatus->setText("Pause clicked");
+                      },
+                      "Pause Action")
+               << IconDef(
+                      ICON_FA_STOP,
+                      [lblStatus]()
+                      {
+                          lblStatus->setText("Stop clicked");
+                      },
+                      "Stop Action"))
+           << UI::Separator(SeparatorType::Native) << btnClick << chkToggle << modernToggle << UI::Separator(SeparatorType::Native) << Stretch(btnFindNode);
 }
 
 IControlPtr createNumbersTab(const LabelPtr &lblStatus)
 {
-    auto vbox = VBox::create();
-    vbox->setPadded(true);
-
-    auto spinBox = Spinbox::create(0, 100);
-    auto slider = SliderInt::create(0, 100);
-    auto progressBar = ProgressBar::create();
-
-    // Create an observable to hold the shared value
-    auto valueObservable = std::make_shared<Observable<int>>(50);
-
-    // Bind the spinbox and slider to the observable
-    spinBox->bind(valueObservable);
-    slider->bind(valueObservable);
-
-    // Update the progress bar and status label when the value changes.
-    // The connection is stored on the spinBox, but it could be any control in this scope.
-    spinBox->observe(
-        valueObservable->onValueChanged,
-        [lblStatus, progressBar](int value)
-        {
-            progressBar->setValue(static_cast<float>(value) / 100.0f);
-            lblStatus->setText("Numeric controls synced to: " + std::to_string(value));
-        });
+    auto valueObservable = MakeObs::Int(50);
+    auto progressBar = UI::ProgressBar(0.0f, "");
 
     // Manually trigger the update for the initial state
     progressBar->setValue(static_cast<float>(valueObservable->get()) / 100.0f);
     lblStatus->setText("Numeric controls synced to: " + std::to_string(valueObservable->get()));
 
-    // Range Slider Demonstration
-    auto rangeSlider = RangeSlider::create(0.0f, 100.0f);
-    rangeSlider->setRange(20.0f, 80.0f);
-    rangeSlider->setSpanAvailWidth(true);
-    rangeSlider->onChanged(
-        [lblStatus](float vMin, float vMax)
-        {
-            char buf[128];
-            snprintf(buf, sizeof(buf), "Range changed: %.1f to %.1f", vMin, vMax);
-            lblStatus->setText(buf);
-        });
-
-    vbox->append(
-        {{Label::create("Sync Test:"), false},
-         {spinBox, true},
-         {slider, true},
-         {progressBar, true},
-         {Separator::create()->setType(SeparatorType::Native)},
-         {Label::create("Dual Handle Range Slider:")},
-         {rangeSlider, true}});
-    return vbox;
+    return UI::VBox(true)
+           << UI::Label("Sync Test:")
+           << Stretch(
+                  UI::SpinboxBind(0, 100, valueObservable)
+                  << UI::Observe(
+                         valueObservable->onValueChanged,
+                         [lblStatus, progressBar](int value)
+                         {
+                             progressBar->setValue(static_cast<float>(value) / 100.0f);
+                             lblStatus->setText("Numeric controls synced to: " + std::to_string(value));
+                         }))
+           << Stretch(UI::SliderIntBind(0, 100, valueObservable))
+           << Stretch(progressBar)
+           << UI::Separator(SeparatorType::Native)
+           << UI::Label("Dual Handle Range Slider:")
+           << Stretch(
+                  UI::RangeSlider(
+                      0.0f, 100.0f, 20.0f, 80.0f,
+                      [lblStatus](float vMin, float vMax)
+                      {
+                          char buf[128];
+                          snprintf(buf, sizeof(buf), "Range changed: %.1f to %.1f", vMin, vMax);
+                          lblStatus->setText(buf);
+                      })
+                      ->setSpanAvailWidth(true));
 }
 
 IControlPtr createTextEntriesTab(const LabelPtr &lblStatus)
 {
-    auto vbox = VBox::create();
-    vbox->setPadded(true);
+    auto textObservable = MakeObs::String("");
+    auto searchObservable = MakeObs::String("");
+    auto lblMirror = UI::Label("Mirror: ");
 
-    auto entryStandard = Entry::create();
-    entryStandard->setHint("Type here...");
-    auto entryPassword = PasswordEntry::create();
-    entryPassword->setHint("Secret...");
-    auto entrySearch = SearchEntry::create();
-    entrySearch->setHint("Search...");
-    auto lblMirror = Label::create("Mirror: ");
-
-    auto textObservable = std::make_shared<Observable<std::string>>(entryStandard->getText());
-    entryStandard->bind(textObservable);
-    entryStandard->observe(
-        textObservable->onValueChanged,
-        [lblMirror](const std::string &text)
-        {
-            lblMirror->setText("Mirror: " + text);
-        });
     lblMirror->setText("Mirror: " + textObservable->get()); // Initial value
 
-    auto searchObservable = std::make_shared<Observable<std::string>>(entrySearch->getText());
-    entrySearch->bind(searchObservable); // This bind already stores connections
-    entrySearch->observe(
-        searchObservable->onValueChanged,
-        [lblStatus](const std::string &text)
-        {
-            if (!text.empty())
-            {
-                lblStatus->setText("Searching for: " + text);
-            }
-        });
-
-    vbox->append({{Label::create("Standard Entry:")},
-                  {entryStandard, true},
-                  {Label::create("Password Entry:")},
-                  {entryPassword, true},
-                  {Label::create("Search Entry:")},
-                  {entrySearch, true},
-                  {lblMirror}});
-    return vbox;
+    return UI::VBox(true)
+           << UI::Label("Standard Entry:")
+           << Stretch(
+                  UI::EntryBind("Type here...", textObservable)
+                  << UI::Observe(
+                         textObservable->onValueChanged,
+                         [lblMirror](const std::string &text)
+                         {
+                             lblMirror->setText("Mirror: " + text);
+                         }))
+           << UI::Label("Password Entry:")
+           << Stretch(UI::PasswordEntry("Secret..."))
+           << UI::Label("Search Entry:")
+           << Stretch(
+                  UI::SearchEntry("Search...")
+                      ->bind(searchObservable)
+                  << UI::Observe(
+                         searchObservable->onValueChanged,
+                         [lblStatus](const std::string &text)
+                         {
+                             if (!text.empty())
+                             {
+                                 lblStatus->setText("Searching for: " + text);
+                             }
+                         }))
+           << lblMirror;
 }
 
 IControlPtr createDialogsTab(const WindowPtr &win, const LabelPtr &lblStatus)
 {
-    auto vbox = VBox::create();
-    vbox->setPadded(true);
-
-    auto group = Group::create("System Dialogs");
-    group->setMargined(true);
-
-    auto fboxButtons = FlowBox::create();
-    fboxButtons->setPadded(true)->setAlign(FlowBox::Align::Justify);
-
-    auto btnInfo = Button::create(ICON_FA_CIRCLE_INFO " Info");
-    auto btnWarning = Button::create(ICON_FA_TRIANGLE_EXCLAMATION " Warning");
-    auto btnError = Button::create(ICON_FA_CIRCLE_XMARK " Error");
-    auto btnConfirm = Button::create(ICON_FA_CIRCLE_CHECK " Confirm");
-    auto btnQuestion = Button::create(ICON_FA_CIRCLE_QUESTION " Question");
-    auto btnCustom = Button::create(ICON_FA_GEARS " Custom");
-    auto btnFile = Button::create(ICON_FA_FOLDER_OPEN " Open File");
-
-    btnInfo->onClick(
+    auto btnInfo = UI::Button(
+        ICON_FA_CIRCLE_INFO " Info",
         [win, lblStatus]()
         {
             Dialogs::msgBoxInfo("Information", "This is an informational message box, which is the default type.");
             lblStatus->setText("Info dialog shown.");
-        })
-        //->defaultShadow();
-        ;
+        });
 
-    btnWarning->onClick(
+    auto btnWarning = UI::Button(
+        ICON_FA_TRIANGLE_EXCLAMATION " Warning",
         [win, lblStatus]()
         {
             Dialogs::msgBoxWarning("Warning", "This is a warning message. Something might be wrong, so you should pay attention.");
             lblStatus->setText("Warning dialog shown.");
         });
-    // ->defaultShadow();
 
-    btnError->onClick(
+    auto btnError = UI::Button(
+        ICON_FA_CIRCLE_XMARK " Error",
         [win, lblStatus]()
         {
             Dialogs::msgBoxError("Critical Error", "Failed to load imaginary resources.");
             lblStatus->setText("Error dialog shown.");
         });
 
-    btnConfirm->onClick(
+    auto btnConfirm = UI::Button(
+        ICON_FA_CIRCLE_CHECK " Confirm",
         [win, lblStatus]()
         {
             Dialogs::msgBoxConfirm(
@@ -495,27 +443,26 @@ IControlPtr createDialogsTab(const WindowPtr &win, const LabelPtr &lblStatus)
                     lblStatus->setText("Cancelled.");
                 });
         });
-    //->defaultShadow();
 
-    btnQuestion
-        ->onClick(
-            [win, lblStatus]()
-            {
-                Dialogs::msgBoxQuestion(
-                    "Unsaved Work",
-                    "Do you want to save your changes before closing?",
-                    [lblStatus]()
-                    {
-                        lblStatus->setText("Answered: Yes");
-                    },
-                    [lblStatus]()
-                    {
-                        lblStatus->setText("Answered: No");
-                    });
-            });
-    // ->defaultShadow();
+    auto btnQuestion = UI::Button(
+        ICON_FA_CIRCLE_QUESTION " Question",
+        [win, lblStatus]()
+        {
+            Dialogs::msgBoxQuestion(
+                "Unsaved Work",
+                "Do you want to save your changes before closing?",
+                [lblStatus]()
+                {
+                    lblStatus->setText("Answered: Yes");
+                },
+                [lblStatus]()
+                {
+                    lblStatus->setText("Answered: No");
+                });
+        });
 
-    btnCustom->onClick(
+    auto btnCustom = UI::Button(
+        ICON_FA_GEARS " Custom",
         [lblStatus]()
         {
             Dialogs::msgBoxCustom(
@@ -538,7 +485,8 @@ IControlPtr createDialogsTab(const WindowPtr &win, const LabelPtr &lblStatus)
                   }}});
         });
 
-    btnFile->onClick(
+    auto btnFile = UI::Button(
+        ICON_FA_FOLDER_OPEN " Open File",
         [win, lblStatus]()
         {
             Dialogs::openFile(
@@ -555,92 +503,67 @@ IControlPtr createDialogsTab(const WindowPtr &win, const LabelPtr &lblStatus)
                 });
         });
 
-    fboxButtons->append(
-        {{btnInfo, true},
-         {btnWarning, true},
-         {btnError, true},
-         {btnConfirm, true},
-         {btnQuestion, true},
-         {btnCustom, true},
-         {btnFile, true}});
-
-    group->setChild(fboxButtons);
-    vbox->append(group, false);
-
-    vbox->append(Separator::create());
-
-    auto groupVariants = Group::create("Group Style Variants");
-    groupVariants->setMargined(true)->defaultOpen(true);
-    vbox->append(groupVariants, false);
-
-    auto variantsVBox = VBox::create()->setPadded(true);
-    groupVariants->setChild(variantsVBox);
-
-    variantsVBox->append(Group::create("Open on Double-Click")
-                             ->setOpenOnDoubleClick(true)
-                             ->setChild(Label::create("This group opens when you double-click the header.")));
-
-    variantsVBox->append(
-        Group::create("Open on Arrow Click Only")
-            ->setOpenOnArrow(true)
-            ->setChild(Label::create("This group only opens when you click the arrow icon.")));
-
-    variantsVBox->append(
-        Group::create("Bullet Style (no arrow)")
-            ->setBullet(true)
-            ->setChild(Label::create("This group uses a bullet instead of an arrow.")));
-
-    variantsVBox->append(
-        Group::create("Spans Available Width (entire header is clickable)")
-            ->setSpanAvailWidth(true)
-            ->setChild(Label::create("The entire width of this header is clickable.")));
-
-    return vbox;
+    return UI::VBox(true)
+           << (UI::Group("System Dialogs")
+                   ->setMargined(true)
+               << (UI::FlowBox(mui::FlowBox::Align::Justify)
+                       ->setPadded(true)
+                   << btnInfo
+                   << btnWarning
+                   << btnError
+                   << btnConfirm
+                   << btnQuestion
+                   << btnCustom
+                   << btnFile))
+           << UI::Separator()
+           << (UI::Group("Group Style Variants")
+                   ->setMargined(true)
+                   ->defaultOpen(true)
+               << (UI::VBox(true)
+                   << (UI::Group("Open on Double-Click")
+                           ->setOpenOnDoubleClick(true)
+                       << UI::Label("This group opens when you double-click the header."))
+                   << (UI::Group("Open on Arrow Click Only")
+                           ->setOpenOnArrow(true)
+                       << UI::Label("This group only opens when you click the arrow icon."))
+                   << (UI::Group("Bullet Style (no arrow)")
+                           ->setBullet(true)
+                       << UI::Label("This group uses a bullet instead of an arrow."))
+                   << (UI::Group("Spans Available Width (entire header is clickable)")
+                           ->setSpanAvailWidth(true)
+                       << UI::Label("The entire width of this header is clickable."))));
 }
 
 IControlPtr createLayoutsTab(const LabelPtr &lblStatus)
 {
-    auto vbox = VBox::create();
-    vbox->setPadded(true);
-
-    auto gridGroup = Group::create("Grid Layout");
-    gridGroup->setMargined(true);
-    vbox->append(gridGroup, false); // Let the group have its natural height
-
-    auto grid = Grid::create();
-    grid->setColumnWeight(0, 0.3f); // Label column
-    grid->setColumnWeight(1, 0.7f); // Entry column
-    gridGroup->setChild(grid);
-
-    grid->append(Label::create("First Name:"), 0, 0);
-    auto firstNameEntry = Entry::create("John")->setSpanAvailWidth(true);
-    grid->append(firstNameEntry, 0, 1);
-
-    grid->append(Label::create("Last Name:"), 1, 0);
-    auto lastNameEntry = Entry::create("Doe")->setSpanAvailWidth(true);
-    grid->append(lastNameEntry, 1, 1);
-
-    grid->append(Label::create("Address:"), 2, 0);
-    auto addressEntry = Entry::create("123 Main St, Anytown")->setSpanAvailWidth(true);
-    grid->append(addressEntry, 2, 1);
-
-    auto submitButton = Button::create("Submit");
-    submitButton->onClick(
+    auto firstNameEntry = UI::Entry("John")->setSpanAvailWidth(true);
+    auto lastNameEntry = UI::Entry("Doe")->setSpanAvailWidth(true);
+    auto addressEntry = UI::Entry("123 Main St, Anytown")->setSpanAvailWidth(true);
+    auto submitButton = UI::Button(
+        "Submit",
         [lblStatus, firstNameEntry, lastNameEntry, addressEntry]()
         {
             std::string text = "Submitted: " + firstNameEntry->getText() + " " + lastNameEntry->getText() + " from " + addressEntry->getText();
             lblStatus->setText(text);
         });
-    grid->append(Label::create(""), 3, 0); // Empty cell to push button to the right column
-    grid->append(submitButton, 3, 1);
 
-    vbox->append(Separator::create()->setType(SeparatorType::Native));
+    auto grid = UI::Grid({0.3f, 0.7f})
+                << GridCell(UI::Label("First Name:"), 0, 0)
+                << GridCell(firstNameEntry, 0, 1)
+                << GridCell(UI::Label("Last Name:"), 1, 0)
+                << GridCell(lastNameEntry, 1, 1)
+                << GridCell(UI::Label("Address:"), 2, 0)
+                << GridCell(addressEntry, 2, 1)
+                << GridCell(UI::Label(""), 3, 0)
+                << GridCell(submitButton, 3, 1);
 
-    auto flowGroup = Group::create("Flow Layout (Left)");
-    flowGroup->setMargined(true);
-    vbox->append(flowGroup, false);
+    auto vbox = UI::VBox(true)
+                << (UI::Group("Grid Layout")->setMargined(true) << grid)
+                << UI::Separator(SeparatorType::Native);
 
-    auto flowBox = FlowBox::create()->setAlign(FlowBox::Align::Left);
+    // Flow layouts
+    auto flowGroup = UI::Group("Flow Layout (Left)")->setMargined(true);
+    auto flowBox = UI::FlowBox(mui::FlowBox::Align::Left);
     for (int i = 0; i < 15; ++i)
     {
         std::string label = "Button " + std::to_string(i + 1);
@@ -648,18 +571,19 @@ IControlPtr createLayoutsTab(const LabelPtr &lblStatus)
         {
             label += " is a bit longer";
         }
-        flowBox->append(Button::create(label)->onClick(
-            [lblStatus, label]()
-            {
-                lblStatus->setText(label + " clicked");
-            }));
+        flowBox
+            << UI::Button(
+                   label,
+                   [lblStatus, label]()
+                   {
+                       lblStatus->setText(label + " clicked");
+                   });
     }
-    flowGroup->setChild(flowBox);
+    flowGroup << flowBox;
+    vbox << flowGroup;
 
-    auto flowGroupCenter = Group::create("Flow Layout (Center)");
-    flowGroupCenter->setMargined(true);
-    vbox->append(flowGroupCenter, false);
-    auto flowBoxCenter = FlowBox::create()->setAlign(FlowBox::Align::Center);
+    auto flowGroupCenter = UI::Group("Flow Layout (Center)")->setMargined(true);
+    auto flowBoxCenter = UI::FlowBox(mui::FlowBox::Align::Center);
     for (int i = 0; i < 15; ++i)
     {
         std::string label = "Button " + std::to_string(i + 1);
@@ -667,20 +591,19 @@ IControlPtr createLayoutsTab(const LabelPtr &lblStatus)
         {
             label += " is a bit longer";
         }
-        flowBoxCenter->append(
-            Button::create(label)
-                ->onClick(
-                    [lblStatus, label]()
-                    {
-                        lblStatus->setText(label + " clicked");
-                    }));
+        flowBoxCenter
+            << UI::Button(
+                   label,
+                   [lblStatus, label]()
+                   {
+                       lblStatus->setText(label + " clicked");
+                   });
     }
-    flowGroupCenter->setChild(flowBoxCenter);
+    flowGroupCenter << flowBoxCenter;
+    vbox << flowGroupCenter;
 
-    auto flowGroupRight = Group::create("Flow Layout (Right)");
-    flowGroupRight->setMargined(true);
-    vbox->append(flowGroupRight, false);
-    auto flowBoxRight = FlowBox::create()->setAlign(FlowBox::Align::Right);
+    auto flowGroupRight = UI::Group("Flow Layout (Right)")->setMargined(true);
+    auto flowBoxRight = UI::FlowBox(mui::FlowBox::Align::Right);
     for (int i = 0; i < 15; ++i)
     {
         std::string label = "Button " + std::to_string(i + 1);
@@ -688,20 +611,19 @@ IControlPtr createLayoutsTab(const LabelPtr &lblStatus)
         {
             label += " is a bit longer";
         }
-        flowBoxRight->append(
-            Button::create(label)
-                ->onClick(
-                    [lblStatus, label]()
-                    {
-                        lblStatus->setText(label + " clicked");
-                    }));
+        flowBoxRight
+            << UI::Button(
+                   label,
+                   [lblStatus, label]()
+                   {
+                       lblStatus->setText(label + " clicked");
+                   });
     }
-    flowGroupRight->setChild(flowBoxRight);
+    flowGroupRight << flowBoxRight;
+    vbox << flowGroupRight;
 
-    auto flowGroupJustify = Group::create("Flow Layout (Justify)");
-    flowGroupJustify->setMargined(true);
-    vbox->append(flowGroupJustify, false);
-    auto flowBoxJustify = FlowBox::create()->setAlign(FlowBox::Align::Justify);
+    auto flowGroupJustify = UI::Group("Flow Layout (Justify)")->setMargined(true);
+    auto flowBoxJustify = UI::FlowBox(mui::FlowBox::Align::Justify);
     for (int i = 0; i < 15; ++i)
     {
         std::string label = "Btn " + std::to_string(i + 1);
@@ -709,117 +631,51 @@ IControlPtr createLayoutsTab(const LabelPtr &lblStatus)
         {
             label += " long";
         }
-        flowBoxJustify->append(
-            Button::create(label)
-                ->onClick(
-                    [lblStatus, label]()
-                    {
-                        lblStatus->setText(label + " clicked");
-                    }));
+        flowBoxJustify
+            << UI::Button(
+                   label,
+                   [lblStatus, label]()
+                   {
+                       lblStatus->setText(label + " clicked");
+                   });
     }
-    flowGroupJustify->setChild(flowBoxJustify);
-
-    // auto flowGroupFill = Group::create("Flow Layout (Fill)");
-    // flowGroupFill->setMargined(true);
-    // vbox->append(flowGroupFill, false);
-    // auto flowBoxFill = FlowBox::create()->setAlign(FlowBox::Align::Fill);
-    // for (int i = 0; i < 15; ++i)
-    // {
-    //     std::string label = "Btn " + std::to_string(i + 1);
-    //     if (i % 4 == 0)
-    //     {
-    //         label += " long";
-    //     }
-    //     flowBoxFill->append(Button::create(label)->onClick([lblStatus, label]()
-    //                                                        { lblStatus->setText(label + " clicked"); }));
-    // }
-    // flowGroupFill->setChild(flowBoxFill);
+    flowGroupJustify << flowBoxJustify;
+    vbox << flowGroupJustify;
 
     return vbox;
 }
 
 IControlPtr createAdvancedTab(const LabelPtr &lblStatus)
 {
-    // This tab demonstrates a complex File Explorer UI built with the new widgets.
-    auto vbox = VBox::create();
-    vbox->setPadded(false); // Remove padding so the splitter takes full space naturally
-
-    // --- Toolbar Area ---
-    auto toolbarArea = VBox::create();
-    toolbarArea->setPadded(true);
-
-    auto toolbarHBox = HBox::create();
-    toolbarHBox->setPadded(true);
-
     // Breadcrumb Navigator
-    auto breadcrumb = BreadcrumbBar::create("C:/Users/Public/Documents");
-    breadcrumb->onPathNavigated(
+    auto breadcrumb = UI::BreadcrumbBar(
+        "C:/Users/Public/Documents",
         [lblStatus](const std::string &path)
         {
             lblStatus->setText("Navigated to: " + path);
         });
 
-    // Navigation Buttons (IconStack)
-    auto navButtons = IconStack::create()
-                          ->add(
-                              ICON_FA_ARROW_LEFT,
-                              [lblStatus]()
-                              {
-                                  lblStatus->setText("Back clicked");
-                              },
-                              "Go Back")
-                          ->add(
-                              ICON_FA_ARROW_RIGHT,
-                              [lblStatus]()
-                              {
-                                  lblStatus->setText("Forward clicked");
-                              },
-                              "Go Forward")
-                          ->add(
-                              ICON_FA_ARROW_UP,
-                              [lblStatus]()
-                              {
-                                  lblStatus->setText("Up clicked");
-                              },
-                              "Up to Parent Folder");
-
-    toolbarHBox->append(navButtons, false);
-    toolbarHBox->append(breadcrumb, true); // Stretches to fill width
-
-    toolbarArea->append(toolbarHBox, false);
-    toolbarArea->append(Separator::create()->setType(SeparatorType::Native), false);
-    vbox->append(toolbarArea, false);
-
-    // --- Splitter Area ---
-    auto splitter = SplitterView::create(SplitterOrientation::Horizontal);
-    splitter->setSplitRatio(0.25f);
-
     // Left Panel: Directory Tree
-    auto leftPanel = VBox::create();
-    leftPanel->setPadded(true);
-
-    auto treeRoot = TreeNode::create(ICON_FA_DESKTOP " This PC")->setDefaultOpen(true);
-    treeRoot->append(Label::create(ICON_FA_HARD_DRIVE " Local Disk (C:)"));
-    auto driveD = TreeNode::create(ICON_FA_HARD_DRIVE " Data (D:)");
-    driveD->append(Label::create(ICON_FA_FOLDER " Backups"));
-    driveD->append(Label::create(ICON_FA_FOLDER " Projects"));
-    treeRoot->append(driveD);
-
-    leftPanel->append(treeRoot, true);
-    splitter->setPanel1(leftPanel);
+    auto leftPanel = UI::VBox(true)
+                     << Stretch(
+                            UI::TreeNode(ICON_FA_DESKTOP " This PC")
+                                ->setDefaultOpen(true)
+                            << UI::Label(ICON_FA_HARD_DRIVE " Local Disk (C:)")
+                            << (UI::TreeNode(ICON_FA_FOLDER " Data (D:)")
+                                << UI::Label(ICON_FA_FOLDER " Backups")
+                                << UI::Label(ICON_FA_FOLDER " Projects")));
 
     // Right Panel: Data Table
-    auto table = Table::create();
-    table->addColumn("Name", 3.0f)->addColumn("Date Modified", 2.0f)->addColumn("Size", 1.0f);
-    table->setSortable(true);
-    table->setSpanAvailWidth(true);
+    auto table = UI::Table({{"Name", 3.0f}, {"Date Modified", 2.0f}, {"Size", 1.0f}})
+                     ->setSortable(true)
+                     ->setSpanAvailWidth(true);
 
     // Add some mock file data
-    table->addRow({Label::create(ICON_FA_FOLDER " Photos"), Label::create("10/24/2023"), Label::create("--")});
-    table->addRow({Label::create(ICON_FA_FOLDER " Videos"), Label::create("10/12/2023"), Label::create("--")});
-    table->addRow({Label::create(ICON_FA_FILE_WORD " Q4_Report.docx"), Label::create("10/25/2023"), Label::create("2,450 KB")});
-    table->addRow({Label::create(ICON_FA_FILE_EXCEL " Budget_2024.xlsx"), Label::create("10/26/2023"), Label::create("124 KB")});
-    table->addRow({Label::create(ICON_FA_FILE_PDF " Invoice_992.pdf"), Label::create("10/27/2023"), Label::create("89 KB")});
+    table << TableRow({UI::Label(ICON_FA_FOLDER " Photos"), UI::Label("10/24/2023"), UI::Label("--")})
+          << TableRow({UI::Label(ICON_FA_FOLDER " Videos"), UI::Label("10/12/2023"), UI::Label("--")})
+          << TableRow({UI::Label(ICON_FA_FILE_WORD " Q4_Report.docx"), UI::Label("10/25/2023"), UI::Label("2,450 KB")})
+          << TableRow({UI::Label(ICON_FA_FILE_EXCEL " Budget_2024.xlsx"), UI::Label("10/26/2023"), UI::Label("124 KB")})
+          << TableRow({UI::Label(ICON_FA_FILE_PDF " Invoice_992.pdf"), UI::Label("10/27/2023"), UI::Label("89 KB")});
 
     table->onRowSelected(
         [lblStatus](int row)
@@ -834,216 +690,182 @@ IControlPtr createAdvancedTab(const LabelPtr &lblStatus)
             lblStatus->setText("Sort requested on column " + std::to_string(colIndex) + " (" + dir + ")");
         });
 
-    auto rightPanel = VBox::create();
-    rightPanel->setPadded(true);
-    rightPanel->append(table, true);
-    splitter->setPanel2(rightPanel);
+    auto rightPanel = UI::VBox(true) << Stretch(table);
 
-    vbox->append(splitter, true); // Stretchy to take remaining height below toolbar
-    return vbox;
+    return UI::VBox(false)
+           << (UI::VBox(true)
+               << (UI::HBox(true)
+                   << (UI::IconStack()
+                       << IconDef(
+                              ICON_FA_ARROW_LEFT,
+                              [lblStatus]()
+                              {
+                                  lblStatus->setText("Back clicked");
+                              },
+                              "Go Back")
+                       << IconDef(
+                              ICON_FA_ARROW_RIGHT,
+                              [lblStatus]()
+                              {
+                                  lblStatus->setText("Forward clicked");
+                              },
+                              "Go Forward")
+                       << IconDef(
+                              ICON_FA_ARROW_UP,
+                              [lblStatus]()
+                              {
+                                  lblStatus->setText("Up clicked");
+                              },
+                              "Up to Parent Folder"))
+                   << Stretch(breadcrumb))
+               << UI::Separator(SeparatorType::Native))
+           << Stretch(UI::Splitter(SplitterOrientation::Horizontal, 0.25f) << SplitterLeft(leftPanel) << SplitterRight(rightPanel));
 }
 
 IControlPtr createPropertyGridTab(const LabelPtr &statusLabel)
 {
-    auto vbox = VBox::create();
-    vbox->setPadded(true);
+    auto nameObservable = MakeObs::String("My Widget");
+    auto nameEntry = UI::EntryBind("", nameObservable)
+                     << UI::Observe(
+                            nameObservable->onValueChanged,
+                            [statusLabel](const std::string &text)
+                            {
+                                statusLabel->setText("Name changed to: " + text);
+                            });
 
-    auto pg = PropertyGrid::create();
-    pg->setNameColumnWidth(120.0f);
-
-    // --- Category 1: Appearance ---
-    pg->addCategory("Appearance");
-
-    auto nameEntry = Entry::create("My Widget");
-    auto nameObservable = std::make_shared<Observable<std::string>>(nameEntry->getText());
-    nameEntry->bind(nameObservable);
-    nameEntry->observe(
-        nameObservable->onValueChanged,
-        [statusLabel](const std::string &text)
-        {
-            statusLabel->setText("Name changed to: " + text);
-        });
-    pg->addProperty("Name", nameEntry);
-
-    auto visibleCheck = Checkbox::create(""); // Label is provided by the grid
-    visibleCheck->setChecked(true);
-    visibleCheck->onToggled(
-        [statusLabel](bool checked)
-        {
-            statusLabel->setText(checked ? "Set to Visible" : "Set to Hidden");
-        });
-    pg->addProperty("Visible", visibleCheck);
-
-    auto colorPicker = ColorEdit::create(0.9f, 0.2f, 0.2f, 1.0f);
-    pg->addProperty("Color", colorPicker);
-
-    auto opacitySlider = SliderFloat::create(0.0f, 1.0f);
-    opacitySlider->setValue(1.0f);
-    pg->addProperty("Opacity", opacitySlider);
-
-    // --- Category 2: Behavior ---
-    pg->addCategory("Behavior");
-
-    auto enabledToggle = ToggleSwitch::create("");
-    enabledToggle->setChecked(true);
-    enabledToggle->onToggled(
-        [statusLabel](bool checked)
-        {
-            statusLabel->setText(checked ? "Control Enabled" : "Control Disabled");
-        });
-    pg->addProperty("Enabled", enabledToggle);
-
-    auto modeCombo = ComboBox::create();
-    modeCombo->append("Mode A")->append("Mode B")->append("Mode C");
-    auto comboObservable = std::make_shared<Observable<int>>(modeCombo->getSelectedIndex());
-    modeCombo->bind(comboObservable); // This bind already stores connections
+    auto comboObservable = MakeObs::Int(0);
+    auto modeCombo = UI::ComboBoxBind(comboObservable)
+                     << "Mode A" << "Mode B" << "Mode C";
     modeCombo->observe(
         comboObservable->onValueChanged,
         [modeCombo, statusLabel](int)
         {
             statusLabel->setText("Mode set to: " + modeCombo->getText());
         });
-    pg->addProperty("Mode", modeCombo);
 
-    // --- Category 3: Advanced (starts closed) ---
-    pg->addCategory("Advanced", false);
-    pg->addProperty("ID", Label::create("0xDEADBEEF")->setColor({0.6f, 0.6f, 0.6f, 1.0f}));
-    pg->addProperty("File Path", Entry::create("C:/path/to/resource.dat"));
-
-    vbox->append(pg, true);
-
-    return vbox;
+    return UI::VBox(true)
+           << Stretch(
+                  UI::PropertyGrid(120.0f)
+                  << PropCat("Appearance")
+                  << PropItem("Name", nameEntry)
+                  << PropItem(
+                         "Visible",
+                         UI::Checkbox(
+                             "", true,
+                             [statusLabel](bool checked)
+                             {
+                                 statusLabel->setText(checked ? "Set to Visible" : "Set to Hidden");
+                             }))
+                  << PropItem("Color", UI::ColorEdit(0.9f, 0.2f, 0.2f, 1.0f))
+                  << PropItem("Opacity", UI::SliderFloat(0.0f, 1.0f, 1.0f))
+                  << PropCat("Behavior")
+                  << PropItem(
+                         "Enabled",
+                         UI::ToggleSwitch(
+                             "", true,
+                             [statusLabel](bool checked)
+                             {
+                                 statusLabel->setText(checked ? "Control Enabled" : "Control Disabled");
+                             }))
+                  << PropItem("Mode", modeCombo)
+                  << PropCat("Advanced", false)
+                  << PropItem("ID", UI::Label("0xDEADBEEF")->setColor({0.6f, 0.6f, 0.6f, 1.0f}))
+                  << PropItem("File Path", UI::Entry("C:/path/to/resource.dat")));
 }
 
 IControlPtr createMoreControlsTab(const LabelPtr &lblStatus)
 {
-    auto vbox = VBox::create();
-    vbox->setPadded(true);
+    auto comboObservable = MakeObs::Int(1);
+    auto combo = UI::ComboBoxBind(comboObservable)
+                 << "Apple" << "Banana" << "Cherry";
+    combo->observe(comboObservable->onValueChanged, [combo, lblStatus](int)
+                   { lblStatus->setText("Selected fruit: " + combo->getText()); });
 
-    // ComboBox
-    vbox->append(Label::create("ComboBox:"), false);
-    auto combo = ComboBox::create();
-    combo->append("Apple");
-    combo->append("Banana");
-    combo->append("Cherry");
-    combo->setSelectedIndex(1);
-    auto comboObservable = std::make_shared<Observable<int>>(combo->getSelectedIndex());
-    combo->bind(comboObservable); // This bind already stores connections
-    combo->observe(
-        comboObservable->onValueChanged,
-        [combo, lblStatus](int)
-        {
-            lblStatus->setText("Selected fruit: " + combo->getText());
-        });
-    vbox->append(combo, true);
-    vbox->append(Separator::create());
-
-    // Radio Buttons
-    vbox->append(Label::create("Radio Buttons:"), false);
-    auto radioHBox = HBox::create();
-    radioHBox->setPadded(true);
-    auto radio1 = RadioButton::create("AM");
-    auto radio2 = RadioButton::create("FM");
-    auto radio3 = RadioButton::create("SW");
+    auto radio1 = UI::RadioButton("AM", false, [lblStatus](bool c)
+                                  {
+        if (c)
+            lblStatus->setText("Radio set to AM"); });
+    auto radio2 = UI::RadioButton("FM", true, [lblStatus](bool c)
+                                  {
+        if (c)
+            lblStatus->setText("Radio set to FM"); });
+    auto radio3 = UI::RadioButton("SW", false, [lblStatus](bool c)
+                                  {
+        if (c)
+            lblStatus->setText("Radio set to SW"); });
     RadioButton::group({radio1, radio2, radio3});
-    radio2->setChecked(true);
-    radio1->onToggled(
-        [lblStatus](bool checked)
-        {
-            if (checked)
-                lblStatus->setText("Radio set to AM");
-        });
-    radio2->onToggled(
-        [lblStatus](bool checked)
-        {
-            if (checked)
-                lblStatus->setText("Radio set to FM");
-        });
-    radio3->onToggled(
-        [lblStatus](bool checked)
-        {
-            if (checked)
-                lblStatus->setText("Radio set to SW");
-        });
-    radioHBox->append({{radio1, true}, {radio2, true}, {radio3, true}});
-    vbox->append(radioHBox, true);
-    vbox->append(Separator::create());
 
-    // ColorEdit
-    vbox->append(Label::create("Color Picker:"), false);
-    auto colorEdit = ColorEdit::create(0.2f, 0.8f, 0.4f, 1.0f);
-    auto colorObservable = std::make_shared<Observable<std::array<float, 4>>>(colorEdit->getColor());
-    colorEdit->bind(colorObservable); // This bind already stores connections
-    colorEdit->observe(
-        colorObservable->onValueChanged,
-        [lblStatus](const std::array<float, 4> &val)
-        {
-            char buffer[100];
-            snprintf(buffer, 100, "Color changed to: (%.2f, %.2f, %.2f, %.2f)", val[0], val[1], val[2], val[3]);
-            lblStatus->setText(buffer);
-        });
+    auto colorObservable = MakeObs::Color(0.2f, 0.8f, 0.4f, 1.0f);
+    auto colorEdit = UI::ColorEditBind(colorObservable)
+                     << UI::Observe(colorObservable->onValueChanged, [lblStatus](const std::array<float, 4> &val)
+                                    {
+        char buffer[100];
+        snprintf(buffer, 100, "Color changed to: (%.2f, %.2f, %.2f, %.2f)", val[0], val[1], val[2], val[3]);
+        lblStatus->setText(buffer); });
 
-    vbox->append(colorEdit, true);
-    vbox->append(Separator::create());
+    auto sliderObservable = MakeObs::Float(0.75f);
+    auto sliderFloat = UI::SliderFloatBind(0.0f, 1.0f, sliderObservable)
+                       << UI::Observe(sliderObservable->onValueChanged, [lblStatus](float value)
+                                      { lblStatus->setText("Float slider value: " + std::to_string(value)); });
 
-    // Float Slider (assuming SliderFloat has bind)
-    vbox->append(Label::create("Float Slider:"), false);
-    auto sliderFloat = SliderFloat::create(0.0f, 1.0f);
-    sliderFloat->setValue(0.75f);
-    auto sliderObservable = std::make_shared<Observable<float>>(sliderFloat->getValue());
-    sliderFloat->bind(sliderObservable); // This bind already stores connections
-    sliderFloat->observe(
-        sliderObservable->onValueChanged,
-        [lblStatus](float value)
-        {
-            lblStatus->setText("Float slider value: " + std::to_string(value));
-        });
-    vbox->append(sliderFloat, true);
-    vbox->append(Separator::create());
-
-    // --- Custom Separators ---
-    vbox->append(Label::create("Custom Separators:"), false);
-    auto hboxSeparators = HBox::create();
-    hboxSeparators->setPadded(true);
-
-    hboxSeparators->append(Label::create("Left"));
-
-    // Vertical Separator
-    hboxSeparators->append(
-        Separator::create()
-            ->setOrientation(SeparatorOrientation::Vertical)
-            ->setThickness(4.0f)
-            ->setColor({0.8f, 0.2f, 0.2f, 1.0f}));
-
-    hboxSeparators->append(Label::create("Right"));
-    vbox->append(hboxSeparators, true);
-
-    // Thick Horizontal Separator as a rectangle
-    vbox->append(Separator::create()->setThickness(5.0f)->setAsRect(true), true);
-    vbox->append(Separator::create()->setType(SeparatorType::Native), true);
-
-    // Text Separator
-    vbox->append(Separator::create()
-                     ->setText("Text Separator"),
-                 true);
-
-    // Native Separator
-    vbox->append(Label::create("Native Separator below:"));
-    vbox->append(Separator::create()->setType(SeparatorType::Native), true);
-
-    return vbox;
+    return UI::VBox(true)
+           << UI::Label("ComboBox:")
+           << Stretch(combo)
+           << UI::Separator()
+           << UI::Label("Radio Buttons:")
+           << (UI::HBox(true)
+               << Stretch(radio1)
+               << Stretch(radio2)
+               << Stretch(radio3))
+           << UI::Separator()
+           << UI::Label("Color Picker:")
+           << Stretch(colorEdit)
+           << UI::Separator()
+           << UI::Label("Float Slider:")
+           << Stretch(sliderFloat)
+           << UI::Separator()
+           << UI::Label("Custom Separators:")
+           << (UI::HBox(true)
+               << UI::Label("Left")
+               << (UI::Separator(SeparatorType::Native, SeparatorOrientation::Vertical)
+                       ->setThickness(4.0f)
+                       ->setColor({0.8f, 0.2f, 0.2f, 1.0f}))
+               << UI::Label("Right"))
+           << UI::Separator()->setThickness(5.0f)->setAsRect(true)
+           << UI::Separator(SeparatorType::Native)
+           << UI::Separator(SeparatorType::Text)->setText("Text Separator");
 }
 
 IControlPtr createThemesTab()
 {
-    auto vbox = VBox::create();
-    vbox->setPadded(true);
-
-    // Create toggles first so they can be captured by button/theme change lambdas.
-    auto tglGrayscale = ToggleSwitch::create("Grayscale");
-    auto tglComplementary = ToggleSwitch::create("Complementary");
-    auto tglSepia = ToggleSwitch::create("Sepia");
-    auto tglInvert = ToggleSwitch::create("Invert");
+    auto tglGrayscale = UI::ToggleSwitch(
+        "Grayscale",
+        false,
+        [](bool c)
+        {
+            App::setApplyGrayscale(c);
+        });
+    auto tglComplementary = UI::ToggleSwitch(
+        "Complementary",
+        false,
+        [](bool c)
+        {
+            App::setApplyComplementary(c);
+        });
+    auto tglSepia = UI::ToggleSwitch(
+        "Sepia",
+        false,
+        [](bool c)
+        {
+            App::setApplySepia(c);
+        });
+    auto tglInvert = UI::ToggleSwitch(
+        "Invert",
+        false,
+        [](bool c)
+        {
+            App::setApplyInvert(c);
+        });
 
     // A lambda to reset all toggles. This is called when a new theme is selected,
     // as App::setTheme() resets all underlying modifier flags.
@@ -1055,81 +877,46 @@ IControlPtr createThemesTab()
         tglInvert->setChecked(false);
     };
 
-    vbox->append(Label::create("Built-in Themes:"), false);
-    auto hboxThemes = HBox::create()->setPadded(true);
-
-    auto btnLight = Button::create("Light Theme");
-    btnLight->onClick(
-        [=]()
-        {
-            App::setTheme(ThemeType::Light);
-            reset_toggles();
-        });
-    auto btnDark = Button::create("Dark Theme");
-    btnDark->onClick(
-        [=]()
-        {
-            App::setTheme(ThemeType::Dark);
-            reset_toggles();
-        });
-    hboxThemes->append({{btnLight, true}, {btnDark, true}});
-    vbox->append(hboxThemes, false);
-
-    vbox->append(Label::create("Color Modifiers:"), false);
-    auto hboxModifiers = HBox::create()->setPadded(true);
-
-    tglGrayscale->onToggled(
-        [](bool checked)
-        {
-            App::setApplyGrayscale(checked);
-        });
-    tglComplementary->onToggled(
-        [](bool checked)
-        {
-            App::setApplyComplementary(checked);
-        });
-    tglSepia->onToggled(
-        [](bool checked)
-        {
-            App::setApplySepia(checked);
-        });
-    tglInvert->onToggled(
-        [](bool checked)
-        {
-            App::setApplyInvert(checked);
-        });
-
-    hboxModifiers->append(
-        {{tglGrayscale, true},
-         {tglComplementary, true},
-         {tglSepia, true},
-         {tglInvert, true}});
-    vbox->append(hboxModifiers, false);
-
-    auto btnClearModifiers = Button::create("Clear Modifiers");
-    btnClearModifiers->onClick(
-        [=]()
-        {
-            App::resetColorModifiers();
-            reset_toggles();
-        });
-    vbox->append(btnClearModifiers, false);
-    vbox->append(Separator::create(), false);
-    vbox->append(Label::create("TOML Themes (from themes.toml):"), false);
-
-    auto tomlFlowBox = FlowBox::create()->setAlign(FlowBox::Align::Justify);
+    auto tomlFlowBox = UI::FlowBox(mui::FlowBox::Align::Justify);
     for (const auto &themeName : App::getAvailableThemes())
     {
-        auto btn = Button::create(themeName);
-        btn->onClick(
-            [themeName, reset_toggles]()
-            {
-                App::setTheme(themeName);
-                reset_toggles();
-            });
-        tomlFlowBox->append(btn);
+        tomlFlowBox << UI::Button(themeName, [themeName, reset_toggles]()
+                                  {
+            App::setTheme(themeName);
+            reset_toggles(); });
     }
 
-    vbox->append(tomlFlowBox, true);
-    return vbox;
+    return UI::VBox(true)
+           << UI::Label("Built-in Themes:")
+           << (UI::HBox(true)
+               << Stretch(UI::Button(
+                      "Light Theme",
+                      [=]()
+                      {
+                          App::setTheme(ThemeType::Light);
+                          reset_toggles();
+                      }))
+               << Stretch(UI::Button(
+                      "Dark Theme",
+                      [=]()
+                      {
+                          App::setTheme(ThemeType::Dark);
+                          reset_toggles();
+                      })))
+           << UI::Label("Color Modifiers:")
+           << (UI::HBox(true)
+               << Stretch(tglGrayscale)
+               << Stretch(tglComplementary)
+               << Stretch(tglSepia)
+               << Stretch(tglInvert))
+           << UI::Button(
+                  "Clear Modifiers",
+                  [=]()
+                  {
+                      App::resetColorModifiers();
+                      reset_toggles();
+                  })
+           << UI::Separator()
+           << UI::Label("TOML Themes (from themes.toml):")
+           << Stretch(tomlFlowBox);
 }

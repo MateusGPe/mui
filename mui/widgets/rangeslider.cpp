@@ -14,7 +14,7 @@ namespace mui
     {
         if (!visible)
             return;
-        ScopedID id(this);
+        ScopedControlID id(this);
 
         auto render_slider = [&]
         {

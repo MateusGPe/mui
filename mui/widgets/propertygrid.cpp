@@ -15,7 +15,7 @@ namespace mui
     {
         if (!visible)
             return;
-        ScopedID id(this);
+        ScopedControlID id(this);
         ImGui::BeginDisabled(!enabled);
 
         // Standard JUCE/Inspector style grid flags
@@ -75,7 +75,8 @@ namespace mui
                         ImGui::TableSetColumnIndex(1);
                         if (item.editor)
                         {
-                            ScopedID itemId(static_cast<int>(i));
+                            bool needsIndexId = item.editor->getID().empty();
+                            if (needsIndexId) ImGui::PushID(static_cast<int>(i));
                             
                             // Force the editor widget to fill the column width
                             ScopedItemWidth width(-FLT_MIN);
@@ -83,6 +84,8 @@ namespace mui
                             // Prevent standard widgets from clipping/wrapping weirdly 
                             // by informing the child control to span available width
                             item.editor->render();
+
+                            if (needsIndexId) ImGui::PopID();
                         }
                     }
 

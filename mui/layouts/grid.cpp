@@ -28,7 +28,7 @@ namespace mui
     void Grid::renderControl()
     {
         if (!visible || m_cells.empty()) return;
-        ScopedID id(this);
+        ScopedControlID id(this);
 
         ImGuiTableFlags flags = ImGuiTableFlags_NoClip;
         if (!m_columnWeights.empty()) {
@@ -52,6 +52,9 @@ namespace mui
                         const auto &cell = it->second;
                         ImGui::TableSetColumnIndex(c);
                         
+                        bool needsIndexId = cell.control->getID().empty();
+                        if (needsIndexId) ImGui::PushID(r * (m_maxCol + 1) + c);
+
                         if (cell.colSpan > 1) {
                             ImGui::TableSetColumnIndex(c + cell.colSpan - 1);
                             float endX = ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x;
@@ -65,6 +68,8 @@ namespace mui
                             cell.control->render();
                             c++;
                         }
+
+                        if (needsIndexId) ImGui::PopID();
                     } else {
                         c++;
                     }

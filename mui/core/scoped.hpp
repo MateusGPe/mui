@@ -76,7 +76,6 @@ namespace mui
         ScopedID() = default;
         ScopedID(int id) { ImGui::PushID(id); }
         ScopedID(const char *str_id) { ImGui::PushID(str_id); }
-        ScopedID(const void *ptr_id) { ImGui::PushID(ptr_id); }
         ScopedID(const std::string &str_id) { ImGui::PushID(str_id.c_str()); }
 
         ~ScopedID() { ImGui::PopID(); }

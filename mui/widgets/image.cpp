@@ -18,7 +18,7 @@ namespace mui
     {
         if (!visible || !textureId)
             return;
-        ScopedID id(this);
+        ScopedControlID id(this);
         ImGui::BeginDisabled(!enabled);
 
         ImGui::Image(textureId, ImVec2(width, height), uv0, uv1, tintColor, borderColor);

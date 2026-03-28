@@ -14,7 +14,7 @@
 #include <fontconfig/fontconfig.h>
 #endif
 
-#include "IconsFontAwesome6.h"
+#include "../include/IconsFontAwesome6.h"
 #include "fa_solid_900.hpp"
 #include <imgui_internal.h>
 

@@ -15,7 +15,7 @@ namespace mui
     {
         if (!visible)
             return;
-        ScopedID id(this);
+        ScopedControlID id(this);
         ImGui::BeginDisabled(!enabled);
 
         std::string preview = (selectedIndex >= 0 && selectedIndex < (int)items.size()) ? items[selectedIndex] : "";
@@ -34,6 +34,7 @@ namespace mui
         {
             for (int i = 0; i < (int)items.size(); ++i)
             {
+                ScopedID itemId(i);
                 const bool isSelected = (selectedIndex == i);
                 if (ImGui::Selectable(items[i].c_str(), isSelected))
                 {

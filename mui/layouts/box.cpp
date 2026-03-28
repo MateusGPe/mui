@@ -11,7 +11,7 @@ namespace mui
     {
         if (!visible)
             return;
-        ScopedID id(this);
+        ScopedControlID id(this);
 
         ImGuiTableFlags table_flags = ImGuiTableFlags_SizingStretchSame;
         if (scrollable)
@@ -21,10 +21,15 @@ namespace mui
 
         if (ImGui::BeginTable("##vbox_layout", 1, table_flags))
         {
-            for (auto &child : children)
+            for (size_t i = 0; i < children.size(); ++i)
             {
+                auto &child = children[i];
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
+
+                bool needsIndexId = child.control->getID().empty();
+                if (needsIndexId) ImGui::PushID(static_cast<int>(i));
+
                 if (child.stretchy)
                 {
                     ScopedItemWidth width(-1);
@@ -34,6 +39,9 @@ namespace mui
                 {
                     child.control->render();
                 }
+
+                if (needsIndexId) ImGui::PopID();
+
                 if (padded)
                 {
                     ImGui::Spacing();
@@ -56,7 +64,7 @@ namespace mui
     {
         if (!visible)
             return;
-        ScopedID id(this);
+        ScopedControlID id(this);
 
         ImGuiTableFlags table_flags = 0;
         if (scrollable)
@@ -77,6 +85,10 @@ namespace mui
             for (size_t i = 0; i < children.size(); ++i)
             {
                 ImGui::TableNextColumn();
+                
+                bool needsIndexId = children[i].control->getID().empty();
+                if (needsIndexId) ImGui::PushID(static_cast<int>(i));
+
                 if (children[i].stretchy)
                 {
                     ScopedItemWidth width(-FLT_MIN);
@@ -86,6 +98,8 @@ namespace mui
                 {
                     children[i].control->render();
                 }
+
+                if (needsIndexId) ImGui::PopID();
             }
             ImGui::EndTable();
         }
@@ -96,7 +110,7 @@ namespace mui
     {
         if (!visible)
             return;
-        ScopedID id(this);
+        ScopedControlID id(this);
 
         ImGuiStyle &style = ImGui::GetStyle();
         float contentWidth = ImGui::GetContentRegionAvail().x;
@@ -165,7 +179,8 @@ namespace mui
 
                 {
                     ScopedItemWidth width;
-                    ScopedID child_id((int)child_idx);
+                    bool needsIndexId = children[child_idx].control->getID().empty();
+                    if (needsIndexId) ImGui::PushID(static_cast<int>(child_idx));
 
                     if (extra_width_per_item > 0.0f)
                     {
@@ -175,6 +190,8 @@ namespace mui
                         width.push(item_width + extra_width_per_item);
                     }
                     children[child_idx].control->render();
+
+                    if (needsIndexId) ImGui::PopID();
                 }
 
                 if (extra_width_per_item <= 0.0f)

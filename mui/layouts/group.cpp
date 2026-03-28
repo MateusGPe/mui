@@ -11,7 +11,7 @@ namespace mui
     {
         if (!visible)
             return;
-        ScopedID id(this);
+        ScopedControlID id(this);
 
         bool was_open = m_open;
 
@@ -20,7 +20,12 @@ namespace mui
             if (margined)
                 ImGui::Indent();
             if (child)
+            {
+                bool needsIndexId = child->getID().empty();
+                if (needsIndexId) ImGui::PushID(0);
                 child->render();
+                if (needsIndexId) ImGui::PopID();
+            }
             if (margined)
                 ImGui::Unindent();
         }

@@ -15,7 +15,7 @@ namespace mui
     {
         if (!visible)
             return;
-        ScopedID id(this);
+        ScopedControlID id(this);
 
         ScopedStyle style;
         style.push(ImGuiStyleVar_WindowPadding, ImVec2(padding, padding));
@@ -47,7 +47,12 @@ namespace mui
         ImGui::BeginChild("##card_content_host", ImVec2(0.0f, 0.0f), child_flags, window_flags);
 
         if (child)
+        {
+            bool needsIndexId = child->getID().empty();
+            if (needsIndexId) ImGui::PushID(0);
             child->render();
+            if (needsIndexId) ImGui::PopID();
+        }
 
         ImGui::EndChild();
     }

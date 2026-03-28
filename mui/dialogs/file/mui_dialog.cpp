@@ -3,7 +3,7 @@
 #endif
 
 #include "mui_dialog.h"
-#include "IconsFontAwesome6.h"
+#include "../../include/IconsFontAwesome6.h"
 #include "../../core/app.hpp" // Added for mui::App::assertMainThread()
 #include <imgui.h>
 #include <imgui_internal.h>

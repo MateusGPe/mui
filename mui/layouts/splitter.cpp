@@ -12,7 +12,7 @@ namespace mui
     void SplitterView::renderControl()
     {
         if (!visible) return;
-        ScopedID id(this);
+        ScopedControlID id(this);
 
         ImVec2 avail = ImGui::GetContentRegionAvail();
         
@@ -23,7 +23,13 @@ namespace mui
 
             // Panel 1
             ImGui::BeginChild("##panel1", ImVec2(size1, avail.y), false, ImGuiWindowFlags_NoSavedSettings);
-            if (panel1) panel1->render();
+            if (panel1)
+            {
+                bool needsIndexId = panel1->getID().empty();
+                if (needsIndexId) ImGui::PushID(0);
+                panel1->render();
+                if (needsIndexId) ImGui::PopID();
+            }
             ImGui::EndChild();
 
             ImGui::SameLine(0, 0);
@@ -45,7 +51,13 @@ namespace mui
 
             // Panel 2
             ImGui::BeginChild("##panel2", ImVec2(size2, avail.y), false, ImGuiWindowFlags_NoSavedSettings);
-            if (panel2) panel2->render();
+            if (panel2)
+            {
+                bool needsIndexId = panel2->getID().empty();
+                if (needsIndexId) ImGui::PushID(1);
+                panel2->render();
+                if (needsIndexId) ImGui::PopID();
+            }
             ImGui::EndChild();
         }
         else
@@ -55,7 +67,13 @@ namespace mui
 
             // Panel 1
             ImGui::BeginChild("##panel1", ImVec2(avail.x, size1), false, ImGuiWindowFlags_NoSavedSettings);
-            if (panel1) panel1->render();
+            if (panel1)
+            {
+                bool needsIndexId = panel1->getID().empty();
+                if (needsIndexId) ImGui::PushID(0);
+                panel1->render();
+                if (needsIndexId) ImGui::PopID();
+            }
             ImGui::EndChild();
 
             // Splitter
@@ -73,7 +91,13 @@ namespace mui
 
             // Panel 2
             ImGui::BeginChild("##panel2", ImVec2(avail.x, size2), false, ImGuiWindowFlags_NoSavedSettings);
-            if (panel2) panel2->render();
+            if (panel2)
+            {
+                bool needsIndexId = panel2->getID().empty();
+                if (needsIndexId) ImGui::PushID(1);
+                panel2->render();
+                if (needsIndexId) ImGui::PopID();
+            }
             ImGui::EndChild();
         }
     }

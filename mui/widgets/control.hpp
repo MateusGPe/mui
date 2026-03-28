@@ -12,8 +12,17 @@
 
 namespace mui
 {
-
+    // Forward declaration for ScopedControlID
     class IControl;
+
+    struct ScopedControlID {
+        bool pushed = false;
+        ScopedControlID(IControl* ctrl);
+        ~ScopedControlID() { 
+            if (pushed) ImGui::PopID(); 
+        }
+    };
+
     using IControlPtr = std::shared_ptr<IControl>;
 
     // Non-templated base class for polymorphism.
@@ -28,6 +37,7 @@ namespace mui
         virtual ~IControl() = default;
         virtual void render() = 0;
         virtual void onHandleDestroyed() = 0;
+        virtual std::string getID() const = 0;
 
         void clearConnections() { m_connections.clear(); }
     };
@@ -70,18 +80,6 @@ namespace mui
             {
                 ImGui::SetTooltip("%s", tooltip.c_str());
             }
-        }
-
-        // Helper for derived controls to push a stable ID instead of their memory address
-        void pushControlID()
-        {
-            if (!m_customId.empty()) ImGui::PushID(m_customId.c_str());
-            else ImGui::PushID(this);
-        }
-
-        void popControlID()
-        {
-            ImGui::PopID();
         }
 
         // ALL WIDGETS MUST NOW IMPLEMENT THIS INSTEAD OF render()
@@ -183,7 +181,7 @@ namespace mui
             return self();
         }
 
-        std::string getID() const 
+        std::string getID() const override
         { 
             return m_customId; 
         }
@@ -391,4 +389,10 @@ namespace mui
     template <class T>
     float Control<T>::s_defaultShadowRounding = -1.0f;
 
+    inline ScopedControlID::ScopedControlID(IControl* ctrl) { 
+        if (!ctrl->getID().empty()) {
+            ImGui::PushID(ctrl->getID().c_str());
+            pushed = true;
+        }
+    }
 } // namespace mui

@@ -16,7 +16,7 @@ namespace mui
     {
         if (!visible || columns.empty())
             return;
-        ScopedID id(this);
+        ScopedControlID id(this);
 
         ImGuiTableFlags flags = m_flags;
         if (spanAvailWidth)
@@ -75,9 +75,12 @@ namespace mui
 
                     if (c < rows[r].size() && rows[r][c])
                     {
+                        bool needsIndexId = rows[r][c]->getID().empty();
+                        if (needsIndexId) ImGui::PushID(static_cast<int>(r * columns.size() + c));
                         // Ensure widgets fit in cell
                         ScopedItemWidth width(-FLT_MIN);
                         rows[r][c]->render();
+                        if (needsIndexId) ImGui::PopID();
                     }
                 }
             }

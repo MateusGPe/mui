@@ -257,6 +257,7 @@ namespace mui
             {
                 ImGui::SameLine();
             }
+            ScopedID btnId(static_cast<int>(i));
             if (ImGui::Button(button.text.c_str(), ImVec2(button_width, 0)))
             {
                 if (button.callback)

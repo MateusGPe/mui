@@ -14,7 +14,7 @@ namespace mui
     {
         if (!visible)
             return;
-        ScopedID sid(this);
+        ScopedControlID sid(this);
         ImGui::BeginDisabled(!enabled);
 
         ImGuiWindow *window = ImGui::GetCurrentWindow();
@@ -25,7 +25,7 @@ namespace mui
         }
 
         const ImGuiStyle &style = ImGui::GetStyle();
-        const ImGuiID id = window->GetID(text.c_str());
+        const ImGuiID m_id = window->GetID(text.c_str());
 
         const float check_box_size = ImGui::GetFrameHeight() * scale;
         const ImVec2 label_size = ImGui::CalcTextSize(text.c_str(), NULL, true);
@@ -46,14 +46,14 @@ namespace mui
         const ImRect total_bb(window->DC.CursorPos, ImVec2(window->DC.CursorPos.x + w, window->DC.CursorPos.y + h));
 
         ImGui::ItemSize(total_bb, 0.0f);
-        if (!ImGui::ItemAdd(total_bb, id))
+        if (!ImGui::ItemAdd(total_bb, m_id))
         {
             ImGui::EndDisabled();
             return;
         }
 
         bool hovered, held;
-        bool pressed = ImGui::ButtonBehavior(total_bb, id, &hovered, &held);
+        bool pressed = ImGui::ButtonBehavior(total_bb, m_id, &hovered, &held);
         if (pressed)
         {
             checked = !checked;

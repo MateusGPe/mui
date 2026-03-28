@@ -24,7 +24,7 @@ namespace mui
     void TreeNode::renderControl()
     {
         if (!visible) return;
-        ScopedID id(this);
+        ScopedControlID id(this);
         ImGui::BeginDisabled(!enabled);
 
         ImGuiTreeNodeFlags flags = m_flags;
@@ -58,8 +58,12 @@ namespace mui
         }
 
         if (nodeOpen) {
-            for (auto& child : children) {
+            for (size_t i = 0; i < children.size(); ++i) {
+                auto& child = children[i];
+                bool needsIndexId = child->getID().empty();
+                if (needsIndexId) ImGui::PushID(static_cast<int>(i));
                 child->render();
+                if (needsIndexId) ImGui::PopID();
             }
             ImGui::TreePop();
         }
