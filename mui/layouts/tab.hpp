@@ -24,32 +24,33 @@ namespace mui
         std::vector<TabPage> pages;
         int selectedIndex = 0;
         ImGuiTabBarFlags m_flags;
-    
+
         Tab();
-    
+
     public:
         mui::Signal<int> onSelectedSignal;
-    
+
         static TabPtr create() { return std::shared_ptr<Tab>(new Tab()); }
-    
+
         void renderControl() override;
-    
+
         TabPtr append(const std::string &name, IControlPtr child);
         TabPtr setMargined(int page, bool margined)
         {
-            if (page >= 0 && page < pages.size())
-            {
-                pages[page].margined = margined;
-            }
+            std::size_t pageCount(page);
+            if (page < 0 || pageCount >= pages.size())
+                return self();
+
+            pages[pageCount].margined = margined;
             return self();
         }
         TabPtr onSelected(std::function<void(int)> cb);
         int getNumPages() const;
         int getSelected() const;
-    
+
         TabPtr setSelected(int index);
         TabPtr bindSelected(std::shared_ptr<Observable<int>> observable);
-    
+
         TabPtr setReorderable(bool b);
         TabPtr setAutoSelectNewTabs(bool b);
         TabPtr setNoCloseWithMiddleMouseButton(bool b);
