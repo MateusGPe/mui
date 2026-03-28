@@ -8,41 +8,29 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # This subdirectory will automatically fetch ImGui and find SDL3.
 add_subdirectory(mui)
 
-# --- YOUR EXECUTABLE ---
-add_executable(${PROJECT_NAME} main.cpp)
-
-# Link your app against the mui library.
-target_link_libraries(${PROJECT_NAME} PUBLIC mui)
-
-# WORKAROUND: The 'mui' library does not correctly export the include
-# directory for its dependency (ImGui). We manually add it to our
-# executable target here. We also add the mui library source as an include
-# path to find its headers.
-target_include_directories(${PROJECT_NAME} PRIVATE
+# Make the 'mui' library usable from a parent project by adding its
+# required include directories to its public interface. This fixes the
+# issue described in the WORKAROUND in the original file.
+target_include_directories(mui INTERFACE
+    # Add the mui source directory to find its headers (e.g., mui.hpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/mui
+    # Add the fetched ImGui dependency's source directory
     ${CMAKE_BINARY_DIR}/_deps/imgui-src
-    mui
 )
 
-# --- THEME EDITOR EXECUTABLE ---
-add_executable(theme_editor theme_edit.cpp)
+# --- EXAMPLES ---
+# Only build the example executables if this project is being built directly,
+# not when it's included as a subdirectory in another project.
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    # --- Main Gallery Example ---
+    add_executable(${PROJECT_NAME} main.cpp)
+    target_link_libraries(${PROJECT_NAME} PUBLIC mui)
 
-# Link theme editor against the mui library.
-target_link_libraries(theme_editor PUBLIC mui)
+    # --- Theme Editor Example ---
+    add_executable(theme_editor theme_edit.cpp)
+    target_link_libraries(theme_editor PUBLIC mui)
 
-# Add include directories for the theme editor.
-target_include_directories(theme_editor PRIVATE
-    ${CMAKE_BINARY_DIR}/_deps/imgui-src
-    mui
-)
-
-# --- THEME EDITOR EXECUTABLE ---
-add_executable(sample sample.cpp)
-
-# Link theme editor against the mui library.
-target_link_libraries(sample PUBLIC mui)
-
-# Add include directories for the theme editor.
-target_include_directories(sample PRIVATE
-    ${CMAKE_BINARY_DIR}/_deps/imgui-src
-    mui
-)
+    # --- Sample App Example ---
+    add_executable(sample sample.cpp)
+    target_link_libraries(sample PUBLIC mui)
+endif()
