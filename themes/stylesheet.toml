@@ -1,0 +1,75 @@
+# Sample MUI Stylesheet
+# This file demonstrates how to define styles for different widget selectors.
+# Selectors can be by type (e.g., "Button"), class (e.g., ".danger"), or ID (e.g., "#my_id").
+
+# 1. Style by Type
+[Card]
+childrounding = 8.0
+shadowEnabled = true
+shadowOffset = [0.0, 4.0]
+shadowBlur = 12.0
+shadowColor = [0.0, 0.0, 0.0, 0.25]
+shadowRounding = 8.0
+
+[Button]
+framerounding = 6.0
+
+# 2. Style by Class
+[".danger"]
+button = [0.8, 0.2, 0.2, 1.0]
+buttonhovered = [0.9, 0.3, 0.3, 1.0]
+buttonactive = [0.7, 0.1, 0.1, 1.0]
+shadowEnabled = true
+shadowOffset = [0.0, 2.0]
+shadowBlur = 8.0
+shadowColor = [0.8, 0.2, 0.2, 0.4]
+shadowRounding = 6.0
+
+[".warning"]
+button = [0.8, 0.6, 0.1, 1.0]
+buttonhovered = [0.9, 0.7, 0.2, 1.0]
+buttonactive = [0.7, 0.5, 0.1, 1.0]
+
+[".info"]
+button = [0.1, 0.5, 0.8, 1.0]
+buttonhovered = [0.2, 0.6, 0.9, 1.0]
+buttonactive = [0.1, 0.4, 0.7, 1.0]
+
+[".success"]
+button = [0.2, 0.7, 0.3, 1.0]
+buttonhovered = [0.3, 0.8, 0.4, 1.0]
+buttonactive = [0.1, 0.6, 0.2, 1.0]
+
+[".nav_btn"]
+framerounding = 16.0
+
+[".no_shadow"]
+shadowEnabled = false
+
+[".invalid"]
+framebg = [0.5, 0.2, 0.2, 1.0]
+border = [0.8, 0.2, 0.2, 1.0]
+framebordersize = 1.0
+
+# 3. Style by ID
+["#btn_click"]
+shadowEnabled = true
+shadowOffset = [0.0, 0.0]
+shadowBlur = 20.0
+shadowColor = [0.0, 0.0, 1.0, 0.5]
+shadowRounding = -1.0
+shadowThickness = 20.0
+framerounding = 20.0
+
+["#custom_shadow_btn"]
+shadowEnabled = true
+shadowOffset = [0.0, 0.0]
+shadowBlur = 10.0
+shadowColor = "#FFFF00CC" # Yellow with 80% alpha
+shadowRounding = 8.0
+
+["#shadow_card"]
+shadowEnabled = true
+shadowOffset = [0.0, 8.0]
+shadowBlur = 20.0
+shadowColor = [0.0, 0.0, 0.0, 0.6]

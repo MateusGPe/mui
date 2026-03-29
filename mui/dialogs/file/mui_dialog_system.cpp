@@ -46,7 +46,7 @@ namespace mui_dlg
     m_content.clear(); // p == "" after this line, due to reference
     m_selectedFileItem = -1;
 
-    if (m_type == IFD_DIALOG_DIRECTORY || m_type == IFD_DIALOG_FILE)
+    if (m_type == MUI_DIALOG_DIRECTORY || m_type == MUI_DIALOG_FILE)
       m_inputTextbox[0] = 0;
     m_selections.clear();
 
@@ -83,8 +83,8 @@ namespace mui_dlg
         {
           FileData info(entry.path());
 
-          // skip files when IFD_DIALOG_DIRECTORY
-          if (!info.IsDirectory && m_type == IFD_DIALOG_DIRECTORY)
+          // skip files when MUI_DIALOG_DIRECTORY
+          if (!info.IsDirectory && m_type == MUI_DIALOG_DIRECTORY)
             continue;
 
           // check if filename matches search query
@@ -103,7 +103,7 @@ namespace mui_dlg
           }
 
           // check if extension matches
-          if (!info.IsDirectory && m_type != IFD_DIALOG_DIRECTORY)
+          if (!info.IsDirectory && m_type != MUI_DIALOG_DIRECTORY)
           {
             if (m_filterSelection < m_filterExtensions.size())
             {

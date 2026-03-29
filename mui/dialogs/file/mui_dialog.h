@@ -18,9 +18,9 @@
 #include <unordered_map>
 #include <vector>
 
-#define IFD_DIALOG_FILE 0
-#define IFD_DIALOG_DIRECTORY 1
-#define IFD_DIALOG_SAVE 2
+#define MUI_DIALOG_FILE 0
+#define MUI_DIALOG_DIRECTORY 1
+#define MUI_DIALOG_SAVE 2
 #include <queue>
 
 namespace mui_dlg
@@ -47,6 +47,9 @@ namespace mui_dlg
     bool Open(const std::string &key, const std::string &title,
               const std::string &filter, bool isMultiselect = false,
               const std::string &startingDir = "");
+              
+    bool SelectFolder(const std::string &key, const std::string &title,
+                      const std::string &startingDir = "");
 
     bool IsDone(const std::string &key);
 

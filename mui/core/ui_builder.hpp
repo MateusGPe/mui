@@ -45,6 +45,12 @@ namespace mui
         }
     };
 
+    template <typename T>
+    struct Ref
+    {
+        std::shared_ptr<T> &ptr;
+    };
+
     struct GridCell
     {
         IControlPtr control;
@@ -133,7 +139,6 @@ namespace mui
         }
     };
 
-    // NEW: Safe Fluent Binding Tag
     template <typename Sig, typename Cb>
     struct ObserveDef
     {
@@ -252,13 +257,19 @@ namespace mui
         return stack;
     }
 
-    // NEW: Safely attach a custom observable connection to any widget in the stream.
     // This calls widget->observe() behind the scenes, ensuring the [[nodiscard]]
     // connection is stored in the widget's protected m_connections array.
     template <typename T, typename Sig, typename Cb, typename std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int> = 0>
     inline T operator<<(T control, const ObserveDef<Sig, Cb> &def)
     {
-        control->observe(def.signal, def.callback);
+        return control->observe(def.signal, def.callback);
+    }
+
+    template <typename T, typename U, typename = std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int>>
+    inline T operator<<(T control, const Ref<U> &ref)
+    {
+        // Use dynamic_pointer_cast for safe downcasting
+        ref.ptr = std::dynamic_pointer_cast<U>(control);
         return control;
     }
 
@@ -470,14 +481,18 @@ namespace mui
             return c;
         }
 
-        // NEW: Fluent tag generator for custom connections
         template <typename Sig, typename Cb>
         inline ObserveDef<Sig, Cb> Observe(Sig &signal, Cb cb)
         {
             return {signal, std::move(cb)};
         }
 
-        // NEW: Add missing native binds for Label and ProgressBar
+        template <typename T>
+        inline Ref<T> Capture(std::shared_ptr<T> &ptr)
+        {
+            return {ptr};
+        }
+
         inline LabelPtr LabelBind(ObsString obs, LabelFormat format = LabelFormat::Normal)
         {
             auto lbl = mui::Label::create(obs ? obs->get() : "")->setFormat(format);

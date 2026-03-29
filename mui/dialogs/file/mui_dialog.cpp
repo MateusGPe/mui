@@ -174,7 +174,7 @@ namespace mui_dlg
     m_selections.clear();
     m_selectedFileItem = -1;
     m_isMultiselect = false;
-    m_type = IFD_DIALOG_SAVE;
+    m_type = MUI_DIALOG_SAVE;
 
     m_parseFilter(filter);
     if (!startingDir.empty())
@@ -203,9 +203,37 @@ namespace mui_dlg
     m_selections.clear();
     m_selectedFileItem = -1;
     m_isMultiselect = isMultiselect;
-    m_type = filter.empty() ? IFD_DIALOG_DIRECTORY : IFD_DIALOG_FILE;
+    m_type = filter.empty() ? MUI_DIALOG_DIRECTORY : MUI_DIALOG_FILE;
 
     m_parseFilter(filter);
+    if (!startingDir.empty())
+      m_setDirectory(std::filesystem::path(startingDir), false);
+    else
+      m_setDirectory(m_currentDirectory, false); // refresh contents
+
+    return true;
+  }
+
+  bool FileDialog::SelectFolder(const std::string &key, const std::string &title,
+                                const std::string &startingDir)
+  {
+    mui::App::assertMainThread();
+
+    if (!m_currentKey.empty())
+      return false;
+
+    m_currentKey = key;
+    m_currentTitle = title + "###" + key;
+    m_isOpen = true;
+    m_calledOpenPopup = false;
+    m_result.clear();
+    m_inputTextbox[0] = 0;
+    m_selections.clear();
+    m_selectedFileItem = -1;
+    m_isMultiselect = false;
+    m_type = MUI_DIALOG_DIRECTORY;
+
+    m_parseFilter("");
     if (!startingDir.empty())
       m_setDirectory(std::filesystem::path(startingDir), false);
     else
@@ -355,8 +383,8 @@ namespace mui_dlg
 
   bool FileDialog::m_finalize(const std::string &filename)
   {
-    bool hasResult = (!filename.empty() && m_type != IFD_DIALOG_DIRECTORY) ||
-                     m_type == IFD_DIALOG_DIRECTORY;
+    bool hasResult = (!filename.empty() && m_type != MUI_DIALOG_DIRECTORY) ||
+                     m_type == MUI_DIALOG_DIRECTORY;
 
     if (hasResult)
     {
@@ -367,7 +395,7 @@ namespace mui_dlg
           m_result.push_back(path);
         else
           m_result.push_back(m_currentDirectory / path);
-        if (m_type == IFD_DIALOG_DIRECTORY || m_type == IFD_DIALOG_FILE)
+        if (m_type == MUI_DIALOG_DIRECTORY || m_type == MUI_DIALOG_FILE)
         {
           if (!std::filesystem::exists(m_result.back()))
           {
@@ -384,7 +412,7 @@ namespace mui_dlg
             m_result.push_back(sel);
           else
             m_result.push_back(m_currentDirectory / sel);
-          if (m_type == IFD_DIALOG_DIRECTORY || m_type == IFD_DIALOG_FILE)
+          if (m_type == MUI_DIALOG_DIRECTORY || m_type == MUI_DIALOG_FILE)
           {
             if (!std::filesystem::exists(m_result.back()))
             {
@@ -395,7 +423,7 @@ namespace mui_dlg
         }
       }
 
-      if (m_type == IFD_DIALOG_SAVE)
+      if (m_type == MUI_DIALOG_SAVE)
       {
         // add the extension
         if (m_filterSelection < m_filterExtensions.size() &&

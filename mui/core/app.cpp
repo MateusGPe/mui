@@ -293,7 +293,10 @@ namespace mui
     }
   }
 
-  std::function<void()> App::mainLoopCallback = nullptr;
+  std::function<void()> App::mainLoopCallback = []()
+  {
+    mui::Dialogs::processDialogs();
+  };
 
   void App::setMainLoopCallback(std::function<void()> cb)
   {

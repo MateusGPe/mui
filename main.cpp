@@ -35,52 +35,10 @@ int main()
     // STYLESHEET CONFIGURATION
     // ==========================================
 
-    // 1. Style by Type
-    StyleSheet::select("Card")
-        .var(ImGuiStyleVar_ChildRounding, 8.0f)
-        .shadow(true, ImVec2(0.0f, 4.0f), 12.0f, ImVec4(0.0f, 0.0f, 0.0f, 0.25f), 8.0f);
-
-    StyleSheet::select("Button")
-        .var(ImGuiStyleVar_FrameRounding, 6.0f);
-
-    // 2. Style by Class
-    StyleSheet::select(".danger")
-        .color(ImGuiCol_Button, ImVec4(0.8f, 0.2f, 0.2f, 1.0f))
-        .color(ImGuiCol_ButtonHovered, ImVec4(0.9f, 0.3f, 0.3f, 1.0f))
-        .color(ImGuiCol_ButtonActive, ImVec4(0.7f, 0.1f, 0.1f, 1.0f))
-        .shadow(true, ImVec2(0.0f, 2.0f), 8.0f, ImVec4(0.8f, 0.2f, 0.2f, 0.4f), 6.0f);
-
-    StyleSheet::select(".warning")
-        .color(ImGuiCol_Button, ImVec4(0.8f, 0.6f, 0.1f, 1.0f))
-        .color(ImGuiCol_ButtonHovered, ImVec4(0.9f, 0.7f, 0.2f, 1.0f))
-        .color(ImGuiCol_ButtonActive, ImVec4(0.7f, 0.5f, 0.1f, 1.0f));
-
-    StyleSheet::select(".info")
-        .color(ImGuiCol_Button, ImVec4(0.1f, 0.5f, 0.8f, 1.0f))
-        .color(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.6f, 0.9f, 1.0f))
-        .color(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.4f, 0.7f, 1.0f));
-
-    StyleSheet::select(".success")
-        .color(ImGuiCol_Button, ImVec4(0.2f, 0.7f, 0.3f, 1.0f))
-        .color(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.8f, 0.4f, 1.0f))
-        .color(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.6f, 0.2f, 1.0f));
-
-    StyleSheet::select(".nav_btn")
-        .var(ImGuiStyleVar_FrameRounding, 16.0f);
-
-    StyleSheet::select(".no_shadow")
-        .shadow(false);
-
-    // 3. Style by ID
-    StyleSheet::select("#btn_click")
-        .shadow(true, ImVec2(0.0f, 0.0f), 20.0f, ImVec4(0.0f, 0.0f, 1.0f, 0.5f), -1.0f, 20.0f)
-        .var(ImGuiStyleVar_FrameRounding, 20.0f);
-
-    StyleSheet::select("#custom_shadow_btn")
-        .shadow(true, ImVec2(0.0f, 0.0f), 10.0f, ImVec4(1.0f, 1.0f, 0.0f, 0.8f), 8.0f);
-
-    StyleSheet::select("#shadow_card")
-        .shadow(true, ImVec2(0.0f, 8.0f), 20.0f, ImVec4(0.0f, 0.0f, 0.0f, 0.6f));
+    // Load styles from an external TOML file. This is more flexible than defining
+    // them in C++. Make sure 'stylesheet.toml' is in the same directory as the
+    // executable.
+    StyleSheet::loadFromFile(App::getFilepath() + "stylesheet.toml");
 
     // Define a docking layout for our windows to arrange them on startup.
     App::setLayoutBuilder(
@@ -95,12 +53,6 @@ int main()
             // Dock windows. This only needs to be done once.
             builder.dockWindow("MUI Control Gallery", center_node_id);
             builder.dockWindow("Inspector", right_node_id);
-        });
-
-    App::setMainLoopCallback(
-        []()
-        {
-            mui::Dialogs::processDialogs();
         });
 
     // Create and show the main window with the control gallery
@@ -425,14 +377,19 @@ IControlPtr createTextEntriesTab(const LabelPtr &lblStatus)
     auto lblMirror = UI::Label("Mirror: ");
 
     lblMirror->setText("Mirror: " + textObservable->get()); // Initial value
+    auto entry = UI::EntryBind("Type here...", textObservable)->setSpanAvailWidth(true);
 
     return UI::VBox(true, true)
            << UI::Label("Standard Entry:")
-           << (UI::EntryBind("Type here...", textObservable)->setSpanAvailWidth(true)
+           << (entry
                << UI::Observe(
                       textObservable->onValueChanged,
-                      [lblMirror](const std::string &text)
+                      [lblMirror, entry](const std::string &text)
                       {
+                          if (text.empty())
+                              entry->setInvalid(true);
+                          else
+                              entry->setInvalid(false);
                           lblMirror->setText("Mirror: " + text);
                       }))
            << UI::Label("Password Entry:")
@@ -574,7 +531,7 @@ IControlPtr createDialogsTab(const WindowPtr &win, const LabelPtr &lblStatus)
                    ->setMargined(true)
                << (UI::VBox(true)
                    << mui::PathPicker::create()
-                          ->setMode(mui::PathPickerMode::File)
+                          ->setMode(mui::PathPickerMode::Folder)
                           ->setSpanAvailWidth(true)
                           ->onPathChanged([lblStatus](const std::string &path)
                                           { lblStatus->setText("PathPicker selected: " + path); })

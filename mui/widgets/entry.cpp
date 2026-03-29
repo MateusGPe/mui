@@ -3,6 +3,7 @@
 #include "../core/app.hpp"
 #include "../core/scoped.hpp"
 #include "imstb_textedit.h"
+#include "../core/stylesheet.hpp"
 #include <algorithm>
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -54,6 +55,23 @@ namespace mui
     auto render_entry = [&]
     {
       bool changed = false;
+      ScopedStyle invalid_scoped_style;
+      ScopedColor invalid_scoped_color;
+      if (m_isInvalid)
+      {
+        // A user can style the invalid state using the ".invalid" class selector.
+        // e.g., StyleSheet::select(".invalid").color(ImGuiCol_FrameBg, ...);
+        const StyleBlock *invalid_style = StyleSheet::get(".invalid");
+        if (invalid_style)
+        {
+          for (const auto &[col, val] : invalid_style->colors)
+            invalid_scoped_color.push(col, val);
+          for (const auto &[var, val] : invalid_style->floats)
+            invalid_scoped_style.push(var, val);
+          for (const auto &[var, val] : invalid_style->vec2s)
+            invalid_scoped_style.push(var, val);
+        }
+      }
       bool entered = false;
 
       if (buffer)
@@ -298,6 +316,12 @@ namespace mui
       m_flags |= ImGuiInputTextFlags_CtrlEnterForNewLine;
     else
       m_flags &= ~ImGuiInputTextFlags_CtrlEnterForNewLine;
+    return self();
+  }
+
+  EntryPtr Entry::setInvalid(bool invalid)
+  {
+    m_isInvalid = invalid;
     return self();
   }
 

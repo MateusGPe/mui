@@ -151,7 +151,7 @@ namespace mui_dlg
             }
             else
             {
-              if ((isDir && m_type == IFD_DIALOG_DIRECTORY) || !isDir)
+              if ((isDir && m_type == MUI_DIALOG_DIRECTORY) || !isDir)
                 m_select(entry.Path, ImGui::GetIO().KeyCtrl);
             }
           }
@@ -213,7 +213,7 @@ namespace mui_dlg
           }
           else
           {
-            if ((isDir && m_type == IFD_DIALOG_DIRECTORY) || !isDir)
+            if ((isDir && m_type == MUI_DIALOG_DIRECTORY) || !isDir)
               m_select(entry.Path, ImGui::GetIO().KeyCtrl);
           }
         }
@@ -379,7 +379,7 @@ namespace mui_dlg
     }
     m_filterCombo->setSelectedIndex(m_filterSelection);
 
-    if (m_type != IFD_DIALOG_DIRECTORY)
+    if (m_type != MUI_DIALOG_DIRECTORY)
       m_filterCombo->show();
     else
       m_filterCombo->hide();

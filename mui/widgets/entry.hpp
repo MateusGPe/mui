@@ -24,6 +24,7 @@ namespace mui
     
         std::string hint;
         bool isMultiline = false;
+        bool m_isInvalid = false; // New member to track invalid state
         bool withContextMenu = true;
     
         int selStart = 0;
@@ -64,6 +65,7 @@ namespace mui
         EntryPtr setCharsUppercase(bool b);
         EntryPtr setAllowTabInput(bool b);
         EntryPtr setCtrlEnterForNewLine(bool b);
+        EntryPtr setInvalid(bool invalid); // New method to set invalid state
     
         EntryPtr bind(std::shared_ptr<Observable<std::string>> observable);
     

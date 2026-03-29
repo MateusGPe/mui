@@ -102,10 +102,7 @@ namespace mui
         segment_widths.push_back(button_width);
         total_width += button_width;
       }
-      if (segments.size() > 1)
-      {
-        total_width += (segments.size() - 1) * separator_width;
-      }
+      total_width += (segments.size() + 1) * separator_width;
 
       // --- 2. Elision & Rendering ---
       ScopedStyle itemSpacing(ImGuiStyleVar_ItemSpacing,
@@ -155,8 +152,9 @@ namespace mui
         }
 
 #ifdef _WIN32
-        if (newPath.size() == 2 && newPath[1] == ':') {
-            newPath += "\\";
+        if (newPath.size() == 2 && newPath[1] == ':')
+        {
+          newPath += "\\";
         }
 #endif
 
@@ -180,71 +178,79 @@ namespace mui
       auto render_separator = [&](int idx)
       {
         ScopedID sep_id("sep" + std::to_string(idx));
-        
+
         if (ImGui::Button(ICON_FA_ANGLE_RIGHT, ImVec2(separator_width, actualSize.y)))
         {
-            ImGui::OpenPopup("BreadcrumbSubdirs");
+          ImGui::OpenPopup("BreadcrumbSubdirs");
         }
         anyItemInteraction |= ImGui::IsItemHovered();
 
         if (ImGui::BeginPopup("BreadcrumbSubdirs"))
         {
-            std::string levelPath = "";
-#ifndef _WIN32
-            if (!segments.empty() && segments[0] != "This PC" &&
-                segments[0] != "Quick Access")
-                levelPath = "/";
-#endif
-            for (int j = 0; j < idx; ++j)
-            {
-                levelPath += segments[j];
+          std::string levelPath = "";
+          if(segments.empty())
+          {
 #ifdef _WIN32
-                levelPath += "\\";
+            levelPath = "This PC";
 #else
-                levelPath += "/";
+            levelPath = "/";
 #endif
-            }
+          }
+#ifndef _WIN32
+          if (!segments.empty() && segments[0] != "This PC" &&
+              segments[0] != "Quick Access")
+            levelPath = "/";
+#endif
+          for (int j = 0; j < idx; ++j)
+          {
+            levelPath += segments[j];
+#ifdef _WIN32
+            levelPath += "\\";
+#else
+            levelPath += "/";
+#endif
+          }
 
-            std::error_code ec;
-            bool found_any = false;
+          std::error_code ec;
+          bool found_any = false;
 
-            if (std::filesystem::is_directory(levelPath, ec))
+          if (std::filesystem::is_directory(levelPath, ec))
+          {
+            std::vector<std::filesystem::path> subdirs;
+            try
             {
-                std::vector<std::filesystem::path> subdirs;
-                try 
+              for (const auto &entry : std::filesystem::directory_iterator(
+                       levelPath, std::filesystem::directory_options::skip_permission_denied, ec))
+              {
+                if (!ec && entry.is_directory(ec))
                 {
-                    for (const auto &entry : std::filesystem::directory_iterator(
-                             levelPath, std::filesystem::directory_options::skip_permission_denied, ec))
-                    {
-                        if (!ec && entry.is_directory(ec))
-                        {
-                            subdirs.push_back(entry.path());
-                        }
-                    }
+                  subdirs.push_back(entry.path());
                 }
-                catch (...)
-                {
-                    // Suppress outright catastrophic directory open failures 
-                }
-
-                std::sort(subdirs.begin(), subdirs.end());
-
-                for (const auto &p : subdirs)
-                {
-                    found_any = true;
-                    if (ImGui::MenuItem(p.filename().string().c_str()))
-                    {
-                        setPath(p.string());
-                        onPathNavigatedSignal(currentPath);
-                    }
-                }
+              }
             }
-
-            if (!found_any)
+            catch (...)
             {
-                ImGui::TextDisabled("No subfolders");
+              // Suppress outright catastrophic directory open failures
             }
-            ImGui::EndPopup();
+
+            std::sort(subdirs.begin(), subdirs.end());
+
+            for (const auto &p : subdirs)
+            {
+              found_any = true;
+              if (ImGui::MenuItem(p.filename().string().c_str()))
+              {
+                setPath(p.string());
+                onPathNavigatedSignal(currentPath);
+              }
+            }
+          }
+
+          if (!found_any)
+          {
+            ImGui::TextDisabled("No subfolders");
+          }
+          ImGui::EndPopup();
         }
       };
 
@@ -253,14 +259,12 @@ namespace mui
         // --- Render all segments ---
         for (size_t i = 0; i < segments.size(); ++i)
         {
-          if (i > 0)
-          {
-            render_separator(i);
-            ImGui::SameLine();
-          }
+          render_separator(i);
+          ImGui::SameLine();
           render_segment_button(i);
           ImGui::SameLine();
         }
+        render_separator(segments.size());
       }
       else
       {
@@ -268,11 +272,11 @@ namespace mui
         float ellipsis_width =
             ImGui::CalcTextSize("...").x + style.FramePadding.x * 2.0f;
         // Available space for the block of segments at the end, including their
-        // preceding separators. The layout is [seg0] [sep] [...] [last_block].
+        // preceding separators. The layout is [sep] [seg0] [sep] [...] [last_block] [sep].
         // The last_block is rendered as [sep][seg]... so the separator is part of
         // the block.
         float available_for_last =
-            actualSize.x - (segment_widths[0] + separator_width) - ellipsis_width;
+            actualSize.x - (separator_width + segment_widths[0] + separator_width) - ellipsis_width - separator_width;
 
         size_t last_segment_start_idx = segments.size();
         float last_segments_width = 0.0f;
@@ -288,6 +292,8 @@ namespace mui
         }
 
         // 1. Render first segment
+        render_separator(0);
+        ImGui::SameLine();
         render_segment_button(0);
         ImGui::SameLine();
 
@@ -326,6 +332,7 @@ namespace mui
           render_segment_button(i);
           ImGui::SameLine();
         }
+        render_separator(segments.size());
       }
 
       if (!anyItemInteraction && clicked)

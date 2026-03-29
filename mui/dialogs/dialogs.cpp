@@ -227,6 +227,24 @@ namespace mui
     }
   }
 
+  void Dialogs::selectFolder(const std::string &title,
+                             std::function<void(const std::string &)> on_ok,
+                             std::function<void()> on_cancel,
+                             const std::string &startingDir)
+  {
+    if (!g_current_dialog_state.key.empty())
+    {
+      return;
+    }
+    std::string key = "selectfolder##" + title;
+
+    std::string effectiveDir = get_effective_starting_dir(startingDir);
+    if (mui_dlg::FileDialog::Instance().SelectFolder(key, title, effectiveDir))
+    {
+      g_current_dialog_state = {key, on_ok, nullptr, on_cancel};
+    }
+  }
+
   void Dialogs::renderMessageBox(ActiveMessageBox &mb, bool &isOpen)
   {
     // --- Icon and Color based on type ---

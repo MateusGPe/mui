@@ -166,6 +166,9 @@ namespace mui
             return m_styles[selector];
         }
 
+        // Load styles from a TOML file.
+        static bool loadFromFile(const std::string& filepath);
+
         static const StyleBlock *get(const std::string &selector)
         {
             auto it = m_styles.find(selector);

@@ -82,8 +82,21 @@ namespace mui
                         {
                             if (is_dir)
                             {
-                                setPath(fullPath);
-                                onPathChangedSignal(fullPath);
+                                if (m_mode == PathPickerMode::Folder)
+                                {
+                                    // For folder mode, selecting a directory from combo means it's the chosen folder
+                                    m_path = fullPath;                                                             // Store the full folder path
+                                    m_breadcrumb->setPath(std::filesystem::path(fullPath).parent_path().string()); // Breadcrumb shows parent
+                                    if (m_fileEntry)
+                                        m_fileEntry->setText(name); // FileEntry shows folder name
+                                    onPathChangedSignal(fullPath);
+                                }
+                                else
+                                {
+                                    // For file/savefile mode, selecting a directory from combo means navigate into it
+                                    setPath(fullPath);
+                                    onPathChangedSignal(fullPath);
+                                }
                             }
                             else
                             {
@@ -165,6 +178,21 @@ namespace mui
                     {
                         auto onSuccess = [this](const std::string &p)
                         {
+                            std::filesystem::path pathObj(p);
+                            if (m_mode == PathPickerMode::Folder)
+                            {
+                                if (!std::filesystem::is_directory(pathObj))
+                                {
+                                    Dialogs::msgBoxError("Error", "Selected path is not a folder.");
+                                    return;
+                                }
+                                m_path = p;                                            // Store the full folder path
+                                m_breadcrumb->setPath(pathObj.parent_path().string()); // Breadcrumb shows parent
+                                if (m_fileEntry)
+                                    m_fileEntry->setText(pathObj.filename().string()); // FileEntry shows folder name
+                                onPathChangedSignal(p);
+                                return;
+                            }
                             setPath(p);
                             onPathChangedSignal(p);
                         };
@@ -187,8 +215,8 @@ namespace mui
                         }
                         else if (m_mode == PathPickerMode::Folder)
                         {
-                            Dialogs::openFile("Select Folder", "", onSuccess,
-                                              onCancel);
+                            Dialogs::selectFolder("Select Folder", onSuccess,
+                                                  onCancel);
                         }
                     });
 
@@ -270,20 +298,20 @@ namespace mui
         if (m_showBreadcrumb)
             m_layout->append(m_breadcrumb, true);
 
+        if (m_showFile)
+        {
+            if (m_mode == PathPickerMode::SaveFile)
+            {
+                m_layout->append(m_fileEntry, true);
+            }
+            else
+            {
+                m_layout->append(m_fileCombo, true);
+            }
+        }
+
         if (m_mode != PathPickerMode::Folder)
         {
-            if (m_showFile)
-            {
-                if (m_mode == PathPickerMode::SaveFile)
-                {
-                    m_layout->append(m_fileEntry, true);
-                }
-                else
-                {
-                    m_layout->append(m_fileCombo, true);
-                }
-            }
-
             if (m_showFilter && !m_filters.empty())
             {
                 m_layout->append(m_filterCombo);
@@ -361,9 +389,6 @@ namespace mui
 
     void PathPicker::updateFileList()
     {
-        if (m_mode == PathPickerMode::Folder)
-            return;
-
         m_fileCombo->clear();
 
         std::error_code ec;
@@ -433,64 +458,67 @@ namespace mui
             current_item_index++;
         }
 
-        std::vector<std::string> lower_exts;
-        bool filter_active = m_filterSelection >= 0 &&
-                             m_filterSelection < static_cast<int>(m_filters.size());
-        bool is_wildcard = false;
-
-        if (filter_active)
+        if (m_mode == PathPickerMode::File) // Only add files to combo if in File mode
         {
-            const auto &exts = m_filters[m_filterSelection].second;
-            for (const auto &e : exts)
+            std::vector<std::string> lower_exts;
+            bool filter_active = m_filterSelection >= 0 &&
+                                 m_filterSelection < static_cast<int>(m_filters.size());
+            bool is_wildcard = false;
+
+            if (filter_active)
             {
-                if (e == "*.*" || e == ".*" || e == "*")
+                const auto &exts = m_filters[m_filterSelection].second;
+                for (const auto &e : exts)
                 {
-                    is_wildcard = true;
-                    break;
-                }
-                std::string lower_e = e;
-                if (lower_e.length() > 0 && lower_e[0] == '*')
-                    lower_e = lower_e.substr(1);
-
-                std::transform(lower_e.begin(), lower_e.end(), lower_e.begin(),
-                               [](unsigned char c)
-                               {
-                                   return std::tolower(c);
-                               });
-                lower_exts.push_back(lower_e);
-            }
-        }
-
-        for (const auto &p : files)
-        {
-            std::string fname = p.filename().string();
-
-            if (filter_active && !is_wildcard && !lower_exts.empty())
-            {
-                std::string file_ext = p.extension().string();
-                std::transform(file_ext.begin(), file_ext.end(), file_ext.begin(),
-                               [](unsigned char c)
-                               {
-                                   return std::tolower(c);
-                               });
-
-                bool found = false;
-                for (const auto &e : lower_exts)
-                {
-                    if (e == file_ext)
+                    if (e == "*.*" || e == ".*" || e == "*")
                     {
-                        found = true;
+                        is_wildcard = true;
                         break;
                     }
+                    std::string lower_e = e;
+                    if (lower_e.length() > 0 && lower_e[0] == '*')
+                        lower_e = lower_e.substr(1);
+
+                    std::transform(lower_e.begin(), lower_e.end(), lower_e.begin(),
+                                   [](unsigned char c)
+                                   {
+                                       return std::tolower(c);
+                                   });
+                    lower_exts.push_back(lower_e);
                 }
-                if (!found)
-                    continue;
             }
 
-            m_fileCombo->append(std::string(ICON_FA_FILE) + " " + fname);
-            if (!currentFilename.empty() && fname == currentFilename)
-                targetIdx = current_item_index;
-            current_item_index++;
+            for (const auto &p : files)
+            {
+                std::string fname = p.filename().string();
+
+                if (filter_active && !is_wildcard && !lower_exts.empty())
+                {
+                    std::string file_ext = p.extension().string();
+                    std::transform(file_ext.begin(), file_ext.end(), file_ext.begin(),
+                                   [](unsigned char c)
+                                   {
+                                       return std::tolower(c);
+                                   });
+
+                    bool found = false;
+                    for (const auto &e : lower_exts)
+                    {
+                        if (e == file_ext)
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found)
+                        continue;
+                }
+
+                m_fileCombo->append(std::string(ICON_FA_FILE) + " " + fname);
+                if (!currentFilename.empty() && fname == currentFilename)
+                    targetIdx = current_item_index;
+                current_item_index++;
+            }
         }
 
         if (targetIdx == -1 && !currentFilename.empty() &&
@@ -516,8 +544,7 @@ namespace mui
         fixDrivePath(p);
         m_upButton->setEnabled(p.has_parent_path() && p.parent_path() != p);
 
-
-        if (m_mode == PathPickerMode::File)
+        if (m_mode == PathPickerMode::File || m_mode == PathPickerMode::Folder)
         {
             std::string preview;
             int s_idx = m_fileCombo->getSelectedIndex();
@@ -533,7 +560,7 @@ namespace mui
                         preview = selectedText.substr(offset);
                 }
             }
-            else if (!m_path.empty() && !std::filesystem::is_directory(m_path))
+            else if (!m_path.empty() && (m_mode == PathPickerMode::Folder || !std::filesystem::is_directory(m_path)))
             {
                 preview = std::filesystem::path(m_path).filename().string();
             }
@@ -622,8 +649,8 @@ namespace mui
                     m_fileEntry->setText(p.filename().string());
                 }
             }
-            updateFileList();
         }
+        updateFileList();
         return self();
     }
 
@@ -633,10 +660,7 @@ namespace mui
         {
             m_mode = mode;
             rebuildLayout();
-            if (m_mode != PathPickerMode::Folder)
-            {
-                updateFileList();
-            }
+            updateFileList();
         }
         return self();
     }

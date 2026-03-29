@@ -49,6 +49,7 @@ namespace mui
         static void openFile(const std::string &title, const std::string &filter, std::function<void(const std::string &)> on_ok, std::function<void()> on_cancel = nullptr, const std::string &startingDir = "");
         static void openFiles(const std::string &title, const std::string &filter, std::function<void(const std::vector<std::string> &)> on_ok, std::function<void()> on_cancel = nullptr, const std::string &startingDir = "");
         static void saveFile(const std::string &title, const std::string &filter, std::function<void(const std::string &)> on_ok, std::function<void()> on_cancel = nullptr, const std::string &startingDir = "");
+        static void selectFolder(const std::string &title, std::function<void(const std::string &)> on_ok, std::function<void()> on_cancel = nullptr, const std::string &startingDir = "");
 
         // To be called from the main loop to process dialog results.
         static void processDialogs();
