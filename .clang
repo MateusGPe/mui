@@ -12,16 +12,25 @@ ContinuationIndentWidth: 4
 # Adjust this value to fit your team's preference.
 ColumnLimit: 100
 
-# How to wrap function parameters
+# How to wrap function parameters and arguments
 BinPackParameters: false
-AlignAfterOpenBracket: DontAlign
+BinPackArguments: false
+AlignAfterOpenBracket: BlockIndent
 
 # --- Braces and Pointers ---
-BreakBeforeBraces: Attach
-PointerAlignment: Left
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterFunction: true
+  AfterControlStatement: true
+  BeforeLambdaBody: true
+  AfterClass: true
+  AfterStruct: true
+  AfterEnum: true
+PointerAlignment: Right
+AllowShortLambdasOnASingleLine: None
 
 # --- Operator Breaking ---
 # This ensures that when a line is broken, the operator (like ->)
 # is at the beginning of the new line, indented.
-BreakBeforeBinaryOperators: None
+BreakBeforeBinaryOperators: All
 ...

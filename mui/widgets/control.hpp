@@ -11,17 +11,21 @@
 #include "../core/signal.hpp"
 #include "../core/shadows.hpp" // Added ImGuiShadows include
 #include "../core/stylesheet.hpp"
+#include <optional>
 
 namespace mui
 {
     // Forward declaration for ScopedControlID
     class IControl;
 
-    struct ScopedControlID {
+    struct ScopedControlID
+    {
         bool pushed = false;
-        ScopedControlID(IControl* ctrl);
-        ~ScopedControlID() { 
-            if (pushed) ImGui::PopID(); 
+        ScopedControlID(IControl *ctrl);
+        ~ScopedControlID()
+        {
+            if (pushed)
+                ImGui::PopID();
         }
     };
 
@@ -49,7 +53,7 @@ namespace mui
     {
     protected:
         std::vector<std::string> m_classes;
-        std::vector<const StyleBlock*> m_cachedStyles;
+        std::vector<const StyleBlock *> m_cachedStyles;
         unsigned int m_styleVersion = 0;
 
         // Derived classes MUST implement this to identify themselves (e.g., return "Button")
@@ -58,11 +62,61 @@ namespace mui
         void updateStyleCache()
         {
             m_cachedStyles.clear();
-            if (auto b = StyleSheet::get(getTypeName())) m_cachedStyles.push_back(b);
-            for (const auto& cls : m_classes)
-                if (auto b = StyleSheet::get("." + cls)) m_cachedStyles.push_back(b);
+            if (auto b = StyleSheet::get(getTypeName()))
+                m_cachedStyles.push_back(b);
+            for (const auto &cls : m_classes)
+                if (auto b = StyleSheet::get("." + cls))
+                    m_cachedStyles.push_back(b);
             if (!m_customId.empty())
-                if (auto b = StyleSheet::get("#" + m_customId)) m_cachedStyles.push_back(b);
+                if (auto b = StyleSheet::get("#" + m_customId))
+                    m_cachedStyles.push_back(b);
+
+            // Resolve Shadow Properties: Globals -> Stylesheet -> Inline
+            m_resolvedHasShadow = StyleSheet::s_defaultHasShadow;
+            m_resolvedShadowOffset = StyleSheet::s_defaultShadowOffset;
+            m_resolvedShadowBlur = StyleSheet::s_defaultShadowBlur;
+            m_resolvedShadowColor = StyleSheet::s_defaultShadowColor;
+            m_resolvedShadowRounding = StyleSheet::s_defaultShadowRounding;
+            m_resolvedShadowFillBackground = StyleSheet::s_defaultShadowFillBackground;
+            m_resolvedShadowThickness = StyleSheet::s_defaultShadowThickness;
+
+            for (const auto *block : m_cachedStyles)
+            {
+                if (block->shadowEnabled)
+                    m_resolvedHasShadow = *block->shadowEnabled;
+                else
+                    continue;
+                if (block->shadowOffset)
+                    m_resolvedShadowOffset = *block->shadowOffset;
+                if (block->shadowBlur)
+                    m_resolvedShadowBlur = *block->shadowBlur;
+                if (block->shadowColor)
+                    m_resolvedShadowColor = *block->shadowColor;
+                if (block->shadowRounding)
+                    m_resolvedShadowRounding = *block->shadowRounding;
+                if (block->shadowFillBackground)
+                    m_resolvedShadowFillBackground = *block->shadowFillBackground;
+                if (block->shadowThickness)
+                    m_resolvedShadowThickness = *block->shadowThickness;
+            }
+
+            if (inlineShadowEnabled)
+            {
+                m_resolvedHasShadow = *inlineShadowEnabled;
+                if (inlineShadowOffset)
+                    m_resolvedShadowOffset = *inlineShadowOffset;
+                if (inlineShadowBlur)
+                    m_resolvedShadowBlur = *inlineShadowBlur;
+                if (inlineShadowColor)
+                    m_resolvedShadowColor = *inlineShadowColor;
+                if (inlineShadowRounding)
+                    m_resolvedShadowRounding = *inlineShadowRounding;
+                if (inlineShadowFillBackground)
+                    m_resolvedShadowFillBackground = *inlineShadowFillBackground;
+                if (inlineShadowThickness)
+                    m_resolvedShadowThickness = *inlineShadowThickness;
+            }
+
             m_styleVersion = StyleSheet::getVersion();
         }
         bool visible = true;
@@ -79,23 +133,23 @@ namespace mui
         std::string tooltip;
         std::string m_customId; // Stable ID to prevent ImGui state loss on reallocation
 
-        // Static Global Shadow Defaults
-        static bool s_defaultHasShadow;
-        static ImVec2 s_defaultShadowOffset;
-        static float s_defaultShadowBlur;
-        static ImVec4 s_defaultShadowColor;
-        static float s_defaultShadowRounding;
-        static bool s_defaultShadowFillBackground;
-        static float s_defaultShadowThickness;
+        // Shadow Properties (inline overrides)
+        std::optional<bool> inlineShadowEnabled;
+        std::optional<ImVec2> inlineShadowOffset;
+        std::optional<float> inlineShadowBlur;
+        std::optional<ImVec4> inlineShadowColor;
+        std::optional<float> inlineShadowRounding;
+        std::optional<bool> inlineShadowFillBackground;
+        std::optional<float> inlineShadowThickness;
 
-        // Shadow Properties
-        bool hasShadow = s_defaultHasShadow;
-        ImVec2 shadowOffset = s_defaultShadowOffset;
-        float shadowBlur = s_defaultShadowBlur;
-        ImVec4 shadowColor = s_defaultShadowColor;
-        float shadowRounding = s_defaultShadowRounding; // -1 means use ImGui style default
-        bool shadowFillBackground = s_defaultShadowFillBackground;
-        float shadowThickness = s_defaultShadowThickness;
+        // Cached Resolved Shadow Properties
+        bool m_resolvedHasShadow = false;
+        ImVec2 m_resolvedShadowOffset = {0.0f, 0.0f};
+        float m_resolvedShadowBlur = 10.0f;
+        ImVec4 m_resolvedShadowColor = {-1.0f, -1.0f, -1.0f, -1.0f};
+        float m_resolvedShadowRounding = -1.0f;
+        bool m_resolvedShadowFillBackground = true;
+        float m_resolvedShadowThickness = -1.0f;
 
         void renderTooltip()
         {
@@ -116,14 +170,14 @@ namespace mui
     public:
         virtual ~Control() = default;
 
-        std::shared_ptr<Derived> addClass(const std::string& cls)
+        std::shared_ptr<Derived> addClass(const std::string &cls)
         {
             m_classes.push_back(cls);
             m_styleVersion = 0; // Force update on next render
             return self();
         }
 
-        std::shared_ptr<Derived> setID(const std::string& id)
+        std::shared_ptr<Derived> setID(const std::string &id)
         {
             m_customId = id;
             m_styleVersion = 0; // Force update on next render
@@ -137,24 +191,54 @@ namespace mui
                 return;
 
             // Fast cache invalidation check
-            if (m_styleVersion != StyleSheet::getVersion()) {
+            if (m_styleVersion != StyleSheet::getVersion())
+            {
                 updateStyleCache();
             }
 
             // RAII struct to safely push and pop ImGui styles, immune to early returns
-            struct ScopedStyleApplier {
+            struct ScopedStyleApplier
+            {
                 int colorPushes = 0;
                 int varPushes = 0;
-                ScopedStyleApplier(const std::vector<const StyleBlock*>& blocks) {
-                    for (const auto* block : blocks) {
-                        for (const auto& [col, val] : block->colors) { ImGui::PushStyleColor(col, val); colorPushes++; }
-                        for (const auto& [var, val] : block->floats) { ImGui::PushStyleVar(var, val); varPushes++; }
-                        for (const auto& [var, val] : block->vec2s)  { ImGui::PushStyleVar(var, val); varPushes++; }
+                ScopedStyleApplier(const std::vector<const StyleBlock *> &blocks)
+                {
+                    if (blocks.empty())
+                        return;
+                    for (const auto *block : blocks)
+                    {
+                        if (!block->colors.empty())
+                        {
+                            for (const auto &[col, val] : block->colors)
+                            {
+                                ImGui::PushStyleColor(col, val);
+                            }
+                            colorPushes += block->colors.size();
+                        }
+                        if (!block->floats.empty())
+                        {
+                            for (const auto &[var, val] : block->floats)
+                            {
+                                ImGui::PushStyleVar(var, val);
+                            }
+                            varPushes += block->floats.size();
+                        }
+                        if (!block->vec2s.empty())
+                        {
+                            for (const auto &[var, val] : block->vec2s)
+                            {
+                                ImGui::PushStyleVar(var, val);
+                            }
+                            varPushes += block->vec2s.size();
+                        }
                     }
                 }
-                ~ScopedStyleApplier() {
-                    ImGui::PopStyleVar(varPushes);
-                    ImGui::PopStyleColor(colorPushes);
+                ~ScopedStyleApplier()
+                {
+                    if (varPushes > 0)
+                        ImGui::PopStyleVar(varPushes);
+                    if (colorPushes > 0)
+                        ImGui::PopStyleColor(colorPushes);
                 }
             } style_applier(m_cachedStyles);
 
@@ -167,7 +251,7 @@ namespace mui
             if (window == nullptr || window->SkipItems)
                 return;
 
-            if (!hasShadow || shadowThickness <= 0.0f)
+            if (!m_resolvedHasShadow || m_resolvedShadowThickness <= 0.0f)
             {
                 renderControl();
                 return;
@@ -196,20 +280,19 @@ namespace mui
 
             // 3. Switch to background to draw shadow
             splitter.SetCurrentChannel(draw_list, 0);
-            float rounding = shadowRounding < 0.0f ? ImGui::GetStyle().FrameRounding : shadowRounding;
-            const ImVec4* shadow_uvs = App::GetShadowUVs();
+            float rounding = m_resolvedShadowRounding < 0.0f ? ImGui::GetStyle().FrameRounding : m_resolvedShadowRounding;
+            const ImVec4 *shadow_uvs = App::GetShadowUVs();
             if (shadow_tex)
             {
-                ImVec4 activeShadowColor = shadowColor;
-                if (activeShadowColor.w < 0.0f) 
+                ImVec4 activeShadowColor = m_resolvedShadowColor;
+                if (activeShadowColor.w < 0.0f)
                 {
                     activeShadowColor = App::GetThemeShadowColor();
                 }
                 ImU32 col32 = ImGui::GetColorU32(activeShadowColor);
                 ImGuiShadows::DrawShadowRect(
-                    draw_list, shadow_tex, shadow_uvs, p_min, p_max, col32, 
-                    shadowThickness, shadowOffset, rounding, shadowFillBackground
-                );
+                    draw_list, shadow_tex, shadow_uvs, p_min, p_max, col32,
+                    m_resolvedShadowThickness, m_resolvedShadowOffset, rounding, m_resolvedShadowFillBackground);
             }
 
             // 4. Merge
@@ -227,8 +310,8 @@ namespace mui
         }
 
         std::string getID() const override
-        { 
-            return m_customId; 
+        {
+            return m_customId;
         }
 
         std::shared_ptr<Derived> show()
@@ -326,103 +409,85 @@ namespace mui
         // Shadow Configuration
         std::shared_ptr<Derived> setShadow(bool enable, ImVec2 offset = ImVec2(0, 0), float blur = 10.0f, ImVec4 col = ImVec4(-1.0f, -1.0f, -1.0f, -1.0f), float rounding = -1.0f, float thickness = -1.0f)
         {
-            hasShadow = enable;
-            shadowOffset = offset;
-            shadowBlur = blur;
-            shadowColor = col;
-            shadowRounding = rounding;
-            shadowThickness = (thickness < 0.0f) ? blur : thickness; // fallback to blur for backward compatibility
+            inlineShadowEnabled = enable;
+            inlineShadowOffset = offset;
+            inlineShadowBlur = blur;
+            inlineShadowColor = col;
+            inlineShadowRounding = rounding;
+            inlineShadowThickness = (thickness < 0.0f) ? blur : thickness; // fallback to blur for backward compatibility
+            m_styleVersion = 0;
             return self();
         }
 
         std::shared_ptr<Derived> setShadowEnabled(bool enable)
         {
-            hasShadow = enable;
+            inlineShadowEnabled = enable;
+            m_styleVersion = 0;
             return self();
         }
 
         std::shared_ptr<Derived> setShadowOffset(ImVec2 offset)
         {
-            shadowOffset = offset;
+            inlineShadowOffset = offset;
+            m_styleVersion = 0;
             return self();
         }
 
         std::shared_ptr<Derived> setShadowBlur(float blur)
         {
-            shadowBlur = blur;
+            inlineShadowBlur = blur;
+            m_styleVersion = 0;
             return self();
         }
 
         std::shared_ptr<Derived> setShadowColor(ImVec4 col)
         {
-            shadowColor = col;
+            inlineShadowColor = col;
+            m_styleVersion = 0;
             return self();
         }
 
         std::shared_ptr<Derived> setShadowRounding(float rounding)
         {
-            shadowRounding = rounding;
+            inlineShadowRounding = rounding;
+            m_styleVersion = 0;
             return self();
         }
 
         std::shared_ptr<Derived> setShadowFillBackground(bool fill)
         {
-            shadowFillBackground = fill;
+            inlineShadowFillBackground = fill;
+            m_styleVersion = 0;
             return self();
         }
 
         std::shared_ptr<Derived> setShadowThickness(float thickness)
         {
-            shadowThickness = thickness;
+            inlineShadowThickness = thickness;
+            m_styleVersion = 0;
             return self();
         }
 
-        bool getShadowEnabled() const { return hasShadow; }
-        ImVec2 getShadowOffset() const { return shadowOffset; }
-        float getShadowBlur() const { return shadowBlur; }
-        ImVec4 getShadowColor() const { return shadowColor; }
-        float getShadowRounding() const { return shadowRounding; }
-        bool getShadowFillBackground() const { return shadowFillBackground; }
-        float getShadowThickness() const { return shadowThickness; }
+        bool getShadowEnabled() const { return inlineShadowEnabled.value_or(StyleSheet::s_defaultHasShadow); }
+        ImVec2 getShadowOffset() const { return inlineShadowOffset.value_or(StyleSheet::s_defaultShadowOffset); }
+        float getShadowBlur() const { return inlineShadowBlur.value_or(StyleSheet::s_defaultShadowBlur); }
+        ImVec4 getShadowColor() const { return inlineShadowColor.value_or(StyleSheet::s_defaultShadowColor); }
+        float getShadowRounding() const { return inlineShadowRounding.value_or(StyleSheet::s_defaultShadowRounding); }
+        bool getShadowFillBackground() const { return inlineShadowFillBackground.value_or(StyleSheet::s_defaultShadowFillBackground); }
+        float getShadowThickness() const { return inlineShadowThickness.value_or(StyleSheet::s_defaultShadowThickness); }
 
         std::shared_ptr<Derived> defaultShadow(bool enable = true)
         {
-            hasShadow = s_defaultHasShadow || enable;
-            shadowOffset = s_defaultShadowOffset;
-            shadowBlur = s_defaultShadowBlur;
-            shadowColor = s_defaultShadowColor;
-            shadowRounding = s_defaultShadowRounding;
-            shadowFillBackground = s_defaultShadowFillBackground;
-            shadowThickness = s_defaultShadowThickness;
+            inlineShadowEnabled = StyleSheet::s_defaultHasShadow || enable;
+            inlineShadowOffset = StyleSheet::s_defaultShadowOffset;
+            inlineShadowBlur = StyleSheet::s_defaultShadowBlur;
+            inlineShadowColor = StyleSheet::s_defaultShadowColor;
+            inlineShadowRounding = StyleSheet::s_defaultShadowRounding;
+            inlineShadowFillBackground = StyleSheet::s_defaultShadowFillBackground;
+            inlineShadowThickness = StyleSheet::s_defaultShadowThickness;
+            m_styleVersion = 0;
             return self();
         }
-
-        // Global defaults setter
-        static void setGlobalShadowDefaults(bool enable, ImVec2 offset = ImVec2(0, 0), float blur = 10.0f, ImVec4 col = ImVec4(-1.0f, -1.0f, -1.0f, -1.0f), float rounding = -1.0f, float thickness = -1.0f)
-        {
-            s_defaultHasShadow = enable;
-            s_defaultShadowOffset = offset;
-            s_defaultShadowBlur = blur;
-            s_defaultShadowColor = col;
-            s_defaultShadowRounding = rounding;
-            s_defaultShadowThickness = (thickness < 0.0f) ? blur : thickness;
-        }
-
-        static void setGlobalShadowEnabled(bool enable) { s_defaultHasShadow = enable; }
-        static void setGlobalShadowOffset(ImVec2 offset) { s_defaultShadowOffset = offset; }
-        static void setGlobalShadowBlur(float blur) { s_defaultShadowBlur = blur; }
-        static void setGlobalShadowColor(ImVec4 col) { s_defaultShadowColor = col; }
-        static void setGlobalShadowRounding(float rounding) { s_defaultShadowRounding = rounding; }
-        static void setGlobalShadowFillBackground(bool fill) { s_defaultShadowFillBackground = fill; }
-        static void setGlobalShadowThickness(float thickness) { s_defaultShadowThickness = thickness; }
-
-        static bool getGlobalShadowEnabled() { return s_defaultHasShadow; }
-        static ImVec2 getGlobalShadowOffset() { return s_defaultShadowOffset; }
-        static float getGlobalShadowBlur() { return s_defaultShadowBlur; }
-        static ImVec4 getGlobalShadowColor() { return s_defaultShadowColor; }
-        static float getGlobalShadowRounding() { return s_defaultShadowRounding; }
-        static bool getGlobalShadowFillBackground() { return s_defaultShadowFillBackground; }
-        static float getGlobalShadowThickness() { return s_defaultShadowThickness; }
 
         std::shared_ptr<Derived> addSize(float w, float h)
         {
@@ -493,23 +558,10 @@ namespace mui
         }
     };
 
-    template <class T>
-    bool Control<T>::s_defaultHasShadow = false;
-    template <class T>
-    ImVec2 Control<T>::s_defaultShadowOffset = ImVec2(0.0f, 0.0f);
-    template <class T>
-    float Control<T>::s_defaultShadowBlur = 8.0f;
-    template <class T>
-    ImVec4 Control<T>::s_defaultShadowColor = ImVec4(0.0f, 0.0f, 0.0f, 0.5f);
-    template <class T>
-    float Control<T>::s_defaultShadowRounding = 8.0f;
-    template <class T>
-    bool Control<T>::s_defaultShadowFillBackground = true;
-    template <class T>
-    float Control<T>::s_defaultShadowThickness = -1.0f;
-
-    inline ScopedControlID::ScopedControlID(IControl* ctrl) { 
-        if (!ctrl->getID().empty()) {
+    inline ScopedControlID::ScopedControlID(IControl *ctrl)
+    {
+        if (!ctrl->getID().empty())
+        {
             ImGui::PushID(ctrl->getID().c_str());
             pushed = true;
         }

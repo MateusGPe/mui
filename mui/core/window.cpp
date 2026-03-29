@@ -1,23 +1,26 @@
 #include "window.hpp"
 #include "app.hpp"
-#include <imgui.h>
 #include <algorithm>
+#include <imgui.h>
 
 namespace mui
 {
     Window::Window(const std::string &title, int width, int height, bool hasMenubar)
-        : title(title), width(width), height(height), isOpen(true), _needs_focus(false), dockId(0)
+        : title(title), width(width), height(height), isOpen(true),
+          _needs_focus(false), dockId(0)
     {
-        // Initialize flags. By default, most features are enabled (meaning the "No" flags are not set).
+        // Initialize flags. By default, most features are enabled (meaning the "No"
+        // flags are not set).
         m_flags = hasMenubar ? ImGuiWindowFlags_MenuBar : ImGuiWindowFlags_None;
         App::assertMainThread();
         App::activeWindows.push_back(this);
-        hasShadow = false;
+        inlineShadowEnabled = false;
     }
 
     Window::~Window()
     {
-        auto it = std::find(App::activeWindows.begin(), App::activeWindows.end(), this);
+        auto it =
+            std::find(App::activeWindows.begin(), App::activeWindows.end(), this);
         if (it != App::activeWindows.end())
         {
             App::activeWindows.erase(it);
@@ -140,13 +143,16 @@ namespace mui
     }
     bool Window::getBorderless() const
     {
-        // A window is borderless if its constituent properties are all set to generate no decoration.
-        // Note: ImGuiWindowFlags_NoDecoration also includes NoScrollbar and NoCollapse.
-        return (m_flags & ImGuiWindowFlags_NoDecoration) == ImGuiWindowFlags_NoDecoration;
+        // A window is borderless if its constituent properties are all set to
+        // generate no decoration. Note: ImGuiWindowFlags_NoDecoration also includes
+        // NoScrollbar and NoCollapse.
+        return (m_flags & ImGuiWindowFlags_NoDecoration) ==
+               ImGuiWindowFlags_NoDecoration;
     }
     WindowPtr Window::setBorderless(bool b)
     {
-        // This is a utility to set/unset the composite ImGuiWindowFlags_NoDecoration flag.
+        // This is a utility to set/unset the composite ImGuiWindowFlags_NoDecoration
+        // flag.
         if (b)
             m_flags |= ImGuiWindowFlags_NoDecoration;
         else
@@ -158,10 +164,7 @@ namespace mui
 
     bool Window::isWindowOpen() const { return isOpen; }
 
-    void Window::close()
-    {
-        isOpen = false;
-    }
+    void Window::close() { isOpen = false; }
 
     WindowPtr Window::focus()
     {
@@ -178,7 +181,10 @@ namespace mui
         return self();
     }
 
-    bool Window::getHasMenubar() const { return (m_flags & ImGuiWindowFlags_MenuBar) != 0; }
+    bool Window::getHasMenubar() const
+    {
+        return (m_flags & ImGuiWindowFlags_MenuBar) != 0;
+    }
 
     WindowPtr Window::setResizable(bool b)
     {
@@ -189,7 +195,10 @@ namespace mui
         return self();
     }
 
-    bool Window::getResizable() const { return !(m_flags & ImGuiWindowFlags_NoResize); }
+    bool Window::getResizable() const
+    {
+        return !(m_flags & ImGuiWindowFlags_NoResize);
+    }
 
     WindowPtr Window::setMovable(bool b)
     {
@@ -211,7 +220,10 @@ namespace mui
         return self();
     }
 
-    bool Window::getCollapsible() const { return !(m_flags & ImGuiWindowFlags_NoCollapse); }
+    bool Window::getCollapsible() const
+    {
+        return !(m_flags & ImGuiWindowFlags_NoCollapse);
+    }
 
     WindowPtr Window::setHasTitlebar(bool b)
     {
@@ -222,7 +234,10 @@ namespace mui
         return self();
     }
 
-    bool Window::getHasTitlebar() const { return !(m_flags & ImGuiWindowFlags_NoTitleBar); }
+    bool Window::getHasTitlebar() const
+    {
+        return !(m_flags & ImGuiWindowFlags_NoTitleBar);
+    }
 
     WindowPtr Window::setScrollbar(bool b)
     {
@@ -232,7 +247,10 @@ namespace mui
             m_flags |= ImGuiWindowFlags_NoScrollbar;
         return self();
     }
-    bool Window::getScrollbar() const { return !(m_flags & ImGuiWindowFlags_NoScrollbar); }
+    bool Window::getScrollbar() const
+    {
+        return !(m_flags & ImGuiWindowFlags_NoScrollbar);
+    }
     WindowPtr Window::setScrollWithMouse(bool b)
     {
         if (b)
@@ -241,7 +259,10 @@ namespace mui
             m_flags |= ImGuiWindowFlags_NoScrollWithMouse;
         return self();
     }
-    bool Window::getScrollWithMouse() const { return !(m_flags & ImGuiWindowFlags_NoScrollWithMouse); }
+    bool Window::getScrollWithMouse() const
+    {
+        return !(m_flags & ImGuiWindowFlags_NoScrollWithMouse);
+    }
     WindowPtr Window::setAlwaysAutoResize(bool b)
     {
         if (b)
@@ -250,7 +271,10 @@ namespace mui
             m_flags &= ~ImGuiWindowFlags_AlwaysAutoResize;
         return self();
     }
-    bool Window::getAlwaysAutoResize() const { return (m_flags & ImGuiWindowFlags_AlwaysAutoResize) != 0; }
+    bool Window::getAlwaysAutoResize() const
+    {
+        return (m_flags & ImGuiWindowFlags_AlwaysAutoResize) != 0;
+    }
     WindowPtr Window::setBackground(bool b)
     {
         if (b)
@@ -259,7 +283,10 @@ namespace mui
             m_flags |= ImGuiWindowFlags_NoBackground;
         return self();
     }
-    bool Window::getBackground() const { return !(m_flags & ImGuiWindowFlags_NoBackground); }
+    bool Window::getBackground() const
+    {
+        return !(m_flags & ImGuiWindowFlags_NoBackground);
+    }
     WindowPtr Window::setSavedSettings(bool b)
     {
         if (b)
@@ -268,7 +295,10 @@ namespace mui
             m_flags |= ImGuiWindowFlags_NoSavedSettings;
         return self();
     }
-    bool Window::getSavedSettings() const { return !(m_flags & ImGuiWindowFlags_NoSavedSettings); }
+    bool Window::getSavedSettings() const
+    {
+        return !(m_flags & ImGuiWindowFlags_NoSavedSettings);
+    }
     WindowPtr Window::setMouseInputs(bool b)
     {
         if (b)
@@ -277,7 +307,10 @@ namespace mui
             m_flags |= ImGuiWindowFlags_NoMouseInputs;
         return self();
     }
-    bool Window::getMouseInputs() const { return !(m_flags & ImGuiWindowFlags_NoMouseInputs); }
+    bool Window::getMouseInputs() const
+    {
+        return !(m_flags & ImGuiWindowFlags_NoMouseInputs);
+    }
     WindowPtr Window::setHorizontalScrollbar(bool b)
     {
         if (b)
@@ -286,7 +319,10 @@ namespace mui
             m_flags &= ~ImGuiWindowFlags_HorizontalScrollbar;
         return self();
     }
-    bool Window::getHorizontalScrollbar() const { return (m_flags & ImGuiWindowFlags_HorizontalScrollbar) != 0; }
+    bool Window::getHorizontalScrollbar() const
+    {
+        return (m_flags & ImGuiWindowFlags_HorizontalScrollbar) != 0;
+    }
     WindowPtr Window::setFocusOnAppearing(bool b)
     {
         if (b)
@@ -295,7 +331,10 @@ namespace mui
             m_flags |= ImGuiWindowFlags_NoFocusOnAppearing;
         return self();
     }
-    bool Window::getFocusOnAppearing() const { return !(m_flags & ImGuiWindowFlags_NoFocusOnAppearing); }
+    bool Window::getFocusOnAppearing() const
+    {
+        return !(m_flags & ImGuiWindowFlags_NoFocusOnAppearing);
+    }
     WindowPtr Window::setBringToFrontOnFocus(bool b)
     {
         if (b)
@@ -304,7 +343,10 @@ namespace mui
             m_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
         return self();
     }
-    bool Window::getBringToFrontOnFocus() const { return !(m_flags & ImGuiWindowFlags_NoBringToFrontOnFocus); }
+    bool Window::getBringToFrontOnFocus() const
+    {
+        return !(m_flags & ImGuiWindowFlags_NoBringToFrontOnFocus);
+    }
     WindowPtr Window::setAlwaysVerticalScrollbar(bool b)
     {
         if (b)
@@ -313,7 +355,10 @@ namespace mui
             m_flags &= ~ImGuiWindowFlags_AlwaysVerticalScrollbar;
         return self();
     }
-    bool Window::getAlwaysVerticalScrollbar() const { return (m_flags & ImGuiWindowFlags_AlwaysVerticalScrollbar) != 0; }
+    bool Window::getAlwaysVerticalScrollbar() const
+    {
+        return (m_flags & ImGuiWindowFlags_AlwaysVerticalScrollbar) != 0;
+    }
     WindowPtr Window::setAlwaysHorizontalScrollbar(bool b)
     {
         if (b)
@@ -322,7 +367,10 @@ namespace mui
             m_flags &= ~ImGuiWindowFlags_AlwaysHorizontalScrollbar;
         return self();
     }
-    bool Window::getAlwaysHorizontalScrollbar() const { return (m_flags & ImGuiWindowFlags_AlwaysHorizontalScrollbar) != 0; }
+    bool Window::getAlwaysHorizontalScrollbar() const
+    {
+        return (m_flags & ImGuiWindowFlags_AlwaysHorizontalScrollbar) != 0;
+    }
     WindowPtr Window::setNavInputs(bool b)
     {
         if (b)
@@ -331,7 +379,10 @@ namespace mui
             m_flags |= ImGuiWindowFlags_NoNavInputs;
         return self();
     }
-    bool Window::getNavInputs() const { return !(m_flags & ImGuiWindowFlags_NoNavInputs); }
+    bool Window::getNavInputs() const
+    {
+        return !(m_flags & ImGuiWindowFlags_NoNavInputs);
+    }
     WindowPtr Window::setNavFocus(bool b)
     {
         if (b)
@@ -340,7 +391,10 @@ namespace mui
             m_flags |= ImGuiWindowFlags_NoNavFocus;
         return self();
     }
-    bool Window::getNavFocus() const { return !(m_flags & ImGuiWindowFlags_NoNavFocus); }
+    bool Window::getNavFocus() const
+    {
+        return !(m_flags & ImGuiWindowFlags_NoNavFocus);
+    }
     WindowPtr Window::setUnsavedDocument(bool b)
     {
         if (b)
@@ -349,7 +403,10 @@ namespace mui
             m_flags &= ~ImGuiWindowFlags_UnsavedDocument;
         return self();
     }
-    bool Window::getUnsavedDocument() const { return (m_flags & ImGuiWindowFlags_UnsavedDocument) != 0; }
+    bool Window::getUnsavedDocument() const
+    {
+        return (m_flags & ImGuiWindowFlags_UnsavedDocument) != 0;
+    }
     WindowPtr Window::setDocking(bool b)
     {
         if (b)
@@ -358,6 +415,9 @@ namespace mui
             m_flags |= ImGuiWindowFlags_NoDocking;
         return self();
     }
-    bool Window::getDocking() const { return !(m_flags & ImGuiWindowFlags_NoDocking); }
+    bool Window::getDocking() const
+    {
+        return !(m_flags & ImGuiWindowFlags_NoDocking);
+    }
 
 } // namespace mui

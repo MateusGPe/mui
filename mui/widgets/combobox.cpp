@@ -1,191 +1,196 @@
 // widgets/combobox.cpp
 #include "combobox.hpp"
 #include "../core/app.hpp"
-#include <imgui.h>
 #include "../core/scoped.hpp"
+#include <imgui.h>
 
 namespace mui
 {
-    ComboBox::ComboBox() : selectedIndex(-1)
+  ComboBox::ComboBox() : selectedIndex(-1)
+  {
+    App::assertMainThread();
+    m_flags = 0;
+  }
+  void ComboBox::renderControl()
+  {
+    if (!visible)
+      return;
+    ScopedControlID id(this);
+    ImGui::BeginDisabled(!enabled);
+
+    std::string preview =
+        (selectedIndex >= 0 && selectedIndex < (int)items.size())
+            ? items[selectedIndex]
+            : "";
+
+    float w = width;
+    if (spanAvailWidth)
+      w = -FLT_MIN;
+
+    ScopedItemWidth item_width;
+    if (w != 0.0f)
+      item_width.push(w);
+    else if (minSize.x > 0)
+      ImGui::SetNextItemWidth(minSize.x);
+
+    if (ImGui::BeginCombo("##combo", preview.c_str(), m_flags))
     {
-        App::assertMainThread();
-        m_flags = 0;
-    }
-    void ComboBox::renderControl()
-    {
-        if (!visible)
-            return;
-        ScopedControlID id(this);
-        ImGui::BeginDisabled(!enabled);
-
-        std::string preview = (selectedIndex >= 0 && selectedIndex < (int)items.size()) ? items[selectedIndex] : "";
-
-        float w = width;
-        if (spanAvailWidth)
-            w = -FLT_MIN;
-
-        ScopedItemWidth item_width;
-        if (w != 0.0f)
-            item_width.push(w);
-        else if (minSize.x > 0)
-            ImGui::SetNextItemWidth(minSize.x);
-
-        if (ImGui::BeginCombo("##combo", preview.c_str(), m_flags))
+      for (int i = 0; i < (int)items.size(); ++i)
+      {
+        ScopedID itemId(i);
+        const bool isSelected = (selectedIndex == i);
+        if (ImGui::Selectable(items[i].c_str(), isSelected))
         {
-            for (int i = 0; i < (int)items.size(); ++i)
-            {
-                ScopedID itemId(i);
-                const bool isSelected = (selectedIndex == i);
-                if (ImGui::Selectable(items[i].c_str(), isSelected))
-                {
-                    selectedIndex = i;
-                    onChangedSignal(i);
-                }
-                if (isSelected)
-                {
-                    ImGui::SetItemDefaultFocus();
-                }
-            }
-            ImGui::EndCombo();
+          selectedIndex = i;
+          onChangedSignal(i);
         }
-        renderTooltip();
-        ImGui::EndDisabled();
-    }
-
-    ComboBoxPtr ComboBox::append(const std::string &item)
-    {
-        items.push_back(item);
-        if (selectedIndex == -1)
-            selectedIndex = 0;
-        return self();
-    }
-
-    ComboBoxPtr ComboBox::clear()
-    {
-        items.clear();
-        selectedIndex = -1;
-        return self();
-    }
-
-    int ComboBox::getSelectedIndex() const { return selectedIndex; }
-
-    std::string ComboBox::getText() const
-    {
-        if (selectedIndex >= 0 && selectedIndex < (int)items.size())
+        if (isSelected)
         {
-            return items[selectedIndex];
+          ImGui::SetItemDefaultFocus();
         }
-        return "";
+      }
+      ImGui::EndCombo();
     }
+    renderTooltip();
+    ImGui::EndDisabled();
+  }
 
-    ComboBoxPtr ComboBox::setSelectedIndex(int index)
-    {
-        if (index >= -1 && index < (int)items.size())
-        {
-            selectedIndex = index;
-        }
-        return self();
-    }
+  ComboBoxPtr ComboBox::append(const std::string &item)
+  {
+    items.push_back(item);
+    if (selectedIndex == -1)
+      selectedIndex = 0;
+    return self();
+  }
 
-    ComboBoxPtr ComboBox::bind(std::shared_ptr<Observable<int>> observable)
-    {
-        setSelectedIndex(observable->get());
-        m_connections.push_back(observable->onValueChanged.connect([this](const int &val)
-                                                                   { mui::App::queueMain([this, val]()
-                                                                                         { this->setSelectedIndex(val); }); }));
-        m_connections.push_back(onChangedSignal.connect([observable](int val)
-                                                        { observable->set(val); }));
-        return self();
-    }
+  ComboBoxPtr ComboBox::clear()
+  {
+    items.clear();
+    selectedIndex = -1;
+    return self();
+  }
 
-    ComboBoxPtr ComboBox::onChanged(std::function<void(int)> cb)
-    {
-        if (cb)
-            m_connections.push_back(onChangedSignal.connect(cb));
+  int ComboBox::getSelectedIndex() const { return selectedIndex; }
 
-        return self();
+  std::string ComboBox::getText() const
+  {
+    if (selectedIndex >= 0 && selectedIndex < (int)items.size())
+    {
+      return items[selectedIndex];
     }
+    return "";
+  }
 
-    ComboBoxPtr ComboBox::setSpanAvailWidth(bool span)
+  ComboBoxPtr ComboBox::setSelectedIndex(int index)
+  {
+    if (index >= -1 && index < (int)items.size())
     {
-        spanAvailWidth = span;
-        return self();
+      selectedIndex = index;
     }
+    return self();
+  }
 
-    ComboBoxPtr ComboBox::setMinWidth(float w)
-    {
-        minSize.x = w;
-        return self();
-    }
+  ComboBoxPtr ComboBox::bind(std::shared_ptr<Observable<int>> observable)
+  {
+    setSelectedIndex(observable->get());
+    m_connections.push_back(
+        observable->onValueChanged.connect([this](const int &val)
+                                           { mui::App::queueMain([this, val]()
+                                                                 { this->setSelectedIndex(val); }); }));
+    m_connections.push_back(
+        onChangedSignal.connect([observable](int val)
+                                { observable->set(val); }));
+    return self();
+  }
 
-    ComboBoxPtr ComboBox::setPopupAlignLeft(bool b)
-    {
-        if (b)
-            m_flags |= ImGuiComboFlags_PopupAlignLeft;
-        else
-            m_flags &= ~ImGuiComboFlags_PopupAlignLeft;
-        return self();
-    }
+  ComboBoxPtr ComboBox::onChanged(std::function<void(int)> cb)
+  {
+    if (cb)
+      m_connections.push_back(onChangedSignal.connect(cb));
 
-    ComboBoxPtr ComboBox::setHeightSmall(bool b)
-    {
-        if (b)
-            m_flags |= ImGuiComboFlags_HeightSmall;
-        else
-            m_flags &= ~ImGuiComboFlags_HeightSmall;
-        return self();
-    }
+    return self();
+  }
 
-    ComboBoxPtr ComboBox::setHeightRegular(bool b)
-    {
-        if (b)
-            m_flags |= ImGuiComboFlags_HeightRegular;
-        else
-            m_flags &= ~ImGuiComboFlags_HeightRegular;
-        return self();
-    }
+  ComboBoxPtr ComboBox::setSpanAvailWidth(bool span)
+  {
+    spanAvailWidth = span;
+    return self();
+  }
 
-    ComboBoxPtr ComboBox::setHeightLarge(bool b)
-    {
-        if (b)
-            m_flags |= ImGuiComboFlags_HeightLarge;
-        else
-            m_flags &= ~ImGuiComboFlags_HeightLarge;
-        return self();
-    }
+  ComboBoxPtr ComboBox::setMinWidth(float w)
+  {
+    minSize.x = w;
+    return self();
+  }
 
-    ComboBoxPtr ComboBox::setHeightLargest(bool b)
-    {
-        if (b)
-            m_flags |= ImGuiComboFlags_HeightLargest;
-        else
-            m_flags &= ~ImGuiComboFlags_HeightLargest;
-        return self();
-    }
+  ComboBoxPtr ComboBox::setPopupAlignLeft(bool b)
+  {
+    if (b)
+      m_flags |= ImGuiComboFlags_PopupAlignLeft;
+    else
+      m_flags &= ~ImGuiComboFlags_PopupAlignLeft;
+    return self();
+  }
 
-    ComboBoxPtr ComboBox::setNoArrowButton(bool b)
-    {
-        if (b)
-            m_flags |= ImGuiComboFlags_NoArrowButton;
-        else
-            m_flags &= ~ImGuiComboFlags_NoArrowButton;
-        return self();
-    }
+  ComboBoxPtr ComboBox::setHeightSmall(bool b)
+  {
+    if (b)
+      m_flags |= ImGuiComboFlags_HeightSmall;
+    else
+      m_flags &= ~ImGuiComboFlags_HeightSmall;
+    return self();
+  }
 
-    ComboBoxPtr ComboBox::setNoPreview(bool b)
-    {
-        if (b)
-            m_flags |= ImGuiComboFlags_NoPreview;
-        else
-            m_flags &= ~ImGuiComboFlags_NoPreview;
-        return self();
-    }
-    ComboBoxPtr ComboBox::setCustomPreview(bool b)
-    {
-        if (b)
-            m_flags |= ImGuiComboFlags_WidthFitPreview;
-        else
-            m_flags &= ~ImGuiComboFlags_WidthFitPreview;
-        return self();
-    }
+  ComboBoxPtr ComboBox::setHeightRegular(bool b)
+  {
+    if (b)
+      m_flags |= ImGuiComboFlags_HeightRegular;
+    else
+      m_flags &= ~ImGuiComboFlags_HeightRegular;
+    return self();
+  }
+
+  ComboBoxPtr ComboBox::setHeightLarge(bool b)
+  {
+    if (b)
+      m_flags |= ImGuiComboFlags_HeightLarge;
+    else
+      m_flags &= ~ImGuiComboFlags_HeightLarge;
+    return self();
+  }
+
+  ComboBoxPtr ComboBox::setHeightLargest(bool b)
+  {
+    if (b)
+      m_flags |= ImGuiComboFlags_HeightLargest;
+    else
+      m_flags &= ~ImGuiComboFlags_HeightLargest;
+    return self();
+  }
+
+  ComboBoxPtr ComboBox::setNoArrowButton(bool b)
+  {
+    if (b)
+      m_flags |= ImGuiComboFlags_NoArrowButton;
+    else
+      m_flags &= ~ImGuiComboFlags_NoArrowButton;
+    return self();
+  }
+
+  ComboBoxPtr ComboBox::setNoPreview(bool b)
+  {
+    if (b)
+      m_flags |= ImGuiComboFlags_NoPreview;
+    else
+      m_flags &= ~ImGuiComboFlags_NoPreview;
+    return self();
+  }
+  ComboBoxPtr ComboBox::setCustomPreview(bool b)
+  {
+    if (b)
+      m_flags |= ImGuiComboFlags_WidthFitPreview;
+    else
+      m_flags &= ~ImGuiComboFlags_WidthFitPreview;
+    return self();
+  }
 } // namespace mui

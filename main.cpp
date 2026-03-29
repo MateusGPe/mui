@@ -30,6 +30,57 @@ int main()
     App::init(true, true);
     App::setTheme("Rounded Visual Studio");
 
+    // ==========================================
+    // STYLESHEET CONFIGURATION
+    // ==========================================
+
+    // 1. Style by Type
+    StyleSheet::select("Card")
+        .var(ImGuiStyleVar_ChildRounding, 8.0f)
+        .shadow(true, ImVec2(0.0f, 4.0f), 12.0f, ImVec4(0.0f, 0.0f, 0.0f, 0.25f), 8.0f);
+
+    StyleSheet::select("Button")
+        .var(ImGuiStyleVar_FrameRounding, 6.0f);
+
+    // 2. Style by Class
+    StyleSheet::select(".danger")
+        .color(ImGuiCol_Button, ImVec4(0.8f, 0.2f, 0.2f, 1.0f))
+        .color(ImGuiCol_ButtonHovered, ImVec4(0.9f, 0.3f, 0.3f, 1.0f))
+        .color(ImGuiCol_ButtonActive, ImVec4(0.7f, 0.1f, 0.1f, 1.0f))
+        .shadow(true, ImVec2(0.0f, 2.0f), 8.0f, ImVec4(0.8f, 0.2f, 0.2f, 0.4f), 6.0f);
+
+    StyleSheet::select(".warning")
+        .color(ImGuiCol_Button, ImVec4(0.8f, 0.6f, 0.1f, 1.0f))
+        .color(ImGuiCol_ButtonHovered, ImVec4(0.9f, 0.7f, 0.2f, 1.0f))
+        .color(ImGuiCol_ButtonActive, ImVec4(0.7f, 0.5f, 0.1f, 1.0f));
+
+    StyleSheet::select(".info")
+        .color(ImGuiCol_Button, ImVec4(0.1f, 0.5f, 0.8f, 1.0f))
+        .color(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.6f, 0.9f, 1.0f))
+        .color(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.4f, 0.7f, 1.0f));
+
+    StyleSheet::select(".success")
+        .color(ImGuiCol_Button, ImVec4(0.2f, 0.7f, 0.3f, 1.0f))
+        .color(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.8f, 0.4f, 1.0f))
+        .color(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.6f, 0.2f, 1.0f));
+
+    StyleSheet::select(".nav_btn")
+        .var(ImGuiStyleVar_FrameRounding, 16.0f);
+
+    StyleSheet::select(".no_shadow")
+        .shadow(false);
+
+    // 3. Style by ID
+    StyleSheet::select("#btn_click")
+        .shadow(true, ImVec2(0.0f, 0.0f), 20.0f, ImVec4(0.0f, 0.0f, 1.0f, 0.5f), -1.0f, 20.0f)
+        .var(ImGuiStyleVar_FrameRounding, 20.0f);
+
+    StyleSheet::select("#custom_shadow_btn")
+        .shadow(true, ImVec2(0.0f, 0.0f), 10.0f, ImVec4(1.0f, 1.0f, 0.0f, 0.8f), 8.0f);
+
+    StyleSheet::select("#shadow_card")
+        .shadow(true, ImVec2(0.0f, 8.0f), 20.0f, ImVec4(0.0f, 0.0f, 0.0f, 0.6f));
+
     // Define a docking layout for our windows to arrange them on startup.
     App::setLayoutBuilder(
         [](mui::DockBuilder &builder)
@@ -112,9 +163,9 @@ WindowPtr createInspectorWindow()
     auto win = UI::Window("Inspector", 300, 400)->setMargined(true);
 
     // --- Theme Controls ---
-    auto btnPrev = UI::Button(ICON_FA_ARROW_LEFT " Prev");
-    auto btnNext = UI::Button(ICON_FA_ARROW_RIGHT " Next");
-    auto btnRandom = UI::Button(ICON_FA_SHUFFLE " Random");
+    auto btnPrev = UI::Button(ICON_FA_ARROW_LEFT " Prev")->addClass("nav_btn");
+    auto btnNext = UI::Button(ICON_FA_ARROW_RIGHT " Next")->addClass("nav_btn");
+    auto btnRandom = UI::Button(ICON_FA_SHUFFLE " Random")->addClass("nav_btn");
     auto lblTheme = UI::Label("Current Theme: " + App::getCurrentThemeName())->setSpanAvailWidth(true);
 
     // Logic for theme switching
@@ -258,8 +309,8 @@ IControlPtr createBasicsTab(const LabelPtr &lblStatus)
                 char timeStr[100];
                 std::strftime(timeStr, sizeof(timeStr), "%H:%M:%S", std::localtime(&currentTime));
                 lblStatus->setText(std::string("Button clicked at ") + timeStr);
-            });
-    btnClick->setShadow(true, ImVec2(0.0f, 0.0f), 20.0f, ImVec4(0.0f, 0.0f, 1.0f, 0.5f), -1.0f, 20.);
+            })
+            ->setID("btn_click");
     auto chkToggle =
         UI::Checkbox(
             "Standard Checkbox",
@@ -406,45 +457,49 @@ IControlPtr createTextEntriesTab(const LabelPtr &lblStatus)
 IControlPtr createDialogsTab(const WindowPtr &win, const LabelPtr &lblStatus)
 {
     auto btnInfo = UI::Button(
-        ICON_FA_CIRCLE_INFO " Info",
-        [win, lblStatus]()
-        {
-            Dialogs::msgBoxInfo("Information", "This is an informational message box, which is the default type.");
-            lblStatus->setText("Info dialog shown.");
-        });
+                       ICON_FA_CIRCLE_INFO " Info",
+                       [win, lblStatus]()
+                       {
+                           Dialogs::msgBoxInfo("Information", "This is an informational message box, which is the default type.");
+                           lblStatus->setText("Info dialog shown.");
+                       })
+                       ->addClass("info");
 
     auto btnWarning = UI::Button(
-        ICON_FA_TRIANGLE_EXCLAMATION " Warning",
-        [win, lblStatus]()
-        {
-            Dialogs::msgBoxWarning("Warning", "This is a warning message. Something might be wrong, so you should pay attention.");
-            lblStatus->setText("Warning dialog shown.");
-        });
+                          ICON_FA_TRIANGLE_EXCLAMATION " Warning",
+                          [win, lblStatus]()
+                          {
+                              Dialogs::msgBoxWarning("Warning", "This is a warning message. Something might be wrong, so you should pay attention.");
+                              lblStatus->setText("Warning dialog shown.");
+                          })
+                          ->addClass("warning");
 
     auto btnError = UI::Button(
-        ICON_FA_CIRCLE_XMARK " Error",
-        [win, lblStatus]()
-        {
-            Dialogs::msgBoxError("Critical Error", "Failed to load imaginary resources.");
-            lblStatus->setText("Error dialog shown.");
-        });
+                        ICON_FA_CIRCLE_XMARK " Error",
+                        [win, lblStatus]()
+                        {
+                            Dialogs::msgBoxError("Critical Error", "Failed to load imaginary resources.");
+                            lblStatus->setText("Error dialog shown.");
+                        })
+                        ->addClass("danger");
 
     auto btnConfirm = UI::Button(
-        ICON_FA_CIRCLE_CHECK " Confirm",
-        [win, lblStatus]()
-        {
-            Dialogs::msgBoxConfirm(
-                "Confirmation",
-                "This action is permanent. Are you sure you want to proceed?",
-                [lblStatus]()
-                {
-                    lblStatus->setText("Confirmed!");
-                },
-                [lblStatus]()
-                {
-                    lblStatus->setText("Cancelled.");
-                });
-        });
+                          ICON_FA_CIRCLE_CHECK " Confirm",
+                          [win, lblStatus]()
+                          {
+                              Dialogs::msgBoxConfirm(
+                                  "Confirmation",
+                                  "This action is permanent. Are you sure you want to proceed?",
+                                  [lblStatus]()
+                                  {
+                                      lblStatus->setText("Confirmed!");
+                                  },
+                                  [lblStatus]()
+                                  {
+                                      lblStatus->setText("Cancelled.");
+                                  });
+                          })
+                          ->addClass("success");
 
     auto btnQuestion = UI::Button(
         ICON_FA_CIRCLE_QUESTION " Question",
@@ -780,35 +835,58 @@ IControlPtr createMoreControlsTab(const LabelPtr &lblStatus)
     auto comboObservable = MakeObs::Int(1);
     auto combo = UI::ComboBoxBind(comboObservable)
                  << "Apple" << "Banana" << "Cherry";
-    combo->observe(comboObservable->onValueChanged, [combo, lblStatus](int)
-                   { lblStatus->setText("Selected fruit: " + combo->getText()); });
+    combo->observe(
+        comboObservable->onValueChanged,
+        [combo, lblStatus](int)
+        {
+            lblStatus->setText("Selected fruit: " + combo->getText());
+        });
 
-    auto radio1 = UI::RadioButton("AM", false, [lblStatus](bool c)
-                                  {
-        if (c)
-            lblStatus->setText("Radio set to AM"); });
-    auto radio2 = UI::RadioButton("FM", true, [lblStatus](bool c)
-                                  {
-        if (c)
-            lblStatus->setText("Radio set to FM"); });
-    auto radio3 = UI::RadioButton("SW", false, [lblStatus](bool c)
-                                  {
-        if (c)
-            lblStatus->setText("Radio set to SW"); });
+    auto radio1 = UI::RadioButton(
+        "AM",
+        false,
+        [lblStatus](bool c)
+        {
+            if (c)
+                lblStatus->setText("Radio set to AM");
+        });
+    auto radio2 = UI::RadioButton(
+        "FM",
+        true,
+        [lblStatus](bool c)
+        {
+            if (c)
+                lblStatus->setText("Radio set to FM");
+        });
+    auto radio3 = UI::RadioButton(
+        "SW",
+        false,
+        [lblStatus](bool c)
+        {
+            if (c)
+                lblStatus->setText("Radio set to SW");
+        });
     RadioButton::group({radio1, radio2, radio3});
 
     auto colorObservable = MakeObs::Color(0.2f, 0.8f, 0.4f, 1.0f);
     auto colorEdit = UI::ColorEditBind(colorObservable)
-                     << UI::Observe(colorObservable->onValueChanged, [lblStatus](const std::array<float, 4> &val)
-                                    {
-        char buffer[100];
-        snprintf(buffer, 100, "Color changed to: (%.2f, %.2f, %.2f, %.2f)", val[0], val[1], val[2], val[3]);
-        lblStatus->setText(buffer); });
+                     << UI::Observe(
+                            colorObservable->onValueChanged,
+                            [lblStatus](const std::array<float, 4> &val)
+                            {
+                                char buffer[100];
+                                snprintf(buffer, 100, "Color changed to: (%.2f, %.2f, %.2f, %.2f)", val[0], val[1], val[2], val[3]);
+                                lblStatus->setText(buffer);
+                            });
 
     auto sliderObservable = MakeObs::Float(0.75f);
     auto sliderFloat = UI::SliderFloatBind(0.0f, 1.0f, sliderObservable)
-                       << UI::Observe(sliderObservable->onValueChanged, [lblStatus](float value)
-                                      { lblStatus->setText("Float slider value: " + std::to_string(value)); });
+                       << UI::Observe(
+                              sliderObservable->onValueChanged,
+                              [lblStatus](float value)
+                              {
+                                  lblStatus->setText("Float slider value: " + std::to_string(value));
+                              });
 
     return UI::VBox(true)
            << UI::Label("ComboBox:")
@@ -925,13 +1003,13 @@ IControlPtr createThemesTab()
 
 IControlPtr createShadowsTab()
 {
-    auto btn1 = UI::Button("No Shadow");
+    auto btn1 = UI::Button("No Shadow")->addClass("no_shadow");
     auto btn2 = UI::Button("Default Shadow")->setShadow(true);
-    auto btn3 = UI::Button("Custom Shadow")->setShadow(true, ImVec2(0.0f, 0.0f), 10.0f, ImVec4(1.0f, 1.0f, 0.0f, 0.8f), 8.0f);
+    auto btn3 = UI::Button("Custom Shadow")->setID("custom_shadow_btn");
 
     auto card1 = UI::Card()
                      ->setPadding(20.0f)
-                     ->setShadow(true, ImVec2(0.0f, 8.0f), 20.0f, ImVec4(0.0f, 0.0f, 0.0f, 0.6f))
+                     ->setID("shadow_card")
                  << UI::Label("Card with a large, soft drop shadow");
 
     return UI::VBox(true)

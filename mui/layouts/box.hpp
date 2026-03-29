@@ -23,9 +23,10 @@ namespace mui
         bool scrollable = false;
         bool autoScroll = false;
 
-        Box() { 
-            this->verifyState(); 
-            this->hasShadow = false;
+        Box()
+        {
+            this->verifyState();
+            this->inlineShadowEnabled = false;
         }
 
     public:
@@ -95,6 +96,7 @@ namespace mui
     protected:
         std::string getTypeName() const override { return "VBox"; }
         VBox();
+
     public:
         static VBoxPtr create() { return std::shared_ptr<VBox>(new VBox()); }
         void renderControl() override;
@@ -108,6 +110,7 @@ namespace mui
     protected:
         std::string getTypeName() const override { return "HBox"; }
         HBox();
+
     public:
         static HBoxPtr create() { return std::shared_ptr<HBox>(new HBox()); }
         void renderControl() override;
