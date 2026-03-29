@@ -5,6 +5,7 @@
 #include "mui_dialog.h"
 #include "../../core/app.hpp" // Added for mui::App::assertMainThread()
 #include "../../include/IconsFontAwesome6.h"
+#include <sstream>
 #include <imgui.h>
 #include <imgui_internal.h>
 
@@ -445,63 +446,53 @@ namespace mui_dlg
 
   void FileDialog::m_parseFilter(const std::string &filter)
   {
-    m_filter = "";
     m_filterExtensions.clear();
     m_filterSelection = 0;
+    m_filterCombo->clear();
 
     if (filter.empty())
       return;
 
-    std::vector<std::string> exts;
-
-    size_t lastSplit = 0, lastExt = 0;
-    bool inExtList = false;
-    for (size_t i = 0; i < filter.size(); i++)
+    size_t current_pos = 0;
+    while (current_pos < filter.length())
     {
-      if (filter[i] == ',')
+      size_t brace_open = filter.find('{', current_pos);
+      if (brace_open == std::string::npos)
+        break;
+
+      size_t brace_close = filter.find('}', brace_open);
+      if (brace_close == std::string::npos)
+        break;
+
+      std::string name = filter.substr(current_pos, brace_open - current_pos);
+      name.erase(0, name.find_first_not_of(" \t\n\r"));
+      if (!name.empty())
       {
-        if (!inExtList)
-          lastSplit = i + 1;
-        else
+        name.erase(name.find_last_not_of(" \t\n\r") + 1);
+      }
+
+      std::string exts_str =
+          filter.substr(brace_open + 1, brace_close - brace_open - 1);
+      std::vector<std::string> exts;
+      std::stringstream ss(exts_str);
+      std::string ext;
+      while (std::getline(ss, ext, ','))
+      {
+        ext.erase(0, ext.find_first_not_of(" \t\n\r"));
+        if (!ext.empty())
         {
-          exts.push_back(filter.substr(lastExt, i - lastExt));
-          lastExt = i + 1;
+          ext.erase(ext.find_last_not_of(" \t\n\r") + 1);
+          exts.push_back(ext);
         }
       }
-      else if (filter[i] == '{')
-      {
-        std::string filterName = filter.substr(lastSplit, i - lastSplit);
-        if (filterName == ".*")
-        {
-          m_filter += std::string(std::string("All Files (*.*)\0").c_str(), 16);
-          m_filterExtensions.push_back(std::vector<std::string>());
-        }
-        else
-          m_filter +=
-              std::string((filterName + "\0").c_str(), filterName.size() + 1);
-        inExtList = true;
-        lastExt = i + 1;
-      }
-      else if (filter[i] == '}')
-      {
-        exts.push_back(filter.substr(lastExt, i - lastExt));
-        m_filterExtensions.push_back(exts);
-        exts.clear();
+      m_filterExtensions.push_back(exts);
+      m_filterCombo->append(name);
 
-        inExtList = false;
-      }
-    }
-    if (lastSplit != 0)
-    {
-      std::string filterName = filter.substr(lastSplit);
-      if (filterName == ".*")
+      current_pos = brace_close + 1;
+      if (current_pos < filter.length() && filter[current_pos] == ',')
       {
-        m_filter += std::string(std::string("All Files (*.*)\0").c_str(), 16);
-        m_filterExtensions.push_back(std::vector<std::string>());
+        current_pos++;
       }
-      else
-        m_filter +=
-            std::string((filterName + "\0").c_str(), filterName.size() + 1);
     }
   }
 

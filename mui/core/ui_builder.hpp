@@ -2,6 +2,7 @@
 #include "include/mui.hpp"
 #include <string>
 #include <memory>
+#include <array>
 #include <vector>
 #include <initializer_list>
 #include <functional>

@@ -11,6 +11,7 @@
 typedef struct SDL_GLContextState *SDL_GLContext;
 struct SDL_Renderer;
 struct SDL_Texture;
+struct ImGuiStyle; // Forward declare ImGuiStyle
 
 #include "../dialogs/dialogs.hpp"
 #include "shadows.hpp"

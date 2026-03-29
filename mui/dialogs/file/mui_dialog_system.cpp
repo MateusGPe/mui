@@ -161,8 +161,8 @@ namespace mui_dlg
         // name
         if (column == 0)
         {
-          std::string lName = left.Path.string();
-          std::string rName = right.Path.string();
+          std::string lName = left.Path.filename().string();
+          std::string rName = right.Path.filename().string();
 
           std::transform(lName.begin(), lName.end(), lName.begin(), ::tolower);
           std::transform(rName.begin(), rName.end(), rName.begin(), ::tolower);

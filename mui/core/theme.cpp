@@ -16,7 +16,9 @@
 
 #include "../include/IconsFontAwesome6.h"
 #include "fa_solid_900.hpp"
+#include "style_parser_utils.hpp" // Shared parsing utilities
 #include <imgui_internal.h>
+#include "stylesheet.hpp"
 
 namespace mui
 {
@@ -463,7 +465,7 @@ namespace mui
 
         ImGuiStyle &style = ImGui::GetStyle();
 
-        // Parse style geometry and properties
+        // Parse style geometry and properties using shared mappings
         if (auto styleNodeRaw = findCaseInsensitive(themeTable, "style"))
         {
           if (auto styleTable = styleNodeRaw->as_table())
@@ -707,132 +709,37 @@ namespace mui
         {
           if (auto colorsTable = colorsNodeRaw->as_table())
           {
-            ImVec4 *colors = style.Colors;
-
-            static const std::unordered_map<std::string_view, ImGuiCol> colorMap =
-                {{"text", ImGuiCol_Text},
-                 {"textdisabled", ImGuiCol_TextDisabled},
-                 {"windowbg", ImGuiCol_WindowBg},
-                 {"childbg", ImGuiCol_ChildBg},
-                 {"popupbg", ImGuiCol_PopupBg},
-                 {"border", ImGuiCol_Border},
-                 {"bordershadow", ImGuiCol_BorderShadow},
-                 {"framebg", ImGuiCol_FrameBg},
-                 {"framebghovered", ImGuiCol_FrameBgHovered},
-                 {"framebgactive", ImGuiCol_FrameBgActive},
-                 {"titlebg", ImGuiCol_TitleBg},
-                 {"titlebgactive", ImGuiCol_TitleBgActive},
-                 {"titlebgcollapsed", ImGuiCol_TitleBgCollapsed},
-                 {"menubarbg", ImGuiCol_MenuBarBg},
-                 {"scrollbarbg", ImGuiCol_ScrollbarBg},
-                 {"scrollbargrab", ImGuiCol_ScrollbarGrab},
-                 {"scrollbargrabhovered", ImGuiCol_ScrollbarGrabHovered},
-                 {"scrollbargrabactive", ImGuiCol_ScrollbarGrabActive},
-                 {"checkmark", ImGuiCol_CheckMark},
-                 {"slidergrab", ImGuiCol_SliderGrab},
-                 {"slidergrabactive", ImGuiCol_SliderGrabActive},
-                 {"button", ImGuiCol_Button},
-                 {"buttonhovered", ImGuiCol_ButtonHovered},
-                 {"buttonactive", ImGuiCol_ButtonActive},
-                 {"header", ImGuiCol_Header},
-                 {"headerhovered", ImGuiCol_HeaderHovered},
-                 {"headeractive", ImGuiCol_HeaderActive},
-                 {"separator", ImGuiCol_Separator},
-                 {"separatorhovered", ImGuiCol_SeparatorHovered},
-                 {"separatoractive", ImGuiCol_SeparatorActive},
-                 {"resizegrip", ImGuiCol_ResizeGrip},
-                 {"resizegriphovered", ImGuiCol_ResizeGripHovered},
-                 {"resizegripactive", ImGuiCol_ResizeGripActive},
-                 {"inputtextcursor", ImGuiCol_InputTextCursor},
-                 {"tabhovered", ImGuiCol_TabHovered},
-                 {"tab", ImGuiCol_Tab},
-                 {"tabselected", ImGuiCol_TabSelected},
-                 {"tabactive", ImGuiCol_TabSelected}, // Legacy alias
-                 {"tabselectedoverline", ImGuiCol_TabSelectedOverline},
-                 {"tabdimmed", ImGuiCol_TabDimmed},
-                 {"tabunfocused", ImGuiCol_TabDimmed}, // Legacy alias
-                 {"tabdimmedselected", ImGuiCol_TabDimmedSelected},
-                 {"tabunfocusedactive",
-                  ImGuiCol_TabDimmedSelected}, // Legacy alias
-                 {"tabdimmedselectedoverline",
-                  ImGuiCol_TabDimmedSelectedOverline},
-                 {"dockingpreview", ImGuiCol_DockingPreview},
-                 {"dockingemptybg", ImGuiCol_DockingEmptyBg},
-                 {"plotlines", ImGuiCol_PlotLines},
-                 {"plotlineshovered", ImGuiCol_PlotLinesHovered},
-                 {"plothistogram", ImGuiCol_PlotHistogram},
-                 {"plothistogramhovered", ImGuiCol_PlotHistogramHovered},
-                 {"tableheaderbg", ImGuiCol_TableHeaderBg},
-                 {"tableborderstrong", ImGuiCol_TableBorderStrong},
-                 {"tableborderlight", ImGuiCol_TableBorderLight},
-                 {"tablerowbg", ImGuiCol_TableRowBg},
-                 {"tablerowbgalt", ImGuiCol_TableRowBgAlt},
-                 {"textlink", ImGuiCol_TextLink},
-                 {"textselectedbg", ImGuiCol_TextSelectedBg},
-                 {"dragdroptarget", ImGuiCol_DragDropTarget},
-                 {"dragdroptargetbg", ImGuiCol_DragDropTargetBg},
-                 {"navcursor", ImGuiCol_NavCursor},
-                 {"navhighlight", ImGuiCol_NavCursor}, // Legacy alias
-                 {"navwindowinghighlight", ImGuiCol_NavWindowingHighlight},
-                 {"navwindowingdimbg", ImGuiCol_NavWindowingDimBg},
-                 {"modalwindowdimbg", ImGuiCol_ModalWindowDimBg}};
-
-#ifdef DEBUG
-            // Assert in code that the map actually contains every ImGuiCol
-            // enumeration
-            static bool colorMapValidated = false;
-            if (!colorMapValidated)
-            {
-              bool mapped[ImGuiCol_COUNT] = {false};
-              for (const auto &kv : colorMap)
-                if (kv.second >= 0 && kv.second < ImGuiCol_COUNT)
-                  mapped[kv.second] = true;
-              for (int i = 0; i < ImGuiCol_COUNT; ++i)
-                IM_ASSERT(mapped[i] && "A color is missing from the C++ "
-                                       "colorMap! 100% enum coverage required.");
-              colorMapValidated = true;
-            }
-#endif
-
             for (const auto &[key, node] : *colorsTable)
             {
               std::string lowerKey = std::string(key.str());
               std::transform(lowerKey.begin(), lowerKey.end(), lowerKey.begin(),
                              ::tolower);
 
-              auto it = colorMap.find(lowerKey);
-              if (it != colorMap.end())
+              // Use the shared colorMap and parse_color utility
+              auto it = mui::colorMap.find(lowerKey);
+              if (it != mui::colorMap.end())
               {
-                if (auto arr = node.as_array())
+                if (auto color = mui::parse_color(node))
                 {
-                  if (arr->size() >= 3)
-                  {
-                    float r = (*arr)[0].value_or<float>(0.0f);
-                    float g = (*arr)[1].value_or<float>(0.0f);
-                    float b = (*arr)[2].value_or<float>(0.0f);
-                    float a =
-                        arr->size() >= 4 ? (*arr)[3].value_or<float>(1.0f) : 1.0f;
-                    colors[it->second] = ImVec4(r, g, b, a);
-                  }
-                }
-                else if (auto str = node.as_string())
-                {
-                  std::string hex = str->get();
-                  if (hex.length() >= 7 && hex[0] == '#')
-                  {
-                    unsigned int r = 0, g = 0, b = 0, a = 255;
-                    if (hex.length() >= 9)
-                      sscanf(hex.c_str(), "#%02x%02x%02x%02x", &r, &g, &b, &a);
-                    else
-                      sscanf(hex.c_str(), "#%02x%02x%02x", &r, &g, &b);
-                    colors[it->second] =
-                        ImVec4(r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f);
-                  }
+                  style.Colors[it->second] = *color;
                 }
               }
             }
           }
         }
+
+        // CRITICAL - Override Behavior: If a 'selectors' block exists,
+        // pass it to StyleSheet::loadFromNode to apply widget-specific styles.
+        // This allows themes to define baseline widget styles that can be
+        // overridden by later StyleSheet::loadFromFile calls.
+        if (auto selectorsNodeRaw = findCaseInsensitive(themeTable, "selectors"))
+        {
+          if (auto selectorsTable = selectorsNodeRaw->as_table())
+          {
+            mui::StyleSheet::loadFromNode(*selectorsTable);
+          }
+        }
+
         return true;
       };
 

@@ -8,6 +8,7 @@
 #include <random>
 #include <algorithm>
 #include <ctime>
+#include <toml++/toml.hpp>
 #include <imgui_internal.h>
 using namespace mui;
 
