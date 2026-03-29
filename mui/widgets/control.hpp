@@ -44,6 +44,7 @@ namespace mui
         virtual void render() = 0;
         virtual void onHandleDestroyed() = 0;
         virtual std::string getID() const = 0;
+        virtual bool isVisible() const = 0;
 
         void clearConnections() { m_connections.clear(); }
     };

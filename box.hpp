@@ -1,4 +1,3 @@
-// layouts/box.hpp
 #pragma once
 #include "../widgets/control.hpp"
 #include <vector>
@@ -205,7 +204,24 @@ namespace mui
     public:
         static FlowBoxPtr create() { return std::shared_ptr<FlowBox>(new FlowBox()); }
         void renderControl() override;
-        
+        FlowBoxPtr append(IControlPtr child, Sizing sizing)
+        {
+            this->verifyState();
+            children.emplace_back(child, sizing);
+            flow_data.push_back({0, 0, 0, 0});
+            return this->self();
+        }
+        FlowBoxPtr append(IControlPtr child, bool stretchy = false); // Keep for compatibility
+        FlowBoxPtr append(std::initializer_list<BoxChild> items)
+        {
+            this->verifyState();
+            for (const auto &item : items)
+            {
+                children.push_back(item);
+                flow_data.push_back({0, 0, 0, 0});
+            }
+            return this->self();
+        }
         FlowBoxPtr setAlign(Align align)
         {
             m_align = align;
