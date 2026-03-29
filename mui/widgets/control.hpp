@@ -330,6 +330,7 @@ namespace mui
             this->visible = visible;
             return self();
         }
+        bool isVisible() const { return visible; }
 
         std::shared_ptr<Derived> setEnabled(bool enabled)
         {

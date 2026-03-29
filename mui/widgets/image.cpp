@@ -44,7 +44,10 @@ namespace mui
     ScopedControlID id(this);
     ImGui::BeginDisabled(!enabled);
 
-    ImGui::Image(textureId, ImVec2(width, height), uv0, uv1, tintColor,
+    ImVec4 finalTintColor = tintColor;
+    finalTintColor.w *= opacity;
+
+    ImGui::Image(textureId, ImVec2(width, height), uv0, uv1, finalTintColor,
                  borderColor);
 
     renderTooltip();
@@ -71,7 +74,7 @@ namespace mui
     return self();
   }
 
-  ImagePtr Image::loadFromMemory(int width, int height, int channels,
+  ImagePtr Image::loadFromMemory(const std::string &name, int width, int height, int channels,
                                  const unsigned char *data)
   {
     std::vector<unsigned char> rgba_data;
@@ -89,7 +92,7 @@ namespace mui
     }
     else if (channels != 4)
     {
-      return self(); // Unsupported format
+      return nullptr; // Unsupported format
     }
 
     ImTextureID new_texture = 0;
@@ -119,11 +122,12 @@ namespace mui
 
     if (new_texture)
     {
-      setTexture(new_texture, true);
-      setSize((float)width, (float)height);
+      auto img = Image::create(name, new_texture, (float)width, (float)height);
+      img->ownsTexture = true;
+      return img;
     }
 
-    return self();
+    return nullptr;
   }
   ImagePtr Image::setUV(float u0, float v0, float u1, float v1)
   {
@@ -140,5 +144,29 @@ namespace mui
   {
     borderColor = border;
     return self();
+  }
+  ImagePtr Image::setOpacity(float o)
+  {
+    opacity = o;
+    return self();
+  }
+  float Image::getOpacity() const
+  {
+    return opacity;
+  }
+  ImagePtr Image::setName(const std::string &n)
+  {
+    name = n;
+    setID(n);
+    return self();
+  }
+  std::string Image::getName() const
+  {
+    return name;
+  }
+
+  ImTextureID Image::getTextureId() const
+  {
+    return textureId;
   }
 } // namespace mui

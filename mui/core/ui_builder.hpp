@@ -354,9 +354,9 @@ namespace mui
         {
             return mui::ProgressBar::create()->setValue(value)->setOverlayText(overlay);
         }
-        inline ImagePtr Image(ImTextureID tex, float w = 0, float h = 0)
+        inline ImagePtr Image(const std::string &name, ImTextureID tex, float w = 0, float h = 0)
         {
-            return mui::Image::create(tex, w, h);
+            return mui::Image::create(name, tex, w, h);
         }
         inline IconStackPtr IconStack()
         {

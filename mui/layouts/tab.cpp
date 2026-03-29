@@ -84,9 +84,13 @@ namespace mui
   {
     setSelected(observable->get());
     m_connections.push_back(
-        observable->onValueChanged.connect([this](const int &val)
-                                           { mui::App::queueMain([this, val]()
-                                                                 { this->setSelected(val); }); }));
+        observable->onValueChanged.connect(
+            [this](const int &val)
+            {
+              mui::App::queueMain(
+                  [this, val]()
+                  { this->setSelected(val); });
+            }));
     m_connections.push_back(onSelectedSignal.connect(
         [observable](int val)
         { observable->set(val); }));
