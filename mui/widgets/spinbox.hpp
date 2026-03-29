@@ -13,6 +13,7 @@ namespace mui
     class Spinbox : public Control<Spinbox>
     {
     protected:
+        std::string getTypeName() const override { return "Spinbox"; }
         int minVal;
         int maxVal;
         int value;

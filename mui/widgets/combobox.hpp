@@ -16,6 +16,7 @@ namespace mui
     class ComboBox : public Control<ComboBox>
     {
     protected:
+        std::string getTypeName() const override { return "ComboBox"; }
         std::vector<std::string> items;
         int selectedIndex;
         ImGuiComboFlags m_flags;

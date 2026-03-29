@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import os
 
 # A lenient map to translate markdown language tags to file extensions

@@ -24,6 +24,7 @@ namespace mui
     class Button : public Control<Button>
     {
     protected:
+        std::string getTypeName() const override { return "Button"; }
         std::string text;
         ButtonType type;
         bool useCustomColor = false;

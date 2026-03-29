@@ -19,6 +19,7 @@ namespace mui
     class SplitterView : public Control<SplitterView>
     {
     protected:
+        std::string getTypeName() const override { return "SplitterView"; }
         IControlPtr panel1;
         IControlPtr panel2;
         SplitterOrientation orientation;

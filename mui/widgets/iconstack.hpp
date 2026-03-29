@@ -27,6 +27,7 @@ namespace mui
         mui::Signal<int> onIconClickedSignal;
 
         static IconStackPtr create() { return std::shared_ptr<IconStack>(new IconStack()); }
+        std::string getTypeName() const override { return "IconStack"; }
 
         void renderControl() override;
         IconStackPtr add(const std::string &icon, std::function<void()> onClick, const std::string &tip = "", bool textHover = false);

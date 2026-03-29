@@ -16,6 +16,7 @@ namespace mui
     class Entry : public Control<Entry>
     {
     protected:
+        std::string getTypeName() const override { return "Entry"; }
         std::string text;
         char *buffer = nullptr;
         size_t bufferSize = 0;
@@ -76,6 +77,7 @@ namespace mui
     class PasswordEntry : public Entry
     {
     protected:
+        std::string getTypeName() const override { return "PasswordEntry"; }
         PasswordEntry();
     public:
         static PasswordEntryPtr create() { return std::shared_ptr<PasswordEntry>(new PasswordEntry()); }
@@ -87,6 +89,7 @@ namespace mui
     class SearchEntry : public Entry
     {
     protected:
+        std::string getTypeName() const override { return "SearchEntry"; }
         SearchEntry();
     public:
         static SearchEntryPtr create() { return std::shared_ptr<SearchEntry>(new SearchEntry()); }

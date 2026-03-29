@@ -34,3 +34,4 @@
 #include "../widgets/toggleswitch.hpp"
 #include "../widgets/iconbutton.hpp"
 #include "../core/ui_builder.hpp"
+#include "../core/shadows.hpp"

@@ -12,6 +12,7 @@ namespace mui
         m_flags = hasMenubar ? ImGuiWindowFlags_MenuBar : ImGuiWindowFlags_None;
         App::assertMainThread();
         App::activeWindows.push_back(this);
+        hasShadow = false;
     }
 
     Window::~Window()

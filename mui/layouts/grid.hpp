@@ -11,6 +11,7 @@ namespace mui
     class Grid : public Control<Grid>
     {
     protected:
+        std::string getTypeName() const override { return "Grid"; }
         struct Cell
         {
             IControlPtr control;

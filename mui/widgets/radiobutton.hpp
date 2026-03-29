@@ -16,6 +16,7 @@ namespace mui
     class RadioButton : public Control<RadioButton>
     {
     protected:
+        std::string getTypeName() const override { return "RadioButton"; }
         std::string text;
 
         std::shared_ptr<int> m_group_selection;

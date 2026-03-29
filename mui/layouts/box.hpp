@@ -23,7 +23,10 @@ namespace mui
         bool scrollable = false;
         bool autoScroll = false;
 
-        Box() { this->verifyState(); }
+        Box() { 
+            this->verifyState(); 
+            this->hasShadow = false;
+        }
 
     public:
         void onHandleDestroyed() override
@@ -90,6 +93,7 @@ namespace mui
     class VBox : public Box<VBox>
     {
     protected:
+        std::string getTypeName() const override { return "VBox"; }
         VBox();
     public:
         static VBoxPtr create() { return std::shared_ptr<VBox>(new VBox()); }
@@ -102,6 +106,7 @@ namespace mui
     class HBox : public Box<HBox>
     {
     protected:
+        std::string getTypeName() const override { return "HBox"; }
         HBox();
     public:
         static HBoxPtr create() { return std::shared_ptr<HBox>(new HBox()); }
@@ -123,6 +128,7 @@ namespace mui
         };
 
     protected:
+        std::string getTypeName() const override { return "FlowBox"; }
         struct flow_internal
         {
             float lastpos;

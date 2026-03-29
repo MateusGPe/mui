@@ -8,7 +8,10 @@
 
 namespace mui
 {
-    IconStack::IconStack() { App::assertMainThread(); }
+    IconStack::IconStack() { 
+        App::assertMainThread(); 
+        hasShadow = false;
+    }
 
     void IconStack::renderControl()
     {

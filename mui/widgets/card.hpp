@@ -10,6 +10,7 @@ namespace mui
     class Card : public Control<Card>
     {
     protected:
+        std::string getTypeName() const override { return "Card"; }
         IControlPtr child;
         float padding = 8.0f;
         bool fillHeight = false;

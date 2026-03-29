@@ -7,7 +7,10 @@
 
 namespace mui
 {
-    SplitterView::SplitterView(SplitterOrientation o) : orientation(o) { App::assertMainThread(); }
+    SplitterView::SplitterView(SplitterOrientation o) : orientation(o) { 
+        App::assertMainThread(); 
+        hasShadow = false;
+    }
 
     void SplitterView::renderControl()
     {

@@ -13,6 +13,7 @@ namespace mui
     class PropertyGrid : public Control<PropertyGrid>
     {
     protected:
+        std::string getTypeName() const override { return "PropertyGrid"; }
         struct PropertyItem
         {
             std::string label;

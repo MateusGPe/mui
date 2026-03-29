@@ -11,6 +11,7 @@ namespace mui
     { 
         App::assertMainThread();
         m_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
+        hasShadow = false;
     }
 
     void TreeNode::onHandleDestroyed()

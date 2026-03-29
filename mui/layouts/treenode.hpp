@@ -17,6 +17,7 @@ namespace mui
     class TreeNode : public Control<TreeNode>
     {
     protected:
+        std::string getTypeName() const override { return "TreeNode"; }
         std::string label;
         std::string iconText;
         ImTextureID iconTex = 0;

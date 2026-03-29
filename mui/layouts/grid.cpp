@@ -7,7 +7,10 @@
 
 namespace mui
 {
-    Grid::Grid() { App::assertMainThread(); }
+    Grid::Grid() { 
+        App::assertMainThread(); 
+        hasShadow = false;
+    }
 
     GridPtr Grid::append(IControlPtr child, int row, int col, int colSpan)
     {

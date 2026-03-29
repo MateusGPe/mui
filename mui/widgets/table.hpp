@@ -23,6 +23,7 @@ namespace mui
     class Table : public Control<Table>
     {
     protected:
+        std::string getTypeName() const override { return "Table"; }
         std::vector<TableColumn> columns;
         std::vector<std::vector<IControlPtr>> rows;
         int selectedRow = -1;

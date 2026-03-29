@@ -4321,3 +4321,168 @@ NavHighlight = [0.26, 0.59, 0.98, 1.0]
 NavWindowingHighlight = [1.0, 1.0, 1.0, 0.7]
 NavWindowingDimBg = [0.8, 0.8, 0.8, 0.2]
 ModalWindowDimBg = [0.8, 0.8, 0.8, 0.35]
+
+# ==============================================================================
+# EXHAUSTIVE THEME: OBSIDIAN LABORATORY
+# Designed for high-density, high-agency orbital layouts.
+# ==============================================================================
+
+[themes.ObsidianLaboratory]
+
+  # ----------------------------------------------------------------------------
+  # STYLE PROPERTIES
+  # ----------------------------------------------------------------------------
+  [themes.ObsidianLaboratory.style]
+  
+  # Booleans
+  AntiAliasedLines = true
+  AntiAliasedFill = true
+  AntiAliasedLinesUseTex = true
+
+  # Floats (Scalars)
+  Alpha = 1.0
+  DisabledAlpha = 0.5
+  
+  # Geometry: The "No-Line" Rule
+  WindowBorderSize = 0.0
+  ChildBorderSize = 0.0
+  FrameBorderSize = 0.0
+  PopupBorderSize = 0.0
+  TabBorderSize = 0.0
+  TabBarBorderSize = 0.0
+  SeparatorTextBorderSize = 0.0
+  DockingSeparatorSize = 0.0
+
+  # Geometry: The Pods (Roundedness 'md' / Pill-shaped knobs)
+  WindowRounding = 6.0
+  ChildRounding = 6.0
+  FrameRounding = 6.0
+  PopupRounding = 6.0
+  TabRounding = 6.0
+  ScrollbarRounding = 12.0
+  GrabRounding = 12.0
+  
+  # Sizing & Behavior
+  IndentSpacing = 16.0
+  ColumnsMinSpacing = 6.0
+  ScrollbarSize = 14.0
+  GrabMinSize = 12.0
+  LogSliderDeadzone = 4.0
+  MouseCursorScale = 1.0
+  CurveTessellationTol = 1.25
+  CircleTessellationMaxError = 0.30
+  HoverStationaryDelay = 0.15
+  HoverDelayShort = 0.15
+  HoverDelayNormal = 0.40
+
+  # Vectors (ImVec2)
+  WindowPadding = [16.0, 16.0]
+  WindowMinSize = [32.0, 32.0]
+  WindowTitleAlign = [0.0, 0.5]
+  FramePadding = [8.0, 4.0]
+  ItemSpacing = [8.0, 8.0]
+  ItemInnerSpacing = [4.0, 4.0]
+  CellPadding = [4.0, 2.0]
+  TouchExtraPadding = [0.0, 0.0]
+  ButtonTextAlign = [0.5, 0.5]
+  SelectableTextAlign = [0.0, 0.0]
+  SeparatorTextAlign = [0.0, 0.5]
+  SeparatorTextPadding = [20.0, 2.0]
+  DisplayWindowPadding = [16.0, 16.0]
+  DisplaySafeAreaPadding = [4.0, 4.0]
+
+  # Directions
+  WindowMenuButtonPosition = "left"
+  ColorButtonPosition = "right"
+
+  # Flags
+  TreeLinesFlags = ["drawlinesnone"]
+  HoverFlagsForTooltipMouse = ["stationary", "delaynormal"]
+  HoverFlagsForTooltipNav = ["delaynormal"]
+
+  # ----------------------------------------------------------------------------
+  # COLORS
+  # ----------------------------------------------------------------------------
+  [themes.ObsidianLaboratory.colors]
+  
+  # General Surfaces
+  text = "#E5E2E1"
+  textdisabled = "#C7C4D7"
+  windowbg = "#131313"
+  childbg = "#1B1B1C"
+  popupbg = "#202020"
+  border = "#FFFFFF26"       # Ghost Border (15% outline_variant)
+  bordershadow = "#0A0A0A"
+
+  # Frames & Inputs (Recessed/Extruded)
+  framebg = "#353535"
+  framebghovered = "#424242"
+  framebgactive = "#4EDEA3"
+
+  # Titles (Alchemical Headers)
+  titlebg = "#131313"
+  titlebgactive = "#1B1B1C"
+  titlebgcollapsed = "#131313"
+
+  # Menus & Scrolling
+  menubarbg = "#1B1B1C"
+  scrollbarbg = "#131313"
+  scrollbargrab = "#353535"
+  scrollbargrabhovered = "#424242"
+  scrollbargrabactive = "#8152EC"
+
+  # Widgets & Knobs
+  checkmark = "#4EDEA3"
+  slidergrab = "#4EDEA3"
+  slidergrabactive = "#8152EC"
+  button = "#8152EC"
+  buttonhovered = "#9870F0"
+  buttonactive = "#6C3ADB"
+  header = "#202020"
+  headerhovered = "#353535"
+  headeractive = "#8152EC"
+  separator = "#1B1B1C"
+  separatorhovered = "#353535"
+  separatoractive = "#8152EC"
+  resizegrip = "#353535"
+  resizegriphovered = "#424242"
+  resizegripactive = "#4EDEA3"
+
+  # Text Input
+  inputtextcursor = "#4EDEA3"
+  textlink = "#8152EC"
+  textselectedbg = "#8152EC66"
+
+  # Tabs
+  tab = "#131313"
+  tabhovered = "#202020"
+  tabselected = "#1B1B1C"
+  tabselectedoverline = "#8152EC"
+  tabdimmed = "#131313"
+  tabdimmedselected = "#1B1B1C"
+  tabdimmedselectedoverline = "#424242"
+
+  # Docking
+  dockingpreview = "#8152EC4D"
+  dockingemptybg = "#131313"
+
+  # Plots (Useful for training loss charts or generation timing)
+  plotlines = "#C7C4D7"
+  plotlineshovered = "#4EDEA3"
+  plothistogram = "#8152EC"
+  plothistogramhovered = "#9870F0"
+
+  # Tables (Metadata readouts)
+  tableheaderbg = "#202020"
+  tableborderstrong = "#353535"
+  tableborderlight = "#1B1B1C"
+  tablerowbg = "#00000000"
+  tablerowbgalt = "#FFFFFF05"
+
+  # Drag/Drop & Navigation
+  dragdroptarget = "#4EDEA3"
+  dragdroptargetbg = "#4EDEA333"
+  navcursor = "#8152EC"
+  navwindowinghighlight = "#E5E2E1"
+  navwindowingdimbg = "#131313B3"
+  modalwindowdimbg = "#131313B3"

@@ -18,6 +18,7 @@ namespace mui
     BreadcrumbBar::BreadcrumbBar(const std::string &path)
     {
         App::assertMainThread();
+        hasShadow = false;
         currentPath = path;
         parsePath();
         m_editEntry = Entry::create(editBuffer, sizeof(editBuffer))

@@ -16,6 +16,7 @@ namespace mui
     class ListBox : public Control<ListBox>
     {
     protected:
+        std::string getTypeName() const override { return "ListBox"; }
         std::vector<std::string> items;
         int selectedIndex;
         int visibleItemsCount;

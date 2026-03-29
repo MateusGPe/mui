@@ -16,6 +16,7 @@ namespace mui
     class BreadcrumbBar : public Control<BreadcrumbBar>
     {
     protected:
+        std::string getTypeName() const override { return "BreadcrumbBar"; }
         std::string currentPath;
         std::vector<std::string> segments;
         char editBuffer[1024] = {0};

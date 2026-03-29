@@ -12,6 +12,7 @@ namespace mui
     class Group : public Control<Group>
     {
     protected:
+        std::string getTypeName() const override { return "Group"; }
         std::string title;
         IControlPtr child;
         bool margined = false;

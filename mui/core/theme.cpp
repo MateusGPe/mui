@@ -366,7 +366,6 @@ namespace mui
 
     bool Theme::loadThemeFromToml(const std::string &filepath, const std::string &themeName, float dpiScale)
     {
-        applyDarkStyle(dpiScale); // Start with a base style to ensure all properties are initialized
         try
         {
             toml::table config = toml::parse_file(filepath);
@@ -387,19 +386,50 @@ namespace mui
                 return nullptr;
             };
 
-            // Navigate to [themes.ThemeName]
-            auto themesNodeRaw = findCaseInsensitive(&config, "themes");
-            if (!themesNodeRaw || !themesNodeRaw->as_table()) return false;
-            
-            auto themeNodeRaw = findCaseInsensitive(themesNodeRaw->as_table(), themeName);
-            if (!themeNodeRaw || !themeNodeRaw->as_table()) return false;
-            
-            auto themeTable = themeNodeRaw->as_table();
+            auto applyThemeConfig = [&](auto& self, const std::string& currentThemeName, int depth) -> bool {
+                if (depth > 5) return false; // Prevent infinite recursion
 
-            ImGuiStyle &style = ImGui::GetStyle();
+                // Navigate to [themes.ThemeName]
+                auto themesNodeRaw = findCaseInsensitive(&config, "themes");
+                if (!themesNodeRaw || !themesNodeRaw->as_table()) return false;
+                
+                auto themeNodeRaw = findCaseInsensitive(themesNodeRaw->as_table(), currentThemeName);
+                if (!themeNodeRaw || !themeNodeRaw->as_table()) return false;
+                
+                auto themeTable = themeNodeRaw->as_table();
 
-            // Parse style geometry and properties
-            if (auto styleNodeRaw = findCaseInsensitive(themeTable, "style"))
+                std::string baseTheme = "dark";
+                if (auto baseNode = findCaseInsensitive(themeTable, "base"))
+                {
+                    if (auto str = baseNode->as_string())
+                    {
+                        baseTheme = str->get();
+                    }
+                }
+
+                std::string baseThemeLower = baseTheme;
+                std::transform(baseThemeLower.begin(), baseThemeLower.end(), baseThemeLower.begin(), ::tolower);
+
+                if (baseThemeLower == "light")
+                {
+                    applyStyle(1.0f); // Do not scale yet
+                }
+                else if (baseThemeLower == "dark")
+                {
+                    applyDarkStyle(1.0f); // Do not scale yet
+                }
+                else
+                {
+                    if (!self(self, baseTheme, depth + 1))
+                    {
+                        applyDarkStyle(1.0f); // Fallback
+                    }
+                }
+
+                ImGuiStyle &style = ImGui::GetStyle();
+
+                // Parse style geometry and properties
+                if (auto styleNodeRaw = findCaseInsensitive(themeTable, "style"))
             {
                 if (auto styleTable = styleNodeRaw->as_table())
                 {
@@ -606,9 +636,6 @@ namespace mui
                 }
             }
 
-            // Apply DPI scaling before parsing colors
-            style.ScaleAllSizes(dpiScale);
-
             // Parse colors
             if (auto colorsNodeRaw = findCaseInsensitive(themeTable, "colors"))
             {
@@ -697,6 +724,14 @@ namespace mui
                 }
             }
             return true;
+            };
+
+            if (applyThemeConfig(applyThemeConfig, themeName, 0))
+            {
+                ImGui::GetStyle().ScaleAllSizes(dpiScale);
+                return true;
+            }
+            return false;
         }
         catch (const toml::parse_error &)
         {

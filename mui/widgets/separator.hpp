@@ -25,6 +25,7 @@ namespace mui
     class Separator : public Control<Separator>
     {
     protected:
+        std::string getTypeName() const override { return "Separator"; }
         void renderCustomSeparator();
         SeparatorType type = SeparatorType::Custom;
         SeparatorOrientation orientation = SeparatorOrientation::Horizontal;

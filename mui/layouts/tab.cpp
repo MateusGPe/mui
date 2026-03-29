@@ -8,6 +8,7 @@ namespace mui
     Tab::Tab() { 
         App::assertMainThread();
         m_flags = ImGuiTabBarFlags_TabListPopupButton;
+        hasShadow = false;
     }
 
     void Tab::renderControl()

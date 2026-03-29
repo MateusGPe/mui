@@ -47,9 +47,82 @@ namespace mui
     bool App::s_applySepia = false;
     bool App::s_applyInvert = false;
     bool App::useTomlTheme = false;
+    // Define the static shadow variables
+    SDL_Texture *App::s_raw_sdl_shadow_tex = nullptr;
+    ImTextureID App::s_shadow_tex_id = (ImTextureID)(intptr_t)nullptr;
+    ImVec4 App::s_shadow_uvs[10] = {};
 
+    ImTextureID App::GetShadowTexture() { return s_shadow_tex_id; }
+    const ImVec4 *App::GetShadowUVs() { return s_shadow_uvs; }
+
+    ImVec4 App::GetThemeShadowColor()
+    {
+        // Use the WindowBg color to determine if we are currently in a Light or Dark theme
+        ImVec4 bg = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
+        float luminance = bg.x * 0.299f + bg.y * 0.587f + bg.z * 0.114f;
+        
+        if (luminance > 0.5f)
+        {
+            return ImVec4(0.0f, 0.0f, 0.0f, 0.12f); // Softer shadow for light themes
+        }
+        else
+        {
+            return ImVec4(0.0f, 0.0f, 0.0f, 0.45f); // Darker, stronger shadow for dark themes
+        }
+    }
+
+    void App::InitShadows()
+    {
+        if (s_shadow_tex_id != (ImTextureID)(intptr_t)nullptr)
+            return; // Already initialized
+
+        ImGuiShadows::ShadowTextureConfig cfg;
+        ImGuiShadows::ShadowTextureData data = ImGuiShadows::GenerateShadowTexture(cfg);
+
+        if (g_use_opengl)
+        {
+            GLuint texture;
+            glGenTextures(1, &texture);
+            glBindTexture(GL_TEXTURE_2D, texture);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, data.Width, data.Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.PixelsRGBA32.data());
+            glBindTexture(GL_TEXTURE_2D, 0);
+            s_shadow_tex_id = (ImTextureID)(intptr_t)texture;
+        }
+        else
+        {
+            s_raw_sdl_shadow_tex = SDL_CreateTexture(g_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, data.Width, data.Height);
+            SDL_UpdateTexture(s_raw_sdl_shadow_tex, nullptr, data.PixelsRGBA32.data(), data.Width * 4);
+            s_shadow_tex_id = (ImTextureID)(intptr_t)s_raw_sdl_shadow_tex;
+        }
+
+        // Copy UV coordinates
+        for (int i = 0; i < 10; ++i)
+        {
+            s_shadow_uvs[i] = data.Uvs[i];
+        }
+    }
+
+    void App::ShutdownShadows()
+    {
+        if (s_shadow_tex_id != (ImTextureID)(intptr_t)nullptr)
+        {
+            if (g_use_opengl)
+            {
+                GLuint texID = (GLuint)(intptr_t)s_shadow_tex_id;
+                glDeleteTextures(1, &texID);
+            }
+            else if (s_raw_sdl_shadow_tex)
+            {
+                SDL_DestroyTexture(s_raw_sdl_shadow_tex);
+                s_raw_sdl_shadow_tex = nullptr;
+            }
+            s_shadow_tex_id = (ImTextureID)(intptr_t)nullptr;
+        }
+    }
     // Initialize thread-safe queue components
-    std::queue<std::function<void()>> App::m_mainQueue;
+    std::vector<std::function<void()>> App::m_mainQueue;
     std::mutex App::m_mainQueueMutex;
 
     void App::setLayoutBuilder(std::function<void(DockBuilder &)> cb)
@@ -57,7 +130,7 @@ namespace mui
         layoutBuilderCb = std::move(cb);
     }
 
-    void App::init(bool useOpenGL)
+    void App::init(bool useOpenGL, bool enableShadows)
     {
         const char *base_path = SDL_GetBasePath();
         if (base_path)
@@ -197,6 +270,11 @@ namespace mui
                 SDL_DestroyTexture((SDL_Texture *)texture);
             }
         };
+
+        if (enableShadows)
+        {
+            InitShadows();
+        }
     }
 
     std::function<void()> App::mainLoopCallback = nullptr;
@@ -400,6 +478,7 @@ namespace mui
 
     void App::shutdown()
     {
+        ShutdownShadows();
         // No need to reset unique_ptr, as platformService is now a raw pointer to a static object.
     }
 
@@ -408,21 +487,22 @@ namespace mui
         if (!callback)
             return;
         std::lock_guard<std::mutex> lock(m_mainQueueMutex);
-        m_mainQueue.push(std::move(callback));
+        m_mainQueue.emplace_back(std::move(callback));
     }
 
     void App::drainMainQueue()
     {
-        std::queue<std::function<void()>> currentQueue;
+        std::vector<std::function<void()>> currentQueue;
         {
             std::lock_guard<std::mutex> lock(m_mainQueueMutex);
+            if (m_mainQueue.empty())
+                return;
             std::swap(currentQueue, m_mainQueue);
         }
 
-        while (!currentQueue.empty())
+        for (auto &task : currentQueue)
         {
-            currentQueue.front()();
-            currentQueue.pop();
+            task();
         }
     }
 

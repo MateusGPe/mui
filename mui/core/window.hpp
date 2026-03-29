@@ -29,6 +29,7 @@ namespace mui
     ImGuiWindowFlags m_flags;
 
   protected:
+    std::string getTypeName() const override { return "Window"; }
     Window(const std::string &title, int width, int height, bool hasMenubar = false);
 
   public:

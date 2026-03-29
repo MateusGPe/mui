@@ -21,6 +21,7 @@ namespace mui
     class IconButton : public Control<IconButton>
     {
     protected:
+        std::string getTypeName() const override { return "IconButton"; }
         std::string text;
         std::string iconText;
         ImTextureID iconTex = 0;

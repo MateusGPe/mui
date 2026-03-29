@@ -15,6 +15,7 @@ namespace mui
     class ColorEdit : public Control<ColorEdit>
     {
     protected:
+        std::string getTypeName() const override { return "ColorEdit"; }
         float color[4];
 
         ColorEdit(float r = 1.0f, float g = 1.0f, float b = 1.0f, float a = 1.0f);

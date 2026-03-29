@@ -12,6 +12,7 @@ namespace mui
     class Image : public Control<Image>
     {
     protected:
+        std::string getTypeName() const override { return "Image"; }
         ImTextureID textureId;
         ImVec2 uv0 = ImVec2(0, 0);
         ImVec2 uv1 = ImVec2(1, 1);

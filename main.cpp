@@ -21,12 +21,13 @@ IControlPtr createMoreControlsTab(const LabelPtr &statusLabel);
 IControlPtr createAdvancedTab(const LabelPtr &statusLabel);
 IControlPtr createPropertyGridTab(const LabelPtr &statusLabel);
 IControlPtr createThemesTab();
+IControlPtr createShadowsTab();
 WindowPtr createMainGalleryWindow();
 WindowPtr createInspectorWindow();
 
 int main()
 {
-    App::init();
+    App::init(true, true);
     App::setTheme("Rounded Visual Studio");
 
     // Define a docking layout for our windows to arrange them on startup.
@@ -94,7 +95,8 @@ WindowPtr createMainGalleryWindow()
                    << TabPage("Properties", createPropertyGridTab(lblStatus))
                    << TabPage("Advanced", createAdvancedTab(lblStatus))
                    << TabPage("More", createMoreControlsTab(lblStatus))
-                   << TabPage("Themes", createThemesTab()))
+                   << TabPage("Themes", createThemesTab())
+                   << TabPage("Shadows", createShadowsTab()))
             << UI::Separator(SeparatorType::Native)
             << lblStatus);
 
@@ -257,7 +259,7 @@ IControlPtr createBasicsTab(const LabelPtr &lblStatus)
                 std::strftime(timeStr, sizeof(timeStr), "%H:%M:%S", std::localtime(&currentTime));
                 lblStatus->setText(std::string("Button clicked at ") + timeStr);
             });
-
+    btnClick->setShadow(true, ImVec2(0.0f, 0.0f), 20.0f, ImVec4(0.0f, 0.0f, 1.0f, 0.5f), -1.0f, 20.);
     auto chkToggle =
         UI::Checkbox(
             "Standard Checkbox",
@@ -919,4 +921,26 @@ IControlPtr createThemesTab()
            << UI::Separator()
            << UI::Label("TOML Themes (from themes.toml):")
            << Stretch(tomlFlowBox);
+}
+
+IControlPtr createShadowsTab()
+{
+    auto btn1 = UI::Button("No Shadow");
+    auto btn2 = UI::Button("Default Shadow")->setShadow(true);
+    auto btn3 = UI::Button("Custom Shadow")->setShadow(true, ImVec2(0.0f, 0.0f), 10.0f, ImVec4(1.0f, 1.0f, 0.0f, 0.8f), 8.0f);
+
+    auto card1 = UI::Card()
+                     ->setPadding(20.0f)
+                     ->setShadow(true, ImVec2(0.0f, 8.0f), 20.0f, ImVec4(0.0f, 0.0f, 0.0f, 0.6f))
+                 << UI::Label("Card with a large, soft drop shadow");
+
+    return UI::VBox(true)
+           << UI::Label("Widgets can have customizable drop shadows.")
+           << UI::Separator()
+           << (UI::FlowBox()
+               << btn1
+               << btn2
+               << btn3)
+           << UI::Separator()
+           << card1;
 }

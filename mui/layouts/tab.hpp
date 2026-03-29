@@ -15,6 +15,7 @@ namespace mui
     class Tab : public Control<Tab>
     {
     protected:
+        std::string getTypeName() const override { return "Tab"; }
         struct TabPage
         {
             std::string name;

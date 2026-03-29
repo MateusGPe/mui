@@ -16,6 +16,7 @@ namespace mui
     class RangeSlider : public Control<RangeSlider>
     {
     protected:
+        std::string getTypeName() const override { return "RangeSlider"; }
         float minBound, maxBound;
         float currentMin, currentMax;
         std::string text;

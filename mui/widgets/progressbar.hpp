@@ -11,6 +11,7 @@ namespace mui
     class ProgressBar : public Control<ProgressBar>
     {
     protected:
+        std::string getTypeName() const override { return "ProgressBar"; }
         float value;
         std::string overlayText;
         ProgressBar();

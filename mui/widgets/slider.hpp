@@ -12,6 +12,7 @@ namespace mui
     class SliderInt : public Control<SliderInt>
     {
     protected:
+        std::string getTypeName() const override { return "SliderInt"; }
         int minVal;
         int maxVal;
         int value;
@@ -40,6 +41,7 @@ namespace mui
     class SliderFloat : public Control<SliderFloat>
     {
     protected:
+        std::string getTypeName() const override { return "SliderFloat"; }
         float minVal;
         float maxVal;
         float value;

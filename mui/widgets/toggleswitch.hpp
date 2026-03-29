@@ -16,6 +16,7 @@ namespace mui
     class ToggleSwitch : public Control<ToggleSwitch>
     {
     protected:
+        std::string getTypeName() const override { return "ToggleSwitch"; }
         std::string label;
         bool checked;
         float scale = 0.6f;

@@ -20,6 +20,7 @@ namespace mui
     class Label : public Control<Label>
     {
     protected:
+        std::string getTypeName() const override { return "Label"; }
         std::string text;
         LabelFormat format;
 

@@ -5,14 +5,15 @@
 #include <string>
 #include <imgui.h>
 #include <filesystem>
-#include <queue>
 #include <mutex>
 
 // Forward declare SDL_GLContext to avoid including SDL.h in the header
 typedef struct SDL_GLContextState *SDL_GLContext;
 struct SDL_Renderer;
+struct SDL_Texture;
 
 #include "../dialogs/dialogs.hpp"
+#include "shadows.hpp"
 
 namespace mui
 {
@@ -33,6 +34,11 @@ namespace mui
         friend class Window;
 
     private:
+        // --- ADD THESE SHADOW MEMBERS ---
+        static SDL_Texture *s_raw_sdl_shadow_tex;
+        static ImTextureID s_shadow_tex_id;
+        static ImVec4 s_shadow_uvs[10];
+
         static std::thread::id mainThreadId;
         static std::vector<Window *> activeWindows;
         static std::vector<ActiveMessageBox> activeMessageBoxes;
@@ -54,14 +60,20 @@ namespace mui
         static std::string filepath;
 
         // Thread-safe main queue components
-        static std::queue<std::function<void()>> m_mainQueue;
+        static std::vector<std::function<void()>> m_mainQueue;
         static std::mutex m_mainQueueMutex;
         static void drainMainQueue();
+        static void InitShadows();
+        static void ShutdownShadows();
 
     public:
+        static ImTextureID GetShadowTexture();
+        static const ImVec4 *GetShadowUVs();
+        static ImVec4 GetThemeShadowColor();
+
         static void setMainLoopCallback(std::function<void()> cb);
         static void setLayoutBuilder(std::function<void(DockBuilder &)> cb);
-        static void init(bool useOpenGL = false);
+        static void init(bool useOpenGL = false, bool enableShadows = true);
         static void run();
         static void quit();
         static void shutdown();

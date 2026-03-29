@@ -9,6 +9,7 @@ namespace mui
     PropertyGrid::PropertyGrid()
     {
         App::assertMainThread();
+        hasShadow = false;
     }
 
     void PropertyGrid::renderControl()

@@ -15,6 +15,7 @@ namespace mui
     class Checkbox : public Control<Checkbox>
     {
     protected:
+        std::string getTypeName() const override { return "Checkbox"; }
         std::string text;
         bool checked;
         float scale = 0.6f;

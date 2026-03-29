@@ -5,7 +5,10 @@
 
 namespace mui
 {
-    Label::Label(const std::string &text) : text(text), format(LabelFormat::Normal) { App::assertMainThread(); }
+    Label::Label(const std::string &text) : text(text), format(LabelFormat::Normal) { 
+        App::assertMainThread(); 
+        hasShadow = false;
+    }
 
     void Label::renderControl()
     {

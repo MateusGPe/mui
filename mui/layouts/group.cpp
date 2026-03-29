@@ -5,7 +5,10 @@
 
 namespace mui
 {
-    Group::Group(const std::string &title) : title(title) { App::assertMainThread(); }
+    Group::Group(const std::string &title) : title(title) { 
+        App::assertMainThread(); 
+        hasShadow = false;
+    }
 
     void Group::renderControl()
     {
