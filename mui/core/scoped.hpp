@@ -72,16 +72,36 @@ namespace mui
     // --- Scoped ID ---
     class ScopedID
     {
+    private:
+        int m_count = 0;
+
     public:
         ScopedID() = default;
-        ScopedID(int id) { ImGui::PushID(id); }
-        ScopedID(const char *str_id) { ImGui::PushID(str_id); }
-        ScopedID(const std::string &str_id) { ImGui::PushID(str_id.c_str()); }
+        ScopedID(int id) { push(id); }
+        ScopedID(const char *str_id) { push(str_id); }
+        ScopedID(const std::string &str_id) { push(str_id); }
 
-        ~ScopedID() { ImGui::PopID(); }
+        ~ScopedID()
+        {
+            for (int i = 0; i < m_count; ++i)
+                ImGui::PopID();
+        }
 
         ScopedID(const ScopedID &) = delete;
         ScopedID &operator=(const ScopedID &) = delete;
+
+        void push(int id) {
+            ImGui::PushID(id);
+            m_count++;
+        }
+        void push(const char *str_id) {
+            ImGui::PushID(str_id);
+            m_count++;
+        }
+        void push(const std::string &str_id) {
+            ImGui::PushID(str_id.c_str());
+            m_count++;
+        }
     };
 
     // --- Scoped Item Width ---

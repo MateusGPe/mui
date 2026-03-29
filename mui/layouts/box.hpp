@@ -13,6 +13,7 @@ namespace mui
         {
             IControlPtr control;
             bool stretchy;
+            ImVec2 lastKnownSize = ImVec2(0, 0); // Added to cache layout sizes for Box stretching
 
             BoxChild(IControlPtr c, bool s = false) : control(std::move(c)), stretchy(s) {}
         };
@@ -22,6 +23,8 @@ namespace mui
         bool padded = true;
         bool scrollable = false;
         bool autoScroll = false;
+        bool fillWidth = false;
+        bool fillHeight = false;
 
         Box()
         {
@@ -82,10 +85,24 @@ namespace mui
             return this->self();
         }
 
+        std::shared_ptr<Derived> setFillWidth(bool f)
+        {
+            fillWidth = f;
+            return this->self();
+        }
+
+        std::shared_ptr<Derived> setFillHeight(bool f)
+        {
+            fillHeight = f;
+            return this->self();
+        }
+
         int getNumChildren() const { return this->children.size(); }
         bool getPadded() const { return padded; }
         bool getScrollable() const { return scrollable; }
         bool getAutoScroll() const { return autoScroll; }
+        bool getFillWidth() const { return fillWidth; }
+        bool getFillHeight() const { return fillHeight; }
     };
 
     class VBox;

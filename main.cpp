@@ -20,6 +20,7 @@ IControlPtr createLayoutsTab(const LabelPtr &statusLabel);
 IControlPtr createMoreControlsTab(const LabelPtr &statusLabel);
 IControlPtr createAdvancedTab(const LabelPtr &statusLabel);
 IControlPtr createPropertyGridTab(const LabelPtr &statusLabel);
+IControlPtr createImageStackTab();
 IControlPtr createThemesTab();
 IControlPtr createShadowsTab();
 WindowPtr createMainGalleryWindow();
@@ -128,6 +129,7 @@ WindowPtr createMainGalleryWindow()
 
     auto win = UI::Window("MUI Control Gallery", 800, 600)
                    ->setMargined(true)
+                   ->setScrollbar(false)
                    ->onClosing(
                        []()
                        {
@@ -137,7 +139,7 @@ WindowPtr createMainGalleryWindow()
 
     win << (UI::VBox(false)
             << Stretch(
-                   UI::Tab()
+                   UI::Tab()->setFittingPolicyScroll(false)->setFittingPolicyResizeDown(true)
                    << TabPage("Basics", createBasicsTab(lblStatus))
                    << TabPage("Numbers", createNumbersTab(lblStatus))
                    << TabPage("Text", createTextEntriesTab(lblStatus))
@@ -146,6 +148,7 @@ WindowPtr createMainGalleryWindow()
                    << TabPage("Properties", createPropertyGridTab(lblStatus))
                    << TabPage("Advanced", createAdvancedTab(lblStatus))
                    << TabPage("More", createMoreControlsTab(lblStatus))
+                   << TabPage("Images", createImageStackTab())
                    << TabPage("Themes", createThemesTab())
                    << TabPage("Shadows", createShadowsTab()))
             << UI::Separator(SeparatorType::Native)
@@ -355,7 +358,7 @@ IControlPtr createBasicsTab(const LabelPtr &lblStatus)
                 }
             });
 
-    return UI::VBox(true)
+    return UI::VBox(true, true)
            << UI::Label("Media Controls (IconStack):")
            << (UI::IconStack()
                << IconDef(
@@ -391,9 +394,9 @@ IControlPtr createNumbersTab(const LabelPtr &lblStatus)
     progressBar->setValue(static_cast<float>(valueObservable->get()) / 100.0f);
     lblStatus->setText("Numeric controls synced to: " + std::to_string(valueObservable->get()));
 
-    return UI::VBox(true)
+    return UI::VBox(true, true)->setFillWidth(true)
            << UI::Label("Sync Test:")
-           << Stretch(
+           << (
                   UI::SpinboxBind(0, 100, valueObservable)
                   << UI::Observe(
                          valueObservable->onValueChanged,
@@ -402,11 +405,11 @@ IControlPtr createNumbersTab(const LabelPtr &lblStatus)
                              progressBar->setValue(static_cast<float>(value) / 100.0f);
                              lblStatus->setText("Numeric controls synced to: " + std::to_string(value));
                          }))
-           << Stretch(UI::SliderIntBind(0, 100, valueObservable))
-           << Stretch(progressBar)
+           << UI::SliderIntBind(0, 100, valueObservable)
+           << progressBar
            << UI::Separator(SeparatorType::Native)
            << UI::Label("Dual Handle Range Slider:")
-           << Stretch(
+           << (
                   UI::RangeSlider(
                       0.0f, 100.0f, 20.0f, 80.0f,
                       [lblStatus](float vMin, float vMax)
@@ -414,8 +417,7 @@ IControlPtr createNumbersTab(const LabelPtr &lblStatus)
                           char buf[128];
                           snprintf(buf, sizeof(buf), "Range changed: %.1f to %.1f", vMin, vMax);
                           lblStatus->setText(buf);
-                      })
-                      ->setSpanAvailWidth(true));
+                      }));
 }
 
 IControlPtr createTextEntriesTab(const LabelPtr &lblStatus)
@@ -426,31 +428,28 @@ IControlPtr createTextEntriesTab(const LabelPtr &lblStatus)
 
     lblMirror->setText("Mirror: " + textObservable->get()); // Initial value
 
-    return UI::VBox(true)
+    return UI::VBox(true, true)
            << UI::Label("Standard Entry:")
-           << Stretch(
-                  UI::EntryBind("Type here...", textObservable)
-                  << UI::Observe(
-                         textObservable->onValueChanged,
-                         [lblMirror](const std::string &text)
-                         {
-                             lblMirror->setText("Mirror: " + text);
-                         }))
+           << (UI::EntryBind("Type here...", textObservable)->setSpanAvailWidth(true)
+               << UI::Observe(
+                      textObservable->onValueChanged,
+                      [lblMirror](const std::string &text)
+                      {
+                          lblMirror->setText("Mirror: " + text);
+                      }))
            << UI::Label("Password Entry:")
-           << Stretch(UI::PasswordEntry("Secret..."))
+           << (UI::PasswordEntry("Secret...")->setSpanAvailWidth(true))
            << UI::Label("Search Entry:")
-           << Stretch(
-                  UI::SearchEntry("Search...")
-                      ->bind(searchObservable)
-                  << UI::Observe(
-                         searchObservable->onValueChanged,
-                         [lblStatus](const std::string &text)
-                         {
-                             if (!text.empty())
-                             {
-                                 lblStatus->setText("Searching for: " + text);
-                             }
-                         }))
+           << (UI::SearchEntry("Search...")->setSpanAvailWidth(true)->bind(searchObservable)
+               << UI::Observe(
+                      searchObservable->onValueChanged,
+                      [lblStatus](const std::string &text)
+                      {
+                          if (!text.empty())
+                          {
+                              lblStatus->setText("Searching for: " + text);
+                          }
+                      }))
            << lblMirror;
 }
 
@@ -560,7 +559,7 @@ IControlPtr createDialogsTab(const WindowPtr &win, const LabelPtr &lblStatus)
                 });
         });
 
-    return UI::VBox(true)
+    return UI::VBox(true, true)
            << (UI::Group("System Dialogs")
                    ->setMargined(true)
                << (UI::FlowBox(mui::FlowBox::Align::Justify)
@@ -614,7 +613,7 @@ IControlPtr createLayoutsTab(const LabelPtr &lblStatus)
                 << GridCell(UI::Label(""), 3, 0)
                 << GridCell(submitButton, 3, 1);
 
-    auto vbox = UI::VBox(true)
+    auto vbox = UI::VBox(true, true)
                 << (UI::Group("Grid Layout")->setMargined(true) << grid)
                 << UI::Separator(SeparatorType::Native);
 
@@ -713,7 +712,7 @@ IControlPtr createAdvancedTab(const LabelPtr &lblStatus)
         });
 
     // Left Panel: Directory Tree
-    auto leftPanel = UI::VBox(true)
+    auto leftPanel = UI::VBox(true, true)
                      << Stretch(
                             UI::TreeNode(ICON_FA_DESKTOP " This PC")
                                 ->setDefaultOpen(true)
@@ -800,7 +799,7 @@ IControlPtr createPropertyGridTab(const LabelPtr &statusLabel)
             statusLabel->setText("Mode set to: " + modeCombo->getText());
         });
 
-    return UI::VBox(true)
+    return UI::VBox(true, true)
            << Stretch(
                   UI::PropertyGrid(120.0f)
                   << PropCat("Appearance")
@@ -888,7 +887,7 @@ IControlPtr createMoreControlsTab(const LabelPtr &lblStatus)
                                   lblStatus->setText("Float slider value: " + std::to_string(value));
                               });
 
-    return UI::VBox(true)
+    return UI::VBox(true, true)
            << UI::Label("ComboBox:")
            << Stretch(combo)
            << UI::Separator()
@@ -966,7 +965,7 @@ IControlPtr createThemesTab()
             reset_toggles(); });
     }
 
-    return UI::VBox(true)
+    return UI::VBox(true, true)
            << UI::Label("Built-in Themes:")
            << (UI::HBox(true)
                << Stretch(UI::Button(
@@ -1012,7 +1011,7 @@ IControlPtr createShadowsTab()
                      ->setID("shadow_card")
                  << UI::Label("Card with a large, soft drop shadow");
 
-    return UI::VBox(true)
+    return UI::VBox(true, true)
            << UI::Label("Widgets can have customizable drop shadows.")
            << UI::Separator()
            << (UI::FlowBox()
@@ -1021,4 +1020,41 @@ IControlPtr createShadowsTab()
                << btn3)
            << UI::Separator()
            << card1;
+}
+
+IControlPtr createImageStackTab()
+{
+    auto stackView = mui::ImageStackView::create();
+
+    const int width = 256;
+    const int height = 256;
+    std::vector<unsigned char> img1(width * height * 4);
+    std::vector<unsigned char> img2(width * height * 4);
+
+    for (int y = 0; y < height; ++y)
+    {
+        for (int x = 0; x < width; ++x)
+        {
+            int i = (y * width + x) * 4;
+            // Image 1: Red Gradient
+            img1[i + 0] = 255;
+            img1[i + 1] = 0;
+            img1[i + 2] = 0;
+            img1[i + 3] = (unsigned char)((x / (float)width) * 255.0f);
+
+            // Image 2: Blue Checkerboard
+            bool isWhite = ((x / 32) + (y / 32)) % 2 == 0;
+            img2[i + 0] = 0;
+            img2[i + 1] = 0;
+            img2[i + 2] = 255;
+            img2[i + 3] = isWhite ? 255 : 50;
+        }
+    }
+
+    stackView->loadFromMemory("Red Gradient", width, height, 4, img1.data());
+    stackView->loadFromMemory("Blue Checkerboard", width, height, 4, img2.data());
+
+    return UI::VBox(true, true)
+           << UI::Label("ImageStackView supports multiple layers, zooming (scroll), and panning (L/M/R click & drag).")
+           << Stretch(stackView);
 }
