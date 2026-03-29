@@ -26,6 +26,10 @@ namespace mui
         MessageBoxType type = MessageBoxType::Info;
         std::vector<MessageBoxButton> buttons;
         bool open_popup = true;
+
+        bool is_input = false;
+        std::string input_buffer;
+        std::function<void(const std::string&)> on_input_ok;
     };
 
     class Dialogs
@@ -39,6 +43,7 @@ namespace mui
         static void msgBoxConfirm(const std::string &title, const std::string &message, std::function<void()> on_ok, std::function<void()> on_cancel = nullptr);
         static void msgBoxQuestion(const std::string &title, const std::string &message, std::function<void()> on_yes, std::function<void()> on_no = nullptr);
         static void msgBoxCustom(const std::string &title, const std::string &message, MessageBoxType type, std::vector<MessageBoxButton> &&buttons);
+        static void msgBoxInput(const std::string &title, const std::string &message, const std::string &default_text, std::function<void(const std::string &)> on_ok, std::function<void()> on_cancel = nullptr);
 
         // File dialogs using mui::FileDialog
         static void openFile(const std::string &title, const std::string &filter, std::function<void(const std::string &)> on_ok, std::function<void()> on_cancel = nullptr, const std::string &startingDir = "");

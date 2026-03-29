@@ -29,6 +29,12 @@
 #ifndef ICON_FA_TRASH
 #define ICON_FA_TRASH "\xef\x81\x93"
 #endif
+#ifndef ICON_FA_PLAY
+#define ICON_FA_PLAY "\xef\x81\x8b"
+#endif
+#ifndef ICON_FA_PAUSE
+#define ICON_FA_PAUSE "\xef\x81\x8c"
+#endif
 
 namespace mui
 {
@@ -137,19 +143,6 @@ namespace mui
 
     ImageStackViewPtr ImageStackView::moveLayerUp(int index)
     {
-        if (index > 0 && index < (int)m_layers.size())
-        {
-            std::swap(m_layers[index], m_layers[index - 1]);
-            if (m_selectedLayer == index)
-                m_selectedLayer--;
-            else if (m_selectedLayer == index - 1)
-                m_selectedLayer++;
-        }
-        return self();
-    }
-
-    ImageStackViewPtr ImageStackView::moveLayerDown(int index)
-    {
         if (index >= 0 && index < (int)m_layers.size() - 1)
         {
             std::swap(m_layers[index], m_layers[index + 1]);
@@ -157,6 +150,19 @@ namespace mui
                 m_selectedLayer++;
             else if (m_selectedLayer == index + 1)
                 m_selectedLayer--;
+        }
+        return self();
+    }
+
+    ImageStackViewPtr ImageStackView::moveLayerDown(int index)
+    {
+        if (index > 0 && index < (int)m_layers.size())
+        {
+            std::swap(m_layers[index], m_layers[index - 1]);
+            if (m_selectedLayer == index)
+                m_selectedLayer--;
+            else if (m_selectedLayer == index - 1)
+                m_selectedLayer++;
         }
         return self();
     }
@@ -220,6 +226,27 @@ namespace mui
         m_sidebarWidth = width;
         return self();
     }
+    
+    ImageStackViewPtr ImageStackView::setSingleLayerMode(bool single)
+    {
+        m_singleLayerMode = single;
+        m_firstRender = true;
+        return self();
+    }
+
+    ImageStackViewPtr ImageStackView::setThumbnailMode(bool thumb)
+    {
+        m_thumbnailMode = thumb;
+        return self();
+    }
+
+    ImageStackViewPtr ImageStackView::setSlideshowMode(bool slideshow, float interval)
+    {
+        m_slideshowMode = slideshow;
+        m_slideshowInterval = interval;
+        m_slideshowTimer = 0.0f;
+        return self();
+    }
 
     void ImageStackView::renderControl()
     {
@@ -229,7 +256,7 @@ namespace mui
         ImGui::BeginDisabled(!enabled);
 
         // Enclose the control in a child window that perfectly fits available space
-        ImGuiChildFlags host_flags = ImGuiChildFlags_Borders;
+        ImGuiChildFlags host_flags = 0;
         ImGuiWindowFlags host_win_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
         ImGui::BeginChild("##imagestack_host", ImVec2(0, 0), host_flags, host_win_flags);
 
@@ -277,12 +304,34 @@ namespace mui
         }
         else
         {
+            // Auto-advance slideshow timer
+            if (m_slideshowMode && !m_layers.empty())
+            {
+                m_slideshowTimer += ImGui::GetIO().DeltaTime;
+                if (m_slideshowTimer >= m_slideshowInterval)
+                {
+                    m_slideshowTimer = 0.0f;
+                    m_selectedLayer--; // Decrement traverses top visually, simulating chronological
+                    if (m_selectedLayer < 0)
+                        m_selectedLayer = (int)m_layers.size() - 1;
+                    m_firstRender = true; // Auto-fit new sizes
+                }
+            }
+
             float maxWidth = 0.0f;
             float maxHeight = 0.0f;
-            for (const auto &layer : m_layers)
+            if (m_singleLayerMode && m_selectedLayer >= 0 && m_selectedLayer < (int)m_layers.size())
             {
-                maxWidth = std::max(maxWidth, layer.width);
-                maxHeight = std::max(maxHeight, layer.height);
+                maxWidth = m_layers[m_selectedLayer].width;
+                maxHeight = m_layers[m_selectedLayer].height;
+            }
+            else
+            {
+                for (const auto &layer : m_layers)
+                {
+                    maxWidth = std::max(maxWidth, layer.width);
+                    maxHeight = std::max(maxHeight, layer.height);
+                }
             }
 
             if (m_firstRender)
@@ -330,24 +379,29 @@ namespace mui
             draw_list->PushClipRect(canvas_p0, canvas_p1, true);
             ImVec2 origin = canvas_p0 + m_translate;
 
-            for (const auto &layer : m_layers)
+            for (int i = 0; i < (int)m_layers.size(); ++i)
             {
-                if (!layer.visible || layer.opacity <= 0.0f)
-                    continue;
+                const auto &layer = m_layers[i];
+                if (m_singleLayerMode) {
+                    if (i != m_selectedLayer) continue;
+                } else {
+                    if (!layer.visible || layer.opacity <= 0.0f) continue;
+                }
+
                 ImVec2 p1 = origin + ImVec2(layer.width * m_scale, layer.height * m_scale);
 
-                ImU32 col = ImGui::GetColorU32(ImVec4(1.0f, 1.0f, 1.0f, layer.opacity));
+                ImU32 col = ImGui::GetColorU32(ImVec4(1.0f, 1.0f, 1.0f, m_singleLayerMode ? 1.0f : layer.opacity));
                 draw_list->AddImage(layer.textureId, origin, p1, ImVec2(0, 0), ImVec2(1, 1), col);
             }
             draw_list->PopClipRect();
         }
 
         // Border
-        draw_list->AddRect(canvas_p0, canvas_p1, ImGui::GetColorU32(ImGuiCol_Border));
+        //draw_list->AddRect(canvas_p0, canvas_p1, ImGui::GetColorU32(ImGuiCol_Border));
 
         // 4. Sidebar Logic
         ImGui::SameLine();
-        ImGui::BeginChild("##layer_sidebar", ImVec2(scaledSidebarWidth, available_size.y), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+        ImGui::BeginChild("##layer_sidebar", ImVec2(scaledSidebarWidth, available_size.y), 0, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
         renderSidebar(ImVec2(scaledSidebarWidth, available_size.y));
         ImGui::EndChild();
 
@@ -358,88 +412,172 @@ namespace mui
 
     void ImageStackView::renderSidebar(ImVec2 size)
     {
-        ImGui::Text("LAYERS");
+        ImGui::BeginGroup();
+        ImGui::Text(ICON_FA_LAYER_GROUP);
+        ImGui::EndGroup();
+
+        // View mode toggles
+        ImGui::SameLine(ImGui::GetWindowWidth() - 70 * App::getDpiScale());
+        if (ImGui::Button(m_thumbnailMode ? ICON_FA_LIST : ICON_FA_GRIP)) {
+            m_thumbnailMode = !m_thumbnailMode;
+        }
+        if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal)) ImGui::SetTooltip(m_thumbnailMode ? "Switch to List View" : "Switch to Grid View");
+
+        ImGui::SameLine();
+        if (ImGui::Button(m_singleLayerMode ? ICON_FA_IMAGES : ICON_FA_IMAGE)) {
+            m_singleLayerMode = !m_singleLayerMode;
+            m_firstRender = true; // Recalculate zoom bounding boxes 
+        }
+        if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal)) ImGui::SetTooltip(m_singleLayerMode ? "Switch to Stack View" : "Switch to Single View");
+
         ImGui::Separator();
 
         // Use a negative height to dynamically reserve space for the bottom controls, avoiding double scrollbars
         float bottom_reserved = ImGui::GetFrameHeight() + ImGui::GetStyle().ItemSpacing.y * 3.0f;
         ImGui::BeginChild("##layer_list", ImVec2(0, -bottom_reserved));
 
-        // Traverse backwards so top layer is drawn at the top of the list
-        for (int i = (int)m_layers.size() - 1; i >= 0; --i)
+        if (m_thumbnailMode)
         {
-            ImGui::PushID(i);
-            bool isSelected = (m_selectedLayer == i);
-
-            // Background for selected item
-            if (isSelected)
+            float content_w = ImGui::GetContentRegionAvail().x;
+            float thumb_size = 70.0f * App::getDpiScale();
+            float spacing = ImGui::GetStyle().ItemSpacing.x;
+            int columns = std::max(1, (int)(content_w / (thumb_size + spacing)));
+            
+            for (int i = (int)m_layers.size() - 1; i >= 0; --i)
             {
-                ImVec2 p_min = ImGui::GetCursorScreenPos();
-                ImVec2 p_max = ImVec2(p_min.x + ImGui::GetContentRegionAvail().x, p_min.y + 60 * App::getDpiScale());
-                ImGui::GetWindowDrawList()->AddRectFilled(p_min, p_max, ImGui::GetColorU32(ImGuiCol_Header));
+                ImGui::PushID(i);
+                bool isSelected = (m_selectedLayer == i);
+
+                ImVec2 cursor = ImGui::GetCursorScreenPos();
+                if (isSelected) {
+                    ImGui::GetWindowDrawList()->AddRectFilled(cursor, cursor + ImVec2(thumb_size, thumb_size), ImGui::GetColorU32(ImGuiCol_Header));
+                    ImGui::GetWindowDrawList()->AddRect(cursor, cursor + ImVec2(thumb_size, thumb_size), ImGui::GetColorU32(ImGuiCol_Border));
+                }
+
+                if (ImGui::InvisibleButton("##thumb", ImVec2(thumb_size, thumb_size))) {
+                    m_selectedLayer = i;
+                    m_slideshowTimer = 0.0f; // Reset slideshow on click
+                }
+
+                float aspect = m_layers[i].width / (m_layers[i].height == 0 ? 1.0f : m_layers[i].height);
+                ImVec2 draw_size = ImVec2(thumb_size, thumb_size);
+                if (aspect > 1.0f)
+                    draw_size.y = thumb_size / aspect;
+                else
+                    draw_size.x = thumb_size * aspect;
+                
+                float pad = 4.0f * App::getDpiScale();
+                draw_size -= ImVec2(pad*2, pad*2);
+                
+                ImVec2 thumb_offset = ImVec2((thumb_size - draw_size.x) * 0.5f, (thumb_size - draw_size.y) * 0.5f);
+                
+                // Ghost out thumbnail if visibility is technically toggled off, even in list view
+                ImU32 col = ImGui::GetColorU32(ImVec4(1.0f, 1.0f, 1.0f, m_layers[i].visible ? 1.0f : 0.3f));
+                ImGui::GetWindowDrawList()->AddImage(
+                    m_layers[i].textureId,
+                    cursor + thumb_offset,
+                    cursor + thumb_offset + draw_size,
+                    ImVec2(0,0), ImVec2(1,1), col);
+
+                if (ImGui::BeginPopupContextItem("##layer_ctx"))
+                {
+                    if (ImGui::MenuItem("Move Up", nullptr, false, i < (int)m_layers.size() - 1))
+                        moveLayerUp(i);
+                    if (ImGui::MenuItem("Move Down", nullptr, false, i > 0))
+                        moveLayerDown(i);
+                    ImGui::Separator();
+                    if (ImGui::MenuItem("Delete"))
+                        removeLayer(i);
+                    ImGui::EndPopup();
+                }
+
+                ImGui::PopID();
+                
+                int rev_idx = (int)m_layers.size() - 1 - i;
+                if ((rev_idx + 1) % columns != 0 && i != 0) {
+                    ImGui::SameLine();
+                }
             }
-
-            ImGui::BeginGroup();
-
-            // Visibility toggle
-            if (ImGui::Button(m_layers[i].visible ? ICON_FA_EYE : ICON_FA_EYE_SLASH))
+        }
+        else
+        {
+            // Traverse backwards so top layer is drawn at the top of the list
+            for (int i = (int)m_layers.size() - 1; i >= 0; --i)
             {
-                m_layers[i].visible = !m_layers[i].visible;
-            }
+                ImGui::PushID(i);
+                bool isSelected = (m_selectedLayer == i);
 
-            ImGui::SameLine();
+                // Background for selected item
+                if (isSelected)
+                {
+                    ImVec2 p_min = ImGui::GetCursorScreenPos();
+                    ImVec2 p_max = ImVec2(p_min.x + ImGui::GetContentRegionAvail().x, p_min.y + 60 * App::getDpiScale());
+                    ImGui::GetWindowDrawList()->AddRectFilled(p_min, p_max, ImGui::GetColorU32(ImGuiCol_Header));
+                }
 
-            // Aspect-correct Thumbnail calculation
-            float thumb_size = 40.0f * App::getDpiScale();
-            ImVec2 avail_thumb(thumb_size, thumb_size);
-            float aspect = m_layers[i].width / (m_layers[i].height == 0 ? 1.0f : m_layers[i].height);
-            ImVec2 draw_size = avail_thumb;
-            if (aspect > 1.0f)
-                draw_size.y = thumb_size / aspect;
-            else
-                draw_size.x = thumb_size * aspect;
+                ImGui::BeginGroup();
 
-            ImVec2 cursor = ImGui::GetCursorScreenPos();
-            ImVec2 thumb_offset = ImVec2((thumb_size - draw_size.x) * 0.5f, (thumb_size - draw_size.y) * 0.5f);
+                // Visibility toggle
+                if (ImGui::Button(m_layers[i].visible ? ICON_FA_EYE : ICON_FA_EYE_SLASH))
+                {
+                    m_layers[i].visible = !m_layers[i].visible;
+                }
 
-            ImGui::GetWindowDrawList()->AddImage(
-                m_layers[i].textureId,
-                cursor + thumb_offset,
-                cursor + thumb_offset + draw_size);
+                ImGui::SameLine();
 
-            ImGui::Dummy(avail_thumb); // Reserve space for the manually drawn thumbnail
+                // Aspect-correct Thumbnail calculation
+                float thumb_size = 40.0f * App::getDpiScale();
+                ImVec2 avail_thumb(thumb_size, thumb_size);
+                float aspect = m_layers[i].width / (m_layers[i].height == 0 ? 1.0f : m_layers[i].height);
+                ImVec2 draw_size = avail_thumb;
+                if (aspect > 1.0f)
+                    draw_size.y = thumb_size / aspect;
+                else
+                    draw_size.x = thumb_size * aspect;
 
-            ImGui::SameLine();
+                ImVec2 cursor = ImGui::GetCursorScreenPos();
+                ImVec2 thumb_offset = ImVec2((thumb_size - draw_size.x) * 0.5f, (thumb_size - draw_size.y) * 0.5f);
 
-            // Layer properties (Name and Opacity)
-            ImGui::BeginGroup();
-            if (ImGui::Selectable(m_layers[i].name.c_str(), isSelected, ImGuiSelectableFlags_AllowOverlap, ImVec2(0, 0)))
-            {
-                m_selectedLayer = i;
-            }
+                ImGui::GetWindowDrawList()->AddImage(
+                    m_layers[i].textureId,
+                    cursor + thumb_offset,
+                    cursor + thumb_offset + draw_size);
 
-            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - 5);
-            ImGui::SliderFloat("##op", &m_layers[i].opacity, 0.0f, 1.0f, "%.2f");
-            ImGui::PopItemWidth();
-            ImGui::EndGroup();
+                ImGui::Dummy(avail_thumb); // Reserve space for the manually drawn thumbnail
 
-            ImGui::EndGroup();
+                ImGui::SameLine();
 
-            // Quick context actions on right click
-            if (ImGui::BeginPopupContextItem("##layer_ctx"))
-            {
-                if (ImGui::MenuItem("Move Up", nullptr, false, i < (int)m_layers.size() - 1))
-                    moveLayerUp(i);
-                if (ImGui::MenuItem("Move Down", nullptr, false, i > 0))
-                    moveLayerDown(i);
+                // Layer properties (Name and Opacity)
+                ImGui::BeginGroup();
+                if (ImGui::Selectable(m_layers[i].name.c_str(), isSelected, ImGuiSelectableFlags_AllowOverlap, ImVec2(0, 0)))
+                {
+                    m_selectedLayer = i;
+                    m_slideshowTimer = 0.0f; // Reset slideshow on click
+                }
+
+                ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - 5);
+                ImGui::SliderFloat("##op", &m_layers[i].opacity, 0.0f, 1.0f, "%.2f");
+                ImGui::PopItemWidth();
+                ImGui::EndGroup();
+
+                ImGui::EndGroup();
+
+                // Quick context actions on right click
+                if (ImGui::BeginPopupContextItem("##layer_ctx"))
+                {
+                    if (ImGui::MenuItem("Move Up", nullptr, false, i < (int)m_layers.size() - 1))
+                        moveLayerUp(i);
+                    if (ImGui::MenuItem("Move Down", nullptr, false, i > 0))
+                        moveLayerDown(i);
+                    ImGui::Separator();
+                    if (ImGui::MenuItem("Delete"))
+                        removeLayer(i);
+                    ImGui::EndPopup();
+                }
+
+                ImGui::PopID();
                 ImGui::Separator();
-                if (ImGui::MenuItem("Delete"))
-                    removeLayer(i);
-                ImGui::EndPopup();
             }
-
-            ImGui::PopID();
-            ImGui::Separator();
         }
         ImGui::EndChild();
 
@@ -456,6 +594,15 @@ namespace mui
         if (ImGui::Button(ICON_FA_TRASH))
             removeLayer(m_selectedLayer);
         ImGui::EndDisabled();
+
+        ImGui::SameLine();
+        if (ImGui::Button(m_slideshowMode ? ICON_FA_PAUSE : ICON_FA_PLAY)) {
+            m_slideshowMode = !m_slideshowMode;
+            if (m_slideshowMode) m_slideshowTimer = 0.0f;
+            if (m_slideshowMode && !m_singleLayerMode) {
+                m_singleLayerMode = true; // Auto-switch to single mode for slideshow
+            }
+        }
 
         ImGui::SameLine();
         if (ImGui::Button("Fit"))

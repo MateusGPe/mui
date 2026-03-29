@@ -6,6 +6,7 @@
 #include <cstdlib> // for getenv
 #include <imgui.h>
 #include <imgui_internal.h>
+#include <misc/cpp/imgui_stdlib.h>
 #include <vector>
 
 namespace mui
@@ -153,6 +154,22 @@ namespace mui
     App::addMessageBox({title, message, type, std::move(buttons)});
   }
 
+  void Dialogs::msgBoxInput(const std::string &title, const std::string &message,
+                            const std::string &default_text,
+                            std::function<void(const std::string &)> on_ok,
+                            std::function<void()> on_cancel)
+  {
+    ActiveMessageBox mb;
+    mb.title = title;
+    mb.message = message;
+    mb.type = MessageBoxType::Question;
+    mb.is_input = true;
+    mb.input_buffer = default_text;
+    mb.on_input_ok = std::move(on_ok);
+    mb.buttons = {{"OK", nullptr}, {"Cancel", std::move(on_cancel)}};
+    App::addMessageBox(std::move(mb));
+  }
+
   void Dialogs::openFile(const std::string &title, const std::string &filter,
                          std::function<void(const std::string &)> on_ok,
                          std::function<void()> on_cancel,
@@ -261,6 +278,23 @@ namespace mui
       ImGui::TableSetColumnIndex(1);
       ImGui::TextWrapped("%s", mb.message.c_str());
 
+      if (mb.is_input)
+      {
+        ImGui::Spacing();
+        if (ImGui::IsWindowAppearing())
+          ImGui::SetKeyboardFocusHere();
+
+        ImGuiInputTextFlags flags = ImGuiInputTextFlags_EnterReturnsTrue;
+        ImGui::SetNextItemWidth(-FLT_MIN);
+        if (ImGui::InputText("##input", &mb.input_buffer, flags))
+        {
+          if (mb.on_input_ok)
+            mb.on_input_ok(mb.input_buffer);
+          ImGui::CloseCurrentPopup();
+          isOpen = false;
+        }
+      }
+
       ImGui::EndTable();
     }
 
@@ -292,7 +326,14 @@ namespace mui
       ScopedID btnId(static_cast<int>(i));
       if (ImGui::Button(button.text.c_str(), ImVec2(button_width, 0)))
       {
-        if (button.callback)
+        if (mb.is_input && button.text == "OK")
+        {
+          if (mb.on_input_ok)
+          {
+            mb.on_input_ok(mb.input_buffer);
+          }
+        }
+        else if (button.callback)
         {
           button.callback();
         }

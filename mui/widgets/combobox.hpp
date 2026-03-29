@@ -19,6 +19,8 @@ namespace mui
         std::string getTypeName() const override { return "ComboBox"; }
         std::vector<std::string> items;
         int selectedIndex;
+        std::string m_customPreview;
+        bool m_useCustomPreview = false;
         ImGuiComboFlags m_flags;
     
         ComboBox();
@@ -37,6 +39,7 @@ namespace mui
         std::string getText() const;
         ComboBoxPtr setSelectedIndex(int index);
         ComboBoxPtr bind(std::shared_ptr<Observable<int>> observable);
+        ComboBoxPtr setCustomPreviewValue(const std::string& preview);
         ComboBoxPtr onChanged(std::function<void(int)> cb);
         ComboBoxPtr setSpanAvailWidth(bool span);
         ComboBoxPtr setMinWidth(float w);

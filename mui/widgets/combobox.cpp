@@ -19,7 +19,9 @@ namespace mui
     ImGui::BeginDisabled(!enabled);
 
     std::string preview =
-        (selectedIndex >= 0 && selectedIndex < (int)items.size())
+        m_useCustomPreview
+            ? m_customPreview
+        : (selectedIndex >= 0 && selectedIndex < (int)items.size())
             ? items[selectedIndex]
             : "";
 
@@ -88,6 +90,13 @@ namespace mui
       selectedIndex = index;
     }
     return self();
+  }
+
+  ComboBoxPtr ComboBox::setCustomPreviewValue(const std::string& preview)
+  {
+      m_customPreview = true;
+      m_customPreview = preview;
+      return self();
   }
 
   ComboBoxPtr ComboBox::bind(std::shared_ptr<Observable<int>> observable)

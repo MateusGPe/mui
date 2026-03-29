@@ -35,6 +35,12 @@ namespace mui
         float m_scale = 1.0f;
         bool m_firstRender = true;
         float m_sidebarWidth = 200.0f;
+        
+        bool m_singleLayerMode = false;
+        bool m_thumbnailMode = false;
+        bool m_slideshowMode = false;
+        float m_slideshowInterval = 2.0f;
+        float m_slideshowTimer = 0.0f;
 
         void updateZoom(ImVec2 canvasOrigin, ImVec2 canvasSize);
         void renderSidebar(ImVec2 size);
@@ -61,5 +67,9 @@ namespace mui
         ImageStackViewPtr fitToView();
         ImageStackViewPtr resetZoom();
         ImageStackViewPtr setSidebarWidth(float width);
+        
+        ImageStackViewPtr setSingleLayerMode(bool single);
+        ImageStackViewPtr setThumbnailMode(bool thumb);
+        ImageStackViewPtr setSlideshowMode(bool slideshow, float interval = 2.0f);
     };
 } // namespace mui

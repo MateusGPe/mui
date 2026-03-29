@@ -8,6 +8,7 @@
 #include <filesystem>
 #include <imgui.h>
 #include <imgui_internal.h>
+#include <algorithm>
 
 #ifndef ICON_FA_ANGLE_RIGHT
 #define ICON_FA_ANGLE_RIGHT "\xef\x84\x85"
@@ -152,6 +153,13 @@ namespace mui
             newPath += "/";
 #endif
         }
+
+#ifdef _WIN32
+        if (newPath.size() == 2 && newPath[1] == ':') {
+            newPath += "\\";
+        }
+#endif
+
         setPath(newPath);
         onPathNavigatedSignal(currentPath);
       };
@@ -172,9 +180,72 @@ namespace mui
       auto render_separator = [&](int idx)
       {
         ScopedID sep_id("sep" + std::to_string(idx));
-        ImGui::BeginDisabled();
-        ImGui::Button(ICON_FA_ANGLE_RIGHT, ImVec2(separator_width, actualSize.y));
-        ImGui::EndDisabled();
+        
+        if (ImGui::Button(ICON_FA_ANGLE_RIGHT, ImVec2(separator_width, actualSize.y)))
+        {
+            ImGui::OpenPopup("BreadcrumbSubdirs");
+        }
+        anyItemInteraction |= ImGui::IsItemHovered();
+
+        if (ImGui::BeginPopup("BreadcrumbSubdirs"))
+        {
+            std::string levelPath = "";
+#ifndef _WIN32
+            if (!segments.empty() && segments[0] != "This PC" &&
+                segments[0] != "Quick Access")
+                levelPath = "/";
+#endif
+            for (int j = 0; j < idx; ++j)
+            {
+                levelPath += segments[j];
+#ifdef _WIN32
+                levelPath += "\\";
+#else
+                levelPath += "/";
+#endif
+            }
+
+            std::error_code ec;
+            bool found_any = false;
+
+            if (std::filesystem::is_directory(levelPath, ec))
+            {
+                std::vector<std::filesystem::path> subdirs;
+                try 
+                {
+                    for (const auto &entry : std::filesystem::directory_iterator(
+                             levelPath, std::filesystem::directory_options::skip_permission_denied, ec))
+                    {
+                        if (!ec && entry.is_directory(ec))
+                        {
+                            subdirs.push_back(entry.path());
+                        }
+                    }
+                }
+                catch (...)
+                {
+                    // Suppress outright catastrophic directory open failures 
+                }
+
+                std::sort(subdirs.begin(), subdirs.end());
+
+                for (const auto &p : subdirs)
+                {
+                    found_any = true;
+                    if (ImGui::MenuItem(p.filename().string().c_str()))
+                    {
+                        setPath(p.string());
+                        onPathNavigatedSignal(currentPath);
+                    }
+                }
+            }
+
+            if (!found_any)
+            {
+                ImGui::TextDisabled("No subfolders");
+            }
+            ImGui::EndPopup();
+        }
       };
 
       if (total_width <= actualSize.x || segments.size() < 3)

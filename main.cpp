@@ -396,28 +396,26 @@ IControlPtr createNumbersTab(const LabelPtr &lblStatus)
 
     return UI::VBox(true, true)->setFillWidth(true)
            << UI::Label("Sync Test:")
-           << (
-                  UI::SpinboxBind(0, 100, valueObservable)
-                  << UI::Observe(
-                         valueObservable->onValueChanged,
-                         [lblStatus, progressBar](int value)
-                         {
-                             progressBar->setValue(static_cast<float>(value) / 100.0f);
-                             lblStatus->setText("Numeric controls synced to: " + std::to_string(value));
-                         }))
+           << (UI::SpinboxBind(0, 100, valueObservable)
+               << UI::Observe(
+                      valueObservable->onValueChanged,
+                      [lblStatus, progressBar](int value)
+                      {
+                          progressBar->setValue(static_cast<float>(value) / 100.0f);
+                          lblStatus->setText("Numeric controls synced to: " + std::to_string(value));
+                      }))
            << UI::SliderIntBind(0, 100, valueObservable)
            << progressBar
            << UI::Separator(SeparatorType::Native)
            << UI::Label("Dual Handle Range Slider:")
-           << (
-                  UI::RangeSlider(
-                      0.0f, 100.0f, 20.0f, 80.0f,
-                      [lblStatus](float vMin, float vMax)
-                      {
-                          char buf[128];
-                          snprintf(buf, sizeof(buf), "Range changed: %.1f to %.1f", vMin, vMax);
-                          lblStatus->setText(buf);
-                      }));
+           << (UI::RangeSlider(
+                  0.0f, 100.0f, 20.0f, 80.0f,
+                  [lblStatus](float vMin, float vMax)
+                  {
+                      char buf[128];
+                      snprintf(buf, sizeof(buf), "Range changed: %.1f to %.1f", vMin, vMax);
+                      lblStatus->setText(buf);
+                  }));
 }
 
 IControlPtr createTextEntriesTab(const LabelPtr &lblStatus)
@@ -571,6 +569,22 @@ IControlPtr createDialogsTab(const WindowPtr &win, const LabelPtr &lblStatus)
                    << btnQuestion
                    << btnCustom
                    << btnFile))
+           << UI::Separator()
+           << (UI::Group("Inline Path Picker")
+                   ->setMargined(true)
+               << (UI::VBox(true)
+                   << mui::PathPicker::create()
+                          ->setMode(mui::PathPickerMode::File)
+                          ->setSpanAvailWidth(true)
+                          ->onPathChanged([lblStatus](const std::string &path)
+                                          { lblStatus->setText("PathPicker selected: " + path); })
+                   << mui::PathPicker::create()
+                          ->setMode(mui::PathPickerMode::File)
+                          ->setShowFavorites(false)
+                          ->setShowNewFolder(false)
+                          ->setSpanAvailWidth(true)
+                          ->onPathChanged([lblStatus](const std::string &path)
+                                          { lblStatus->setText("PathPicker selected: " + path); })))
            << UI::Separator()
            << (UI::Group("Group Style Variants")
                    ->setMargined(true)
@@ -826,7 +840,7 @@ IControlPtr createPropertyGridTab(const LabelPtr &statusLabel)
                   << PropItem("Mode", modeCombo)
                   << PropCat("Advanced", false)
                   << PropItem("ID", UI::Label("0xDEADBEEF")->setColor({0.6f, 0.6f, 0.6f, 1.0f}))
-                  << PropItem("File Path", UI::Entry("C:/path/to/resource.dat")));
+                  << PropItem("File Path", mui::PathPicker::create()->setPath("C:/path/to/resource.dat")->setSpanAvailWidth(true)));
 }
 
 IControlPtr createMoreControlsTab(const LabelPtr &lblStatus)
@@ -1030,6 +1044,8 @@ IControlPtr createImageStackTab()
     const int height = 256;
     std::vector<unsigned char> img1(width * height * 4);
     std::vector<unsigned char> img2(width * height * 4);
+    std::vector<unsigned char> img3(width * height * 4);
+    std::vector<unsigned char> img4(width * height * 4);
 
     for (int y = 0; y < height; ++y)
     {
@@ -1048,11 +1064,30 @@ IControlPtr createImageStackTab()
             img2[i + 1] = 0;
             img2[i + 2] = 255;
             img2[i + 3] = isWhite ? 255 : 50;
+
+            // Image 3: Green Circle
+            float dx = x - width / 2.0f;
+            float dy = y - height / 2.0f;
+            float dist = std::sqrt(dx * dx + dy * dy);
+            bool inCircle = dist < 100.0f;
+            img3[i + 0] = 0;
+            img3[i + 1] = 255;
+            img3[i + 2] = 0;
+            img3[i + 3] = inCircle ? 200 : 0;
+
+            // Image 4: Yellow/Black Stripes
+            bool isYellow = (x + y) % 64 < 32;
+            img4[i + 0] = isYellow ? 255 : 0;
+            img4[i + 1] = isYellow ? 255 : 0;
+            img4[i + 2] = 0;
+            img4[i + 3] = 128; // Semi-transparent
         }
     }
 
     stackView->loadFromMemory("Red Gradient", width, height, 4, img1.data());
     stackView->loadFromMemory("Blue Checkerboard", width, height, 4, img2.data());
+    stackView->loadFromMemory("Green Circle", width, height, 4, img3.data());
+    stackView->loadFromMemory("Yellow Stripes", width, height, 4, img4.data());
 
     return UI::VBox(true, true)
            << UI::Label("ImageStackView supports multiple layers, zooming (scroll), and panning (L/M/R click & drag).")

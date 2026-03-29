@@ -36,3 +36,4 @@
 #include "../widgets/spinbox.hpp"
 #include "../widgets/table.hpp"
 #include "../widgets/toggleswitch.hpp"
+#include "../widgets/pathpicker.hpp"

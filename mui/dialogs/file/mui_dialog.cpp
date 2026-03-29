@@ -40,19 +40,27 @@ namespace mui_dlg
     m_backHistory.pop(); });
 
     m_forwardButton =
-        mui::IconButton::create(ICON_FA_ARROW_RIGHT)->onClick([&]()
-                                                              {
-        if (m_forwardHistory.empty())
-          return;
-        m_backHistory.push(m_currentDirectory);
-        m_setDirectory(m_forwardHistory.top(), false);
-        m_forwardHistory.pop(); });
+        mui::IconButton::create(
+            ICON_FA_ARROW_RIGHT)
+            ->onClick(
+                [&]()
+                {
+                  if (m_forwardHistory.empty())
+                    return;
+                  m_backHistory.push(m_currentDirectory);
+                  m_setDirectory(m_forwardHistory.top(), false);
+                  m_forwardHistory.pop();
+                });
 
-    m_upButton = mui::IconButton::create(ICON_FA_ARROW_UP)->onClick([&]()
-                                                                    {
-    if (!m_currentDirectory.has_parent_path())
-      return;
-    m_setDirectory(m_currentDirectory.parent_path()); });
+    m_upButton = mui::IconButton::create(
+                     ICON_FA_ARROW_UP)
+                     ->onClick(
+                         [&]()
+                         {
+                           if (!m_currentDirectory.has_parent_path())
+                             return;
+                           m_setDirectory(m_currentDirectory.parent_path());
+                         });
 
     m_pathBox = mui::BreadcrumbBar::create("")->onPathNavigated(
         [&](const std::string &newPath)
@@ -60,15 +68,19 @@ namespace mui_dlg
           m_setDirectory(std::filesystem::path(newPath));
         });
 
-    m_favoriteButton = mui::IconButton::create(ICON_FA_STAR)->onClick([&]()
-                                                                      {
-    auto path = m_currentDirectory.string();
-    bool isFavorite =
-        std::count(m_favorites.begin(), m_favorites.end(), path) > 0;
-    if (isFavorite)
-      RemoveFavorite(path);
-    else
-      AddFavorite(path); });
+    m_favoriteButton = mui::IconButton::create(
+                           ICON_FA_STAR)
+                           ->onClick(
+                               [&]()
+                               {
+                                 auto path = m_currentDirectory.string();
+                                 bool isFavorite =
+                                     std::count(m_favorites.begin(), m_favorites.end(), path) > 0;
+                                 if (isFavorite)
+                                   RemoveFavorite(path);
+                                 else
+                                   AddFavorite(path);
+                               });
 
     m_searchBox =
         mui::Entry::create(m_searchBuffer, sizeof(m_searchBuffer))
@@ -86,28 +98,38 @@ namespace mui_dlg
                     ->append(m_searchBox);
 
     m_fileNameInput = mui::Entry::create(m_inputTextbox, sizeof(m_inputTextbox))
-                          ->onEnter([&](const std::string &val)
-                                    {
-                          if (m_inputTextbox[0] != '\0')
-                            m_finalize(m_inputTextbox); });
+                          ->onEnter(
+                              [&](const std::string &val)
+                              {
+                                if (m_inputTextbox[0] != '\0')
+                                  m_finalize(m_inputTextbox);
+                              });
 
     m_filterCombo = mui::ComboBox::create()
-                        ->onChanged([&](int val)
-                                    {
-                        m_filterSelection = val;
-                        // A change in filter requires rebuilding the content
-                        // list
-                        m_setDirectory(m_currentDirectory); })
+                        ->onChanged(
+                            [&](int val)
+                            {
+                              m_filterSelection = val;
+                              // A change in filter requires rebuilding the content
+                              // list
+                              m_setDirectory(m_currentDirectory);
+                            })
                         ->setMinWidth(160.0f);
 
     m_cancelButton =
-        mui::Button::create("Cancel")->onClick([&]()
-                                               { m_isOpen = false; });
+        mui::Button::create("Cancel")
+            ->onClick(
+                [&]()
+                {
+                  m_isOpen = false;
+                });
 
-    m_okButton = mui::Button::create("OK")->onClick([&]()
-                                                    {
-    if (m_inputTextbox[0] != '\0')
-      m_finalize(m_inputTextbox); });
+    m_okButton = mui::Button::create("OK")->onClick(
+        [&]()
+        {
+          if (m_inputTextbox[0] != '\0')
+            m_finalize(m_inputTextbox);
+        });
 
     m_bottomToolbar = mui::HBox::create()
                           ->setPadded(false)
