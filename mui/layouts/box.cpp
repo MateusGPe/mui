@@ -35,11 +35,15 @@ namespace mui
       ImGui::BeginGroup();
       if (padded)
       {
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
         ImGui::Dummy(ImVec2(0, padding.y));
+        ImGui::PopStyleVar();
         ImGui::Indent(padding.x);
       }
       avail.x -= padding.x * 2.0f;
       avail.y -= padding.y * 2.0f;
+      avail.x = std::max(0.0f, avail.x);
+      avail.y = std::max(0.0f, avail.y);
     }
 
     ImVec2 original_spacing = style.ItemSpacing;
@@ -124,7 +128,10 @@ namespace mui
 
       if (use_child_window)
       {
-        ImGui::BeginChild("##box_item", ImVec2(0, child_height), 0, ImGuiWindowFlags_NoSavedSettings);
+        ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoSavedSettings;
+        if (!showChildScrollbars)
+          window_flags |= ImGuiWindowFlags_NoScrollbar;
+        ImGui::BeginChild("##box_item", ImVec2(0, child_height), 0, window_flags);
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, original_spacing);
         ImGui::PushItemWidth(-1.0f); // Stretch children fill width
 
@@ -169,6 +176,8 @@ namespace mui
       if (padded)
       {
         ImGui::Unindent(padding.x);
+        if (!visible_indices.empty())
+          ImGui::SetCursorPosY(ImGui::GetCursorPosY() - item_spacing_y);
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
         ImGui::Dummy(ImVec2(0, padding.y));
         ImGui::PopStyleVar();
@@ -211,6 +220,8 @@ namespace mui
       }
       avail.x -= padding.x * 2.0f;
       avail.y -= padding.y * 2.0f;
+      avail.x = std::max(0.0f, avail.x);
+      avail.y = std::max(0.0f, avail.y);
     }
 
     ImVec2 original_spacing = style.ItemSpacing;
@@ -291,7 +302,10 @@ namespace mui
       if (use_child_window)
       {
         ImGuiChildFlags flags = fillHeight ? 0 : ImGuiChildFlags_AutoResizeY;
-        ImGui::BeginChild("##box_item", ImVec2(child_width, fillHeight ? avail.y : 0), flags, ImGuiWindowFlags_NoSavedSettings);
+        ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoSavedSettings;
+        if (!showChildScrollbars)
+          window_flags |= ImGuiWindowFlags_NoScrollbar;
+        ImGui::BeginChild("##box_item", ImVec2(child_width, fillHeight ? avail.y : 0), flags, window_flags);
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, original_spacing);
         ImGui::PushItemWidth(-1.0f);
 
@@ -335,6 +349,8 @@ namespace mui
       if (padded)
       {
         ImGui::Unindent(padding.x);
+        if (!visible_indices.empty())
+          ImGui::SetCursorPosY(ImGui::GetCursorPosY() - original_spacing.y);
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
         ImGui::Dummy(ImVec2(0, padding.y));
         ImGui::PopStyleVar();
@@ -375,6 +391,7 @@ namespace mui
         ImGui::PopStyleVar();
         ImGui::Indent(padding.x);
         contentWidth -= padding.x * 2.0f;
+        contentWidth = std::max(0.0f, contentWidth);
       }
     }
 
@@ -399,9 +416,17 @@ namespace mui
       float current_line_width = 0.0f;
       for (size_t i : visible_indices)
       {
-        float item_width = flow_data[i].lastKnownWidth;
-        if (item_width == 0)
-          item_width = 50.0f; // Educated fallback guess for unrendered items
+        auto &child = children[i];
+        float item_width = 0.0f;
+
+        // Predict rigid widths to prevent frame-feedback loops from stretched items pushing themselves onto new lines
+        if (child.sizing.mode == Sizing::Mode::Fixed)
+          item_width = child.sizing.value;
+        else if (child.sizing.mode == Sizing::Mode::Percent)
+          item_width = contentWidth * child.sizing.value;
+        else if (child.sizing.mode == Sizing::Mode::Stretch)
+          item_width = 10.0f; // Minimal basis size for a stretchable item
+        else item_width = flow_data[i].lastKnownWidth > 0 ? flow_data[i].lastKnownWidth : 50.0f;
 
         float curr_spacing = lines.back().empty() ? 0.0f : item_spacing_x;
 
@@ -423,14 +448,24 @@ namespace mui
     for (size_t l = 0; l < lines.size(); ++l)
     {
       const auto &line = lines[l];
-      float line_width = 0.0f;
+      float fixed_line_width = 0.0f;
+      float total_stretch_weight = 0.0f;
+
       for (size_t i = 0; i < line.size(); ++i)
       {
-        line_width += flow_data[line[i]].lastKnownWidth;
+        auto &child = children[line[i]];
+        if (child.sizing.mode == Sizing::Mode::Stretch)
+          total_stretch_weight += child.sizing.value;
+        else if (child.sizing.mode == Sizing::Mode::Fixed)
+          fixed_line_width += child.sizing.value;
+        else if (child.sizing.mode == Sizing::Mode::Percent)
+          fixed_line_width += contentWidth * child.sizing.value;
+        else
+          fixed_line_width += flow_data[line[i]].lastKnownWidth;
       }
-      line_width += item_spacing_x * (line.size() > 1 ? line.size() - 1 : 0);
+      fixed_line_width += item_spacing_x * (line.size() > 1 ? line.size() - 1 : 0);
 
-      float remaining_space = contentWidth - line_width;
+      float remaining_space = std::max(0.0f, contentWidth - fixed_line_width);
       float x_spacing = item_spacing_x;
       float offset = 0.0f;
 
@@ -438,7 +473,7 @@ namespace mui
         offset = remaining_space;
       else if (m_align == Align::Center)
         offset = remaining_space / 2.0f;
-      else if (m_align == Align::Justify && line.size() > 1)
+      else if (m_align == Align::Justify && line.size() > 1 && total_stretch_weight == 0)
         x_spacing = item_spacing_x + remaining_space / (line.size() - 1);
 
       if (offset > 0)
@@ -449,42 +484,63 @@ namespace mui
         size_t child_idx = line[i];
         auto &child = children[child_idx];
 
+        float child_width = 0.0f;
+        bool use_child_window = false;
+
+        switch (child.sizing.mode)
+        {
+        case Sizing::Mode::Stretch:
+          child_width = (remaining_space / total_stretch_weight) * child.sizing.value;
+          use_child_window = true;
+          break;
+        case Sizing::Mode::Fixed:
+          child_width = child.sizing.value;
+          use_child_window = true;
+          break;
+        case Sizing::Mode::Percent:
+          child_width = contentWidth * child.sizing.value;
+          use_child_window = true;
+          break;
+        case Sizing::Mode::Auto:
+          break;
+        }
+
         ImGui::PushID(static_cast<int>(child_idx));
 
-        bool pushed_width = false;
-        if (child.sizing.mode == Sizing::Mode::Stretch)
+        if (use_child_window)
         {
-          ImGui::PushItemWidth(remaining_space / line.size());
-          pushed_width = true;
-        }
-        else if (child.sizing.mode == Sizing::Mode::Fixed)
-        {
-          ImGui::PushItemWidth(child.sizing.value);
-          pushed_width = true;
-        }
-        else if (child.sizing.mode == Sizing::Mode::Percent)
-        {
-          ImGui::PushItemWidth(contentWidth * child.sizing.value);
-          pushed_width = true;
-        }
+          ImGuiChildFlags flags = fillHeight ? 0 : ImGuiChildFlags_AutoResizeY;
+          ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoSavedSettings;
+          if (!showChildScrollbars)
+            window_flags |= ImGuiWindowFlags_NoScrollbar;
+          ImGui::BeginChild("##flow_item", ImVec2(child_width, fillHeight ? ImGui::GetContentRegionAvail().y : 0), flags, window_flags);
+          ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, original_spacing);
+          ImGui::PushItemWidth(-1.0f);
 
-        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, original_spacing);
+          child.control->render();
 
-        child.control->render();
-
-        ImGui::PopStyleVar();
-
-        if (pushed_width)
           ImGui::PopItemWidth();
+          ImGui::PopStyleVar();
+          ImGui::EndChild();
+        }
+        else
+        {
+          ImGui::BeginGroup();
+          ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, original_spacing);
 
-        ImGui::PopID();
+          child.control->render();
 
-        // Update cached width so line-wrapping adjusts instantly next frame
+          ImGui::PopStyleVar();
+          ImGui::EndGroup();
+        }
+
         float actual_width = ImGui::GetItemRectSize().x;
         if (std::abs(flow_data[child_idx].lastKnownWidth - actual_width) > 1.0f)
         {
           flow_data[child_idx].lastKnownWidth = actual_width;
         }
+
+        ImGui::PopID();
 
         if (i < line.size() - 1)
           ImGui::SameLine(0.0f, x_spacing);
@@ -502,6 +558,8 @@ namespace mui
       if (padded)
       {
         ImGui::Unindent(padding.x);
+        if (!visible_indices.empty())
+          ImGui::SetCursorPosY(ImGui::GetCursorPosY() - item_spacing_y);
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
         ImGui::Dummy(ImVec2(0, padding.y));
         ImGui::PopStyleVar();

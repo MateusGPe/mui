@@ -24,13 +24,16 @@ std::string formatVec2(const ImVec2 &v);
 int main()
 {
     // 1. Initialize the App
-    mui::App::init(true); // Using OpenGL
+    mui::App::init("MUI Theme Editor", 1000, 700, true, true); // Using OpenGL
 
     // By default, the App creates a dockspace that fills the main window.
     // We need to tell the App where to put our editor window.
     // This simple layout builder docks our main window into the dockspace.
-    mui::App::setLayoutBuilder([](mui::DockBuilder &builder)
-                               { builder.dockWindow("MUI Theme Editor", builder.getID()); });
+    mui::App::setLayoutBuilder(
+        [](mui::DockBuilder &builder)
+        {
+            builder.dockWindow("MUI Theme Editor", builder.getID());
+        });
 
     // 2. Create the Main Window
     auto mainWindow = mui::Window::create("MUI Theme Editor", 1000, 700)
@@ -76,41 +79,40 @@ mui::HBoxPtr createToolbar(const mui::EntryPtr &themeNameEntry)
 {
     auto btnSave = mui::Button::create("Save Theme to TOML")
                        ->onClick([themeNameEntry]()
-                                {
-        mui::Dialogs::saveFile(
-            "Save Theme",
-            "TOML Files (*.toml){.toml},All Files (*.*){.*}",
-            [themeNameEntry](const std::string &path)
-            {
-                std::string tomlContent = generateTomlTheme(themeNameEntry->getText());
-                std::ofstream out(path);
-                if (out.is_open())
-                {
-                    out << tomlContent;
-                    out.close();
-                    mui::Dialogs::msgBoxInfo("Success", "Theme saved successfully to:\n" + path);
-                }
-                else
-                {
-                    mui::Dialogs::msgBoxError("Error", "Failed to save theme file.");
-                }
-            }); });
+                                 { mui::Dialogs::saveFile(
+                                       "Save Theme",
+                                       "TOML Files (*.toml){.toml},All Files (*.*){.*}",
+                                       [themeNameEntry](const std::string &path)
+                                       {
+                                           std::string tomlContent = generateTomlTheme(themeNameEntry->getText());
+                                           std::ofstream out(path);
+                                           if (out.is_open())
+                                           {
+                                               out << tomlContent;
+                                               out.close();
+                                               mui::Dialogs::msgBoxInfo("Success", "Theme saved successfully to:\n" + path);
+                                           }
+                                           else
+                                           {
+                                               mui::Dialogs::msgBoxError("Error", "Failed to save theme file.");
+                                           }
+                                       }); });
 
     auto btnLoadLight = mui::Button::create("Load Light Default")
                             ->onClick([]()
-                                       {
-        mui::App::setTheme(mui::ThemeType::Light);
-        // NOTE: This live-reloads the theme for the preview panel, but the
-        // editor controls (sliders, color pickers) will not update to reflect
-        // the new default values. This is a limitation of this simple tool.
-    });
+                                      {
+                                          mui::App::setTheme(mui::ThemeType::Light);
+                                          // NOTE: This live-reloads the theme for the preview panel, but the
+                                          // editor controls (sliders, color pickers) will not update to reflect
+                                          // the new default values. This is a limitation of this simple tool.
+                                      });
 
     auto btnLoadDark = mui::Button::create("Load Dark Default")
                            ->onClick([]()
-                                      {
-        mui::App::setTheme(mui::ThemeType::Dark);
-        // NOTE: See 'Load Light Default' for limitations.
-    });
+                                     {
+                                         mui::App::setTheme(mui::ThemeType::Dark);
+                                         // NOTE: See 'Load Light Default' for limitations.
+                                     });
 
     return mui::HBox::create()
         ->append(mui::Label::create("Theme Name:"))
@@ -351,9 +353,12 @@ std::string generateTomlTheme(const std::string &themeName)
 
     // Output the active base inheritance
     std::string baseTheme = "Dark";
-    if (mui::App::isUsingTomlTheme()) {
+    if (mui::App::isUsingTomlTheme())
+    {
         baseTheme = mui::App::getCurrentThemeName();
-    } else {
+    }
+    else
+    {
         baseTheme = (mui::App::getTheme() == mui::ThemeType::Light) ? "Light" : "Dark";
     }
     ss << "base = \"" << baseTheme << "\"\n";

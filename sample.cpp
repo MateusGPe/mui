@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
     {
         // 1. Initialize the App Engine
         // Pass `true` if you want the OpenGL backend, `false` for SDL Renderer
-        mui::App::init(true);
+        mui::App::init("MUI Sample", 1280, 800, true);
 
         // 2. Configure global styling
         mui::App::setTheme(mui::ThemeType::Dark);

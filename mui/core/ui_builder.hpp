@@ -40,8 +40,38 @@ namespace mui
     struct Stretch
     {
         IControlPtr control;
+        float weight;
         template <typename T, typename = std::enable_if_t<std::is_convertible_v<std::shared_ptr<T>, IControlPtr>>>
-        explicit Stretch(std::shared_ptr<T> c) : control(std::move(c))
+        explicit Stretch(std::shared_ptr<T> c, float w = 1.0f) : control(std::move(c)), weight(w)
+        {
+        }
+    };
+
+    struct Auto
+    {
+        IControlPtr control;
+        template <typename T, typename = std::enable_if_t<std::is_convertible_v<std::shared_ptr<T>, IControlPtr>>>
+        explicit Auto(std::shared_ptr<T> c) : control(std::move(c))
+        {
+        }
+    };
+
+    struct Fixed
+    {
+        IControlPtr control;
+        float value;
+        template <typename T, typename = std::enable_if_t<std::is_convertible_v<std::shared_ptr<T>, IControlPtr>>>
+        explicit Fixed(std::shared_ptr<T> c, float v) : control(std::move(c)), value(v)
+        {
+        }
+    };
+
+    struct Percent
+    {
+        IControlPtr control;
+        float value;
+        template <typename T, typename = std::enable_if_t<std::is_convertible_v<std::shared_ptr<T>, IControlPtr>>>
+        explicit Percent(std::shared_ptr<T> c, float v) : control(std::move(c)), value(v)
         {
         }
     };
@@ -162,7 +192,37 @@ namespace mui
     template <typename BoxType, typename std::enable_if_t<std::is_base_of_v<IControl, typename BoxType::element_type>, int> = 0>
     inline BoxType operator<<(BoxType box, const Stretch &child)
     {
-        box->append(child.control, true);
+        box->append(child.control, Sizing::Stretch(child.weight));
+        return box;
+    }
+
+    template <typename BoxType, typename std::enable_if_t<std::is_base_of_v<IControl, typename BoxType::element_type>, int> = 0>
+    inline BoxType operator<<(BoxType box, const Auto &child)
+    {
+        box->append(child.control, Sizing::Auto());
+        return box;
+    }
+
+    template <typename BoxType, typename std::enable_if_t<std::is_base_of_v<IControl, typename BoxType::element_type>, int> = 0>
+    inline BoxType operator<<(BoxType box, const Fixed &child)
+    {
+        box->append(child.control, Sizing::Fixed(child.value));
+        return box;
+    }
+
+    template <typename BoxType, typename std::enable_if_t<std::is_base_of_v<IControl, typename BoxType::element_type>, int> = 0>
+    inline BoxType operator<<(BoxType box, const Percent &child)
+    {
+        box->append(child.control, Sizing::Percent(child.value));
+        return box;
+    }
+
+    // Support pushing a vector of children dynamically into any box layout
+    template <typename BoxType, typename std::enable_if_t<std::is_base_of_v<IControl, typename BoxType::element_type>, int> = 0>
+    inline BoxType operator<<(BoxType box, const std::vector<IControlPtr> &children)
+    {
+        for (const auto &child : children)
+            box->append(child, false);
         return box;
     }
 
@@ -208,12 +268,24 @@ namespace mui
         grid->append(cell.control, cell.row, cell.col, cell.colSpan);
         return grid;
     }
+    inline GridPtr operator<<(GridPtr grid, const std::vector<GridCell> &cells)
+    {
+        for (const auto &cell : cells)
+            grid->append(cell.control, cell.row, cell.col, cell.colSpan);
+        return grid;
+    }
 
     // Tab
     inline TabPtr operator<<(TabPtr tab, const TabPage &page)
     {
         tab->append(page.name, page.control);
         tab->setMargined(tab->getNumPages() - 1, page.margined);
+        return tab;
+    }
+    inline TabPtr operator<<(TabPtr tab, const std::vector<TabPage> &pages)
+    {
+        for (const auto &page : pages)
+            tab << page; // Reuse the single-page operator
         return tab;
     }
 
@@ -226,6 +298,12 @@ namespace mui
     inline TablePtr operator<<(TablePtr table, const TableRow &row)
     {
         table->addRow(row.items);
+        return table;
+    }
+    inline TablePtr operator<<(TablePtr table, const std::vector<TableRow> &rows)
+    {
+        for (const auto &row : rows)
+            table->addRow(row.items);
         return table;
     }
 
@@ -247,9 +325,21 @@ namespace mui
         box->append(item);
         return box;
     }
+    inline ComboBoxPtr operator<<(ComboBoxPtr box, const std::vector<std::string> &items)
+    {
+        for (const auto &item : items)
+            box->append(item);
+        return box;
+    }
     inline ListBoxPtr operator<<(ListBoxPtr box, const std::string &item)
     {
         box->append(item);
+        return box;
+    }
+    inline ListBoxPtr operator<<(ListBoxPtr box, const std::vector<std::string> &items)
+    {
+        for (const auto &item : items)
+            box->append(item);
         return box;
     }
     inline IconStackPtr operator<<(IconStackPtr stack, const IconDef &def)
@@ -284,21 +374,21 @@ namespace mui
         {
             return mui::Window::create(title, w, h, hasMenubar);
         }
-        inline VBoxPtr VBox(bool padded = true, bool scrollable = false)
+        inline VBoxPtr VBox(bool padded = true, bool scrollable = false, float spacing = -1.0f, bool childScrollbars = false)
         {
-            return mui::VBox::create()->setPadded(padded)->setScrollable(scrollable);
+            return mui::VBox::create()->setPadded(padded)->setScrollable(scrollable)->setSpacing(spacing)->setShowChildScrollbars(childScrollbars);
         }
-        inline HBoxPtr HBox(bool padded = true, bool scrollable = false)
+        inline HBoxPtr HBox(bool padded = true, bool scrollable = false, float spacing = -1.0f, bool childScrollbars = false)
         {
-            return mui::HBox::create()->setPadded(padded)->setScrollable(scrollable);
+            return mui::HBox::create()->setPadded(padded)->setScrollable(scrollable)->setSpacing(spacing)->setShowChildScrollbars(childScrollbars);
         }
-        inline FlowBoxPtr FlowBox(mui::FlowBox::Align align = mui::FlowBox::Align::Left)
+        inline FlowBoxPtr FlowBox(mui::FlowBox::Align align = mui::FlowBox::Align::Left, bool padded = true, float spacing = -1.0f, bool childScrollbars = false)
         {
-            return mui::FlowBox::create()->setAlign(align);
+            return mui::FlowBox::create()->setAlign(align)->setPadded(padded)->setSpacing(spacing)->setShowChildScrollbars(childScrollbars);
         }
-        inline CardPtr Card(float padding = 8.0f, bool fillHeight = false)
+        inline CardPtr Card(float padding = 8.0f, bool fillHeight = false, bool spanAvailWidth = false)
         {
-            return mui::Card::create()->setPadding(padding)->setFillHeight(fillHeight);
+            return mui::Card::create()->setPadding(padding)->setFillHeight(fillHeight)->setSpanAvailWidth(spanAvailWidth);
         }
         inline GroupPtr Group(const std::string &title, bool defaultOpen = true, bool margined = true)
         {
@@ -341,6 +431,19 @@ namespace mui
             return t;
         }
 
+        // --- Advanced Containers ---
+        inline std::shared_ptr<mui::PathPicker> PathPicker(mui::PathPickerMode mode = mui::PathPickerMode::File, std::function<void(const std::string &)> onPathChanged = nullptr)
+        {
+            auto p = mui::PathPicker::create()->setMode(mode);
+            if (onPathChanged)
+                p->onPathChanged(std::move(onPathChanged));
+            return p;
+        }
+        inline std::shared_ptr<mui::ImageStackView> ImageStackView()
+        {
+            return mui::ImageStackView::create();
+        }
+
         // --- Controls ---
         inline LabelPtr Label(const std::string &text, LabelFormat format = LabelFormat::Normal)
         {
@@ -349,6 +452,10 @@ namespace mui
         inline SeparatorPtr Separator(SeparatorType t = SeparatorType::Native, SeparatorOrientation o = SeparatorOrientation::Horizontal)
         {
             return mui::Separator::create()->setType(t)->setOrientation(o);
+        }
+        inline SeparatorPtr Spacer(float size = 0.0f)
+        {
+            return mui::Separator::create()->setType(mui::SeparatorType::Custom)->setThickness(size);
         }
         inline ProgressBarPtr ProgressBar(float value, const std::string &overlay = "")
         {

@@ -74,7 +74,7 @@ namespace mui
 
         static void setMainLoopCallback(std::function<void()> cb);
         static void setLayoutBuilder(std::function<void(DockBuilder &)> cb);
-        static void init(bool useOpenGL = false, bool enableShadows = true);
+        static void init(const std::string &title="MUI", int width=1280, int height=720, bool useOpenGL = false, bool enableShadows = true);
         static void run();
         static void quit();
         static void shutdown();

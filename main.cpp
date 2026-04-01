@@ -18,6 +18,7 @@ IControlPtr createNumbersTab(const LabelPtr &statusLabel);
 IControlPtr createTextEntriesTab(const LabelPtr &statusLabel);
 IControlPtr createDialogsTab(const WindowPtr &parentWindow, const LabelPtr &statusLabel);
 IControlPtr createLayoutsTab(const LabelPtr &statusLabel);
+IControlPtr createBoxSizingTab(const LabelPtr &statusLabel);
 IControlPtr createMoreControlsTab(const LabelPtr &statusLabel);
 IControlPtr createAdvancedTab(const LabelPtr &statusLabel);
 IControlPtr createPropertyGridTab(const LabelPtr &statusLabel);
@@ -29,7 +30,7 @@ WindowPtr createInspectorWindow();
 
 int main()
 {
-    App::init(true, true);
+    App::init("MUI Control Gallery", 800, 600, true, true);
     App::setTheme("Rounded Visual Studio");
 
     // ==========================================
@@ -98,6 +99,7 @@ WindowPtr createMainGalleryWindow()
                    << TabPage("Text", createTextEntriesTab(lblStatus))
                    << TabPage("Dialogs", createDialogsTab(win, lblStatus))
                    << TabPage("Layouts", createLayoutsTab(lblStatus))
+                   << TabPage("Box Sizing", createBoxSizingTab(lblStatus))
                    << TabPage("Properties", createPropertyGridTab(lblStatus))
                    << TabPage("Advanced", createAdvancedTab(lblStatus))
                    << TabPage("More", createMoreControlsTab(lblStatus))
@@ -671,6 +673,62 @@ IControlPtr createLayoutsTab(const LabelPtr &lblStatus)
     vbox << flowGroupJustify;
 
     return vbox;
+}
+
+IControlPtr createBoxSizingTab(const LabelPtr &statusLabel)
+{
+    // --- VBox Demo ---
+    // Create a VBox with children using all sizing modes.
+    // setFillWidth(true) makes the children (Buttons) expand to fill the width of the VBox.
+    auto vbox_demo = UI::VBox(true)->setSpacing(5.0f)->setFillWidth(true)->setShowChildScrollbars(true);
+    vbox_demo->append(UI::Button("Fixed Height: 50px"), Sizing::Fixed(50.0f));
+    vbox_demo->append(UI::Button("Percent Height: 25%"), Sizing::Percent(25.0f));
+    vbox_demo->append(UI::Button("Auto Height"), Sizing::Auto());
+    vbox_demo->append(UI::Button("Stretch Weight 1.0"), Sizing::Stretch(1.0f));
+    vbox_demo->append(UI::Button("Stretch Weight 2.0"), Sizing::Stretch(2.0f));
+
+    // --- HBox Demo ---
+    // Create an HBox with children using all sizing modes.
+    // setFillHeight(true) makes the children (Buttons) expand to fill the height of the HBox.
+    auto hbox_demo = UI::HBox(true)->setSpacing(5.0f)->setFillHeight(true)->setShowChildScrollbars(true);
+    hbox_demo->append(UI::Button("Fixed\n50px"), Sizing::Fixed(50.0f));
+    hbox_demo->append(UI::Button("Percent\n25%"), Sizing::Percent(25.0f));
+    hbox_demo->append(UI::Button("Auto"), Sizing::Auto());
+    hbox_demo->append(UI::Button("Stretch\n1.0"), Sizing::Stretch(1.0f));
+    hbox_demo->append(UI::Button("Stretch\n2.0"), Sizing::Stretch(2.0f));
+
+    // --- FlowBox Demo ---
+    // FlowBox naturally wraps items. We can combine sizing modes to create responsive grids.
+    auto flow_demo = UI::FlowBox(mui::FlowBox::Align::Left)->setSpacing(5.0f)->setFillHeight(true)->setShowChildScrollbars(true);
+    flow_demo->append(UI::Button("Fixed Width\n150px"), Sizing::Fixed(150.0f));
+    flow_demo->append(UI::Button("Percent Width\n30%"), Sizing::Percent(30.0f));
+    flow_demo->append(UI::Button("Auto Width"), Sizing::Auto());
+    flow_demo->append(UI::Button("Stretch\nWeight 1.0"), Sizing::Stretch(1.0f));
+    flow_demo->append(UI::Button("Stretch\nWeight 2.0"), Sizing::Stretch(2.0f));
+    flow_demo->append(UI::Button("Another Auto"), Sizing::Auto());
+
+    auto top_split = UI::Splitter(SplitterOrientation::Horizontal, 0.5f)
+                     << SplitterLeft(
+                            UI::Group("VBox Sizing Demo")
+                                ->setMargined(true)
+                                << (UI::VBox(false) << Stretch(vbox_demo)))
+                     << SplitterRight(
+                            UI::Group("HBox Sizing Demo")
+                                ->setMargined(true)
+                                << (UI::VBox(false) << Stretch(hbox_demo)));
+
+    auto main_split = UI::Splitter(SplitterOrientation::Vertical, 0.66f)
+                      << SplitterLeft(top_split)
+                      << SplitterRight(
+                             UI::Group("FlowBox Sizing Demo")
+                                 ->setMargined(true)
+                                 << (UI::VBox(false) << Stretch(flow_demo)));
+
+    // The main layout for this tab will be a splitter to give defined areas to the demos.
+    return UI::VBox(true, true)
+           << UI::Label("Demonstrates the different sizing modes for children in VBox, HBox, and FlowBox layouts. Resize the window or splitters to see how 'Stretch' and 'Percent' modes adapt. Child scrollbars are explicitly enabled to handle overflow.")->setFormat(LabelFormat::Wrapped)
+           << UI::Separator()
+           << Stretch(main_split);
 }
 
 IControlPtr createAdvancedTab(const LabelPtr &lblStatus)

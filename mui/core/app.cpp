@@ -138,7 +138,7 @@ namespace mui
     layoutBuilderCb = std::move(cb);
   }
 
-  void App::init(bool useOpenGL, bool enableShadows)
+  void App::init(const std::string &title, int width, int height, bool useOpenGL, bool enableShadows)
   {
     const char *base_path = SDL_GetBasePath();
     if (base_path)
@@ -173,7 +173,7 @@ namespace mui
       SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
     }
 
-    g_window = SDL_CreateWindow("MUI Master", 1280, 720, window_flags);
+    g_window = SDL_CreateWindow(title.c_str(), width, height, window_flags);
     if (!g_window)
     {
       throw std::runtime_error("SDL_CreateWindow Error");

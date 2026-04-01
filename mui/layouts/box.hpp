@@ -51,6 +51,7 @@ namespace mui
         bool autoScroll = false;
         bool fillWidth = false;
         bool fillHeight = false;
+        bool showChildScrollbars = false;
         float spacing = -1.0f; // -1 means default
 
         Box()
@@ -131,6 +132,12 @@ namespace mui
             return this->self();
         }
 
+        std::shared_ptr<Derived> setShowChildScrollbars(bool show)
+        {
+            showChildScrollbars = show;
+            return this->self();
+        }
+
         std::shared_ptr<Derived> setSpacing(float s)
         {
             spacing = s;
@@ -143,6 +150,7 @@ namespace mui
         bool getAutoScroll() const { return autoScroll; }
         bool getFillWidth() const { return fillWidth; }
         bool getFillHeight() const { return fillHeight; }
+        bool getShowChildScrollbars() const { return showChildScrollbars; }
         float getSpacing() const { return spacing; }
     };
 
