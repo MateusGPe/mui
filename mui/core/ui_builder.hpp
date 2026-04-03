@@ -148,12 +148,30 @@ namespace mui
     };
 
     // --- Property Grid Configuration Tags ---
-    struct PGValueColumnWeight { float weight; };
-    struct PGItemSpacingY { float spacing; };
-    struct PGCategorySpacingY { float spacing; };
-    struct PGItemIndent { float indent; };
-    struct PGSpanCategoryHeaders { bool span; };
-    struct PGZebraStripes { bool show; };
+    struct PGValueColumnWeight
+    {
+        float weight;
+    };
+    struct PGItemSpacingY
+    {
+        float spacing;
+    };
+    struct PGCategorySpacingY
+    {
+        float spacing;
+    };
+    struct PGItemIndent
+    {
+        float indent;
+    };
+    struct PGSpanCategoryHeaders
+    {
+        bool span;
+    };
+    struct PGZebraStripes
+    {
+        bool show;
+    };
 
     struct SplitterLeft
     {
@@ -185,6 +203,324 @@ namespace mui
         }
     };
 
+    // --- General Control Modifiers ---
+    struct SetClass
+    {
+        std::string cls;
+        explicit SetClass(std::string c) : cls(std::move(c)) {}
+    };
+    struct SetID
+    {
+        std::string id;
+        explicit SetID(std::string i) : id(std::move(i)) {}
+    };
+    struct Show
+    {
+    }; // Marker struct for show()
+    struct Hide
+    {
+    }; // Marker struct for hide()
+    struct SetVisible
+    {
+        bool visible;
+        explicit SetVisible(bool v) : visible(v) {}
+    };
+    struct SetEnabled
+    {
+        bool enabled;
+        explicit SetEnabled(bool e) : enabled(e) {}
+    };
+    struct ReleaseOwnership
+    {
+    }; // Marker struct
+    struct AcquireOwnership
+    {
+    }; // Marker struct
+    struct SetTooltip
+    {
+        std::string tooltip;
+        explicit SetTooltip(std::string t) : tooltip(std::move(t)) {}
+    };
+    struct SetSpanAvailWidth
+    {
+        bool span;
+        explicit SetSpanAvailWidth(bool s) : span(s) {}
+    };
+    struct SetUseContainerWidth
+    {
+        bool use;
+        explicit SetUseContainerWidth(bool u) : use(u) {}
+    };
+    struct SetSizeXY
+    {
+        float w, h;
+        explicit SetSizeXY(float width, float height) : w(width), h(height) {}
+    };
+    struct SetPositionXY
+    {
+        float x, y;
+        explicit SetPositionXY(float pos_x, float pos_y) : x(pos_x), y(pos_y) {}
+    };
+    struct SetX
+    {
+        float x;
+        explicit SetX(float pos_x) : x(pos_x) {}
+    };
+    struct SetY
+    {
+        float y;
+        explicit SetY(float pos_y) : y(pos_y) {}
+    };
+    struct SetWidth
+    {
+        float w;
+        explicit SetWidth(float width) : w(width) {}
+    };
+    struct SetHeight
+    {
+        float h;
+        explicit SetHeight(float height) : h(height) {}
+    };
+    struct AddSize
+    {
+        float w, h;
+        explicit AddSize(float width, float height) : w(width), h(height) {}
+    };
+    struct ScaleSize
+    {
+        float factor;
+        explicit ScaleSize(float f) : factor(f) {}
+    };
+    struct ScaleSizeXY
+    {
+        float factorX, factorY;
+        explicit ScaleSizeXY(float fx, float fy) : factorX(fx), factorY(fy) {}
+    };
+    struct SetMinSize
+    {
+        float w, h;
+        explicit SetMinSize(float width, float height) : w(width), h(height) {}
+    };
+    struct SetMaxSize
+    {
+        float w, h;
+        explicit SetMaxSize(float width, float height) : w(width), h(height) {}
+    };
+    struct SetMinWidth
+    {
+        float w;
+        explicit SetMinWidth(float width) : w(width) {}
+    };
+    struct SetMinHeight
+    {
+        float h;
+        explicit SetMinHeight(float height) : h(height) {}
+    };
+    struct SetMaxWidth
+    {
+        float w;
+        explicit SetMaxWidth(float width) : w(width) {}
+    };
+    struct SetMaxHeight
+    {
+        float h;
+        explicit SetMaxHeight(float height) : h(height) {}
+    };
+
+    // --- Shadow Modifiers ---
+    struct SetShadow
+    {
+        bool enable;
+        ImVec2 offset;
+        float blur;
+        ImVec4 color;
+        float rounding;
+        float thickness;
+    };
+    inline SetShadow MakeSetShadow(bool enable, ImVec2 offset = ImVec2(0, 0), float blur = 10.0f, ImVec4 col = ImVec4(-1.0f, -1.0f, -1.0f, -1.0f), float rounding = -1.0f, float thickness = -1.0f)
+    {
+        return {enable, offset, blur, col, rounding, thickness};
+    }
+
+    struct SetShadowEnabled
+    {
+        bool enable;
+        explicit SetShadowEnabled(bool e) : enable(e) {}
+    };
+    struct SetShadowOffset
+    {
+        ImVec2 offset;
+        explicit SetShadowOffset(ImVec2 o) : offset(o) {}
+    };
+    struct SetShadowBlur
+    {
+        float blur;
+        explicit SetShadowBlur(float b) : blur(b) {}
+    };
+    struct SetShadowColor
+    {
+        ImVec4 color;
+        explicit SetShadowColor(ImVec4 c) : color(c) {}
+    };
+    struct SetShadowRounding
+    {
+        float rounding;
+        explicit SetShadowRounding(float r) : rounding(r) {}
+    };
+    struct SetShadowFillBackground
+    {
+        bool fill;
+        explicit SetShadowFillBackground(bool f) : fill(f) {}
+    };
+    struct SetShadowThickness
+    {
+        float thickness;
+        explicit SetShadowThickness(float t) : thickness(t) {}
+    };
+    struct DefaultShadow
+    {
+        bool enable;
+        explicit DefaultShadow(bool e = true) : enable(e) {}
+    };
+
+    // --- Window Specific Modifiers ---
+    struct SetWindowMargined
+    {
+        bool margined;
+        explicit SetWindowMargined(bool m) : margined(m) {}
+    };
+    struct OnWindowClosing
+    {
+        std::function<bool()> cb;
+        explicit OnWindowClosing(std::function<bool()> c) : cb(std::move(c)) {}
+    };
+    struct SetNoTabBar
+    {
+        bool noTabBar;
+        explicit SetNoTabBar(bool b) : noTabBar(b) {}
+    };
+    struct SetTitle
+    {
+        std::string title;
+        explicit SetTitle(std::string t) : title(std::move(t)) {}
+    };
+    struct SetBorderless
+    {
+        bool borderless;
+        explicit SetBorderless(bool b) : borderless(b) {}
+    };
+    struct CloseWindow
+    {
+    }; // Marker struct
+    struct FocusWindow
+    {
+    }; // Marker struct
+    struct SetHasMenubar
+    {
+        bool hasMenubar;
+        explicit SetHasMenubar(bool b) : hasMenubar(b) {}
+    };
+    struct SetWindowResizable
+    {
+        bool resizable;
+        explicit SetWindowResizable(bool b) : resizable(b) {}
+    };
+    struct SetMovable
+    {
+        bool movable;
+        explicit SetMovable(bool b) : movable(b) {}
+    };
+    struct SetCollapsible
+    {
+        bool collapsible;
+        explicit SetCollapsible(bool b) : collapsible(b) {}
+    };
+    struct SetHasTitlebar
+    {
+        bool hasTitlebar;
+        explicit SetHasTitlebar(bool b) : hasTitlebar(b) {}
+    };
+    struct SetScrollbar
+    {
+        bool scrollbar;
+        explicit SetScrollbar(bool b) : scrollbar(b) {}
+    };
+    struct SetScrollWithMouse
+    {
+        bool scrollWithMouse;
+        explicit SetScrollWithMouse(bool b) : scrollWithMouse(b) {}
+    };
+    struct SetAlwaysAutoResize
+    {
+        bool alwaysAutoResize;
+        explicit SetAlwaysAutoResize(bool b) : alwaysAutoResize(b) {}
+    };
+    struct SetBackground
+    {
+        bool background;
+        explicit SetBackground(bool b) : background(b) {}
+    };
+    struct SetSavedSettings
+    {
+        bool savedSettings;
+        explicit SetSavedSettings(bool b) : savedSettings(b) {}
+    };
+    struct SetMouseInputs
+    {
+        bool mouseInputs;
+        explicit SetMouseInputs(bool b) : mouseInputs(b) {}
+    };
+    struct SetHorizontalScrollbar
+    {
+        bool horizontalScrollbar;
+        explicit SetHorizontalScrollbar(bool b) : horizontalScrollbar(b) {}
+    };
+    struct SetFocusOnAppearing
+    {
+        bool focusOnAppearing;
+        explicit SetFocusOnAppearing(bool b) : focusOnAppearing(b) {}
+    };
+    struct SetBringToFrontOnFocus
+    {
+        bool bringToFrontOnFocus;
+        explicit SetBringToFrontOnFocus(bool b) : bringToFrontOnFocus(b) {}
+    };
+    struct SetAlwaysVerticalScrollbar
+    {
+        bool alwaysVerticalScrollbar;
+        explicit SetAlwaysVerticalScrollbar(bool b) : alwaysVerticalScrollbar(b) {}
+    };
+    struct SetAlwaysHorizontalScrollbar
+    {
+        bool alwaysHorizontalScrollbar;
+        explicit SetAlwaysHorizontalScrollbar(bool b) : alwaysHorizontalScrollbar(b) {}
+    };
+    struct SetNavInputs
+    {
+        bool navInputs;
+        explicit SetNavInputs(bool b) : navInputs(b) {}
+    };
+    // ADDED: Missing Window Specific Modifiers from window.hpp
+    struct SetDockID
+    {
+        Identifier id;
+        explicit SetDockID(Identifier i) : id(i) {}
+    };
+    struct SetNavFocus
+    {
+        bool navFocus;
+        explicit SetNavFocus(bool b) : navFocus(b) {}
+    };
+    struct SetUnsavedDocument
+    {
+        bool unsavedDocument;
+        explicit SetUnsavedDocument(bool b) : unsavedDocument(b) {}
+    };
+    struct SetDocking
+    {
+        bool docking;
+        explicit SetDocking(bool b) : docking(b) {}
+    };
     template <typename Sig, typename Cb>
     struct ObserveDef
     {
@@ -362,6 +698,396 @@ namespace mui
     {
         pg->setZebraStripes(opt.show);
         return pg;
+    }
+
+    // ==========================================
+    // 2.2. STREAM OPERATORS (General Control Modifiers)
+    // ==========================================
+    template <typename T, typename std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int> = 0>
+    inline T operator<<(T control, const SetClass &modifier)
+    {
+        control->addClass(modifier.cls);
+        return control;
+    }
+
+    template <typename T, typename std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int> = 0>
+    inline T operator<<(T control, const SetID &modifier)
+    {
+        control->setID(modifier.id);
+        return control;
+    }
+
+    template <typename T, typename std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int> = 0>
+    inline T operator<<(T control, const Show &)
+    {
+        control->show();
+        return control;
+    }
+
+    template <typename T, typename std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int> = 0>
+    inline T operator<<(T control, const Hide &)
+    {
+        control->hide();
+        return control;
+    }
+
+    template <typename T, typename std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int> = 0>
+    inline T operator<<(T control, const SetVisible &modifier)
+    {
+        control->setVisible(modifier.visible);
+        return control;
+    }
+
+    template <typename T, typename std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int> = 0>
+    inline T operator<<(T control, const SetEnabled &modifier)
+    {
+        control->setEnabled(modifier.enabled);
+        return control;
+    }
+
+    template <typename T, typename std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int> = 0>
+    inline T operator<<(T control, const ReleaseOwnership &)
+    {
+        control->releaseOwnership();
+        return control;
+    }
+
+    template <typename T, typename std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int> = 0>
+    inline T operator<<(T control, const AcquireOwnership &)
+    {
+        control->acquireOwnership();
+        return control;
+    }
+
+    template <typename T, typename std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int> = 0>
+    inline T operator<<(T control, const SetTooltip &modifier)
+    {
+        control->setTooltip(modifier.tooltip);
+        return control;
+    }
+
+    template <typename T, typename std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int> = 0>
+    inline T operator<<(T control, const SetSpanAvailWidth &modifier)
+    {
+        control->setSpanAvailWidth(modifier.span);
+        return control;
+    }
+
+    template <typename T, typename std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int> = 0>
+    inline T operator<<(T control, const SetUseContainerWidth &modifier)
+    {
+        control->setUseContainerWidth(modifier.use);
+        return control;
+    }
+
+    template <typename T, typename std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int> = 0>
+    inline T operator<<(T control, const SetSizeXY &modifier)
+    {
+        control->setSize(modifier.w, modifier.h);
+        return control;
+    }
+
+    template <typename T, typename std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int> = 0>
+    inline T operator<<(T control, const SetPositionXY &modifier)
+    {
+        control->setPosition(modifier.x, modifier.y);
+        return control;
+    }
+
+    template <typename T, typename std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int> = 0>
+    inline T operator<<(T control, const SetX &modifier)
+    {
+        control->setX(modifier.x);
+        return control;
+    }
+
+    template <typename T, typename std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int> = 0>
+    inline T operator<<(T control, const SetY &modifier)
+    {
+        control->setY(modifier.y);
+        return control;
+    }
+
+    template <typename T, typename std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int> = 0>
+    inline T operator<<(T control, const SetWidth &modifier)
+    {
+        control->setWidth(modifier.w);
+        return control;
+    }
+
+    template <typename T, typename std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int> = 0>
+    inline T operator<<(T control, const SetHeight &modifier)
+    {
+        control->setHeight(modifier.h);
+        return control;
+    }
+
+    template <typename T, typename std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int> = 0>
+    inline T operator<<(T control, const AddSize &modifier)
+    {
+        control->addSize(modifier.w, modifier.h);
+        return control;
+    }
+
+    template <typename T, typename std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int> = 0>
+    inline T operator<<(T control, const ScaleSize &modifier)
+    {
+        control->scaleSize(modifier.factor);
+        return control;
+    }
+
+    template <typename T, typename std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int> = 0>
+    inline T operator<<(T control, const ScaleSizeXY &modifier)
+    {
+        control->scaleSize(modifier.factorX, modifier.factorY);
+        return control;
+    }
+
+    template <typename T, typename std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int> = 0>
+    inline T operator<<(T control, const SetMinSize &modifier)
+    {
+        control->setMinSize(modifier.w, modifier.h);
+        return control;
+    }
+
+    template <typename T, typename std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int> = 0>
+    inline T operator<<(T control, const SetMaxSize &modifier)
+    {
+        control->setMaxSize(modifier.w, modifier.h);
+        return control;
+    }
+
+    template <typename T, typename std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int> = 0>
+    inline T operator<<(T control, const SetMinWidth &modifier)
+    {
+        control->setMinWidth(modifier.w);
+        return control;
+    }
+
+    template <typename T, typename std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int> = 0>
+    inline T operator<<(T control, const SetMinHeight &modifier)
+    {
+        control->setMinHeight(modifier.h);
+        return control;
+    }
+
+    template <typename T, typename std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int> = 0>
+    inline T operator<<(T control, const SetMaxWidth &modifier)
+    {
+        control->setMaxWidth(modifier.w);
+        return control;
+    }
+
+    template <typename T, typename std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int> = 0>
+    inline T operator<<(T control, const SetMaxHeight &modifier)
+    {
+        control->setMaxHeight(modifier.h);
+        return control;
+    }
+
+    template <typename T, typename std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int> = 0>
+    inline T operator<<(T control, const SetShadow &modifier)
+    {
+        control->setShadow(modifier.enable, modifier.offset, modifier.blur, modifier.color, modifier.rounding, modifier.thickness);
+        return control;
+    }
+
+    template <typename T, typename std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int> = 0>
+    inline T operator<<(T control, const SetShadowEnabled &modifier)
+    {
+        control->setShadowEnabled(modifier.enable);
+        return control;
+    }
+
+    template <typename T, typename std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int> = 0>
+    inline T operator<<(T control, const SetShadowOffset &modifier)
+    {
+        control->setShadowOffset(modifier.offset);
+        return control;
+    }
+
+    template <typename T, typename std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int> = 0>
+    inline T operator<<(T control, const SetShadowBlur &modifier)
+    {
+        control->setShadowBlur(modifier.blur);
+        return control;
+    }
+
+    template <typename T, typename std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int> = 0>
+    inline T operator<<(T control, const SetShadowColor &modifier)
+    {
+        control->setShadowColor(modifier.color);
+        return control;
+    }
+
+    template <typename T, typename std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int> = 0>
+    inline T operator<<(T control, const SetShadowRounding &modifier)
+    {
+        control->setShadowRounding(modifier.rounding);
+        return control;
+    }
+
+    template <typename T, typename std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int> = 0>
+    inline T operator<<(T control, const SetShadowFillBackground &modifier)
+    {
+        control->setShadowFillBackground(modifier.fill);
+        return control;
+    }
+
+    template <typename T, typename std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int> = 0>
+    inline T operator<<(T control, const SetShadowThickness &modifier)
+    {
+        control->setShadowThickness(modifier.thickness);
+        return control;
+    }
+
+    template <typename T, typename std::enable_if_t<std::is_base_of_v<IControl, typename T::element_type>, int> = 0>
+    inline T operator<<(T control, const DefaultShadow &modifier)
+    {
+        control->defaultShadow(modifier.enable);
+        return control;
+    }
+
+    // --- Window Specific Operators ---
+    inline WindowPtr operator<<(WindowPtr win, const SetWindowMargined &modifier)
+    {
+        win->setMargined(modifier.margined);
+        return win;
+    }
+    inline WindowPtr operator<<(WindowPtr win, const OnWindowClosing &modifier)
+    {
+        win->onClosing(modifier.cb);
+        return win;
+    }
+    inline WindowPtr operator<<(WindowPtr win, const SetNoTabBar &modifier)
+    {
+        win->setNoTabBar(modifier.noTabBar);
+        return win;
+    }
+    inline WindowPtr operator<<(WindowPtr win, const SetTitle &modifier)
+    {
+        win->setTitle(modifier.title);
+        return win;
+    }
+    inline WindowPtr operator<<(WindowPtr win, const SetBorderless &modifier)
+    {
+        win->setBorderless(modifier.borderless);
+        return win;
+    }
+    inline WindowPtr operator<<(WindowPtr win, const CloseWindow &)
+    {
+        win->close();
+        return win;
+    }
+    inline WindowPtr operator<<(WindowPtr win, const FocusWindow &)
+    {
+        win->focus();
+        return win;
+    }
+    inline WindowPtr operator<<(WindowPtr win, const SetHasMenubar &modifier)
+    {
+        win->setHasMenubar(modifier.hasMenubar);
+        return win;
+    }
+    inline WindowPtr operator<<(WindowPtr win, const SetWindowResizable &modifier)
+    {
+        win->setResizable(modifier.resizable);
+        return win;
+    }
+    inline WindowPtr operator<<(WindowPtr win, const SetMovable &modifier)
+    {
+        win->setMovable(modifier.movable);
+        return win;
+    }
+    inline WindowPtr operator<<(WindowPtr win, const SetCollapsible &modifier)
+    {
+        win->setCollapsible(modifier.collapsible);
+        return win;
+    }
+    inline WindowPtr operator<<(WindowPtr win, const SetHasTitlebar &modifier)
+    {
+        win->setHasTitlebar(modifier.hasTitlebar);
+        return win;
+    }
+    inline WindowPtr operator<<(WindowPtr win, const SetScrollbar &modifier)
+    {
+        win->setScrollbar(modifier.scrollbar);
+        return win;
+    }
+    inline WindowPtr operator<<(WindowPtr win, const SetScrollWithMouse &modifier)
+    {
+        win->setScrollWithMouse(modifier.scrollWithMouse);
+        return win;
+    }
+    inline WindowPtr operator<<(WindowPtr win, const SetAlwaysAutoResize &modifier)
+    {
+        win->setAlwaysAutoResize(modifier.alwaysAutoResize);
+        return win;
+    }
+    inline WindowPtr operator<<(WindowPtr win, const SetBackground &modifier)
+    {
+        win->setBackground(modifier.background);
+        return win;
+    }
+    inline WindowPtr operator<<(WindowPtr win, const SetSavedSettings &modifier)
+    {
+        win->setSavedSettings(modifier.savedSettings);
+        return win;
+    }
+    inline WindowPtr operator<<(WindowPtr win, const SetMouseInputs &modifier)
+    {
+        win->setMouseInputs(modifier.mouseInputs);
+        return win;
+    }
+    inline WindowPtr operator<<(WindowPtr win, const SetHorizontalScrollbar &modifier)
+    {
+        win->setHorizontalScrollbar(modifier.horizontalScrollbar);
+        return win;
+    }
+    inline WindowPtr operator<<(WindowPtr win, const SetFocusOnAppearing &modifier)
+    {
+        win->setFocusOnAppearing(modifier.focusOnAppearing);
+        return win;
+    }
+    inline WindowPtr operator<<(WindowPtr win, const SetBringToFrontOnFocus &modifier)
+    {
+        win->setBringToFrontOnFocus(modifier.bringToFrontOnFocus);
+        return win;
+    }
+    inline WindowPtr operator<<(WindowPtr win, const SetAlwaysVerticalScrollbar &modifier)
+    {
+        win->setAlwaysVerticalScrollbar(modifier.alwaysVerticalScrollbar);
+        return win;
+    }
+    inline WindowPtr operator<<(WindowPtr win, const SetAlwaysHorizontalScrollbar &modifier)
+    {
+        win->setAlwaysHorizontalScrollbar(modifier.alwaysHorizontalScrollbar);
+        return win;
+    }
+    inline WindowPtr operator<<(WindowPtr win, const SetNavInputs &modifier)
+    {
+        win->setNavInputs(modifier.navInputs);
+        return win;
+    }
+    inline WindowPtr operator<<(WindowPtr win, const SetDockID &modifier)
+    {
+        win->setDockId(modifier.id);
+        return win;
+    }
+    inline WindowPtr operator<<(WindowPtr win, const SetNavFocus &modifier)
+    {
+        win->setNavFocus(modifier.navFocus);
+        return win;
+    }
+    inline WindowPtr operator<<(WindowPtr win, const SetUnsavedDocument &modifier)
+    {
+        win->setUnsavedDocument(modifier.unsavedDocument);
+        return win;
+    }
+    inline WindowPtr operator<<(WindowPtr win, const SetDocking &modifier)
+    {
+        win->setDocking(modifier.docking);
+        return win;
     }
 
     // Lists & Stacks
