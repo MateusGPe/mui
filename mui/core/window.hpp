@@ -52,6 +52,7 @@ namespace mui
     WindowPtr setDockId(Identifier id);
 
     void close();
+    void show();
     WindowPtr focus();
 
     WindowPtr setHasMenubar(bool b);

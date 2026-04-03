@@ -166,6 +166,18 @@ namespace mui
 
     void Window::close() { isOpen = false; }
 
+    void Window::show()
+    {
+        if (!isOpen)
+        {
+            isOpen = true;
+            if (std::find(App::activeWindows.begin(), App::activeWindows.end(), this) == App::activeWindows.end())
+            {
+                App::activeWindows.push_back(this);
+            }
+        }
+    }
+
     WindowPtr Window::focus()
     {
         _needs_focus = true;

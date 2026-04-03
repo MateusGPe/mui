@@ -548,11 +548,11 @@ namespace mui
     auto &mb = activeMessageBoxes.front();
 
     // Make the ID unique in case multiple popups with the same title are queued.
-    std::string popup_id =
-        mb.title + "##msgbox" + std::to_string(activeMessageBoxes.size());
     if (mb.open_popup)
     {
-      ImGui::OpenPopup(popup_id.c_str());
+      static uint64_t msgbox_counter = 0;
+      mb.popup_id = mb.title + "##msgbox" + std::to_string(++msgbox_counter);
+      ImGui::OpenPopup(mb.popup_id.c_str());
       mb.open_popup = false;
     }
 
@@ -566,7 +566,7 @@ namespace mui
     ImGui::SetNextWindowSizeConstraints(min_size, ImVec2(600, FLT_MAX));
 
     bool isOpen = true;
-    if (ImGui::BeginPopupModal(popup_id.c_str(), &isOpen,
+    if (ImGui::BeginPopupModal(mb.popup_id.c_str(), &isOpen,
                                ImGuiWindowFlags_AlwaysAutoResize))
     {
       Dialogs::renderMessageBox(mb, isOpen);

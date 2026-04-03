@@ -711,18 +711,18 @@ IControlPtr createBoxSizingTab(const LabelPtr &statusLabel)
                      << SplitterLeft(
                             UI::Group("VBox Sizing Demo")
                                 ->setMargined(true)
-                                << (UI::VBox(false) << Stretch(vbox_demo)))
+                            << (UI::VBox(false) << Stretch(vbox_demo)))
                      << SplitterRight(
                             UI::Group("HBox Sizing Demo")
                                 ->setMargined(true)
-                                << (UI::VBox(false) << Stretch(hbox_demo)));
+                            << (UI::VBox(false) << Stretch(hbox_demo)));
 
     auto main_split = UI::Splitter(SplitterOrientation::Vertical, 0.66f)
                       << SplitterLeft(top_split)
                       << SplitterRight(
                              UI::Group("FlowBox Sizing Demo")
                                  ->setMargined(true)
-                                 << (UI::VBox(false) << Stretch(flow_demo)));
+                             << (UI::VBox(false) << Stretch(flow_demo)));
 
     // The main layout for this tab will be a splitter to give defined areas to the demos.
     return UI::VBox(true, true)
@@ -897,16 +897,17 @@ IControlPtr createMoreControlsTab(const LabelPtr &lblStatus)
         });
     RadioButton::group({radio1, radio2, radio3});
 
+    auto colorCallback = [lblStatus](const std::array<float, 4> &val)
+    {
+        char buffer[100];
+        snprintf(buffer, 100, "Color changed to: (%.2f, %.2f, %.2f, %.2f)", val[0], val[1], val[2], val[3]);
+        lblStatus->setText(buffer);
+    };
     auto colorObservable = MakeObs::Color(0.2f, 0.8f, 0.4f, 1.0f);
     auto colorEdit = UI::ColorEditBind(colorObservable)
                      << UI::Observe(
                             colorObservable->onValueChanged,
-                            [lblStatus](const std::array<float, 4> &val)
-                            {
-                                char buffer[100];
-                                snprintf(buffer, 100, "Color changed to: (%.2f, %.2f, %.2f, %.2f)", val[0], val[1], val[2], val[3]);
-                                lblStatus->setText(buffer);
-                            });
+                            colorCallback);
 
     auto sliderObservable = MakeObs::Float(0.75f);
     auto sliderFloat = UI::SliderFloatBind(0.0f, 1.0f, sliderObservable)

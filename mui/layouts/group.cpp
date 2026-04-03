@@ -52,7 +52,7 @@ namespace mui
     margined = m;
     return self();
   }
-  std::string Group::getTitle() const { return title; }
+  const std::string& Group::getTitle() const { return title; }
   GroupPtr Group::setTitle(const std::string &t)
   {
     title = t;
