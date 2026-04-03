@@ -124,21 +124,36 @@ namespace mui
     struct PropCat
     {
         std::string name;
-        bool defaultOpen;
-        PropCat(std::string n, bool o = true) : name(std::move(n)), defaultOpen(o)
+        std::string icon;
+        ImVec4 color;
+        ImGuiTreeNodeFlags flags;
+        PropCat(std::string n, const std::string &i = "", ImVec4 c = ImVec4(0, 0, 0, 0), ImGuiTreeNodeFlags f = ImGuiTreeNodeFlags_DefaultOpen)
+            : name(std::move(n)), icon(i), color(c), flags(f)
         {
         }
+        // Backwards compatibility constructor
+        PropCat(std::string n, bool defaultOpen)
+            : name(std::move(n)), icon(""), color({0, 0, 0, 0}), flags(defaultOpen ? ImGuiTreeNodeFlags_DefaultOpen : 0) {}
     };
 
     struct PropItem
     {
         std::string label;
         IControlPtr editor;
+        ImVec4 labelColor;
         template <typename T>
-        PropItem(std::string l, std::shared_ptr<T> e) : label(std::move(l)), editor(std::move(e))
+        PropItem(std::string l, std::shared_ptr<T> e, ImVec4 c = ImVec4(0, 0, 0, 0)) : label(std::move(l)), editor(std::move(e)), labelColor(c)
         {
         }
     };
+
+    // --- Property Grid Configuration Tags ---
+    struct PGValueColumnWeight { float weight; };
+    struct PGItemSpacingY { float spacing; };
+    struct PGCategorySpacingY { float spacing; };
+    struct PGItemIndent { float indent; };
+    struct PGSpanCategoryHeaders { bool span; };
+    struct PGZebraStripes { bool show; };
 
     struct SplitterLeft
     {
@@ -310,12 +325,42 @@ namespace mui
     // Property Grid
     inline PropertyGridPtr operator<<(PropertyGridPtr pg, const PropCat &cat)
     {
-        pg->addCategory(cat.name, cat.defaultOpen);
+        pg->addCategory(cat.name, cat.icon, cat.color, cat.flags);
         return pg;
     }
     inline PropertyGridPtr operator<<(PropertyGridPtr pg, const PropItem &item)
     {
-        pg->addProperty(item.label, item.editor);
+        pg->addProperty(item.label, item.editor, item.labelColor);
+        return pg;
+    }
+    inline PropertyGridPtr operator<<(PropertyGridPtr pg, const PGValueColumnWeight &opt)
+    {
+        pg->setValueColumnWeight(opt.weight);
+        return pg;
+    }
+    inline PropertyGridPtr operator<<(PropertyGridPtr pg, const PGItemSpacingY &opt)
+    {
+        pg->setItemSpacingY(opt.spacing);
+        return pg;
+    }
+    inline PropertyGridPtr operator<<(PropertyGridPtr pg, const PGCategorySpacingY &opt)
+    {
+        pg->setCategorySpacingY(opt.spacing);
+        return pg;
+    }
+    inline PropertyGridPtr operator<<(PropertyGridPtr pg, const PGItemIndent &opt)
+    {
+        pg->setItemIndent(opt.indent);
+        return pg;
+    }
+    inline PropertyGridPtr operator<<(PropertyGridPtr pg, const PGSpanCategoryHeaders &opt)
+    {
+        pg->setSpanCategoryHeaders(opt.span);
+        return pg;
+    }
+    inline PropertyGridPtr operator<<(PropertyGridPtr pg, const PGZebraStripes &opt)
+    {
+        pg->setZebraStripes(opt.show);
         return pg;
     }
 

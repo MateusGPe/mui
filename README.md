@@ -53,10 +53,18 @@ The `mui::Control<Derived>` template inherits from `mui::IControl` and `std::ena
 
 ### Universal Shadow System
 
-  * **Global Shadow Defaults**: Managed via static members `s_defaultHasShadow`, `s_defaultShadowOffset`, `s_defaultShadowBlur`, `s_defaultShadowColor`, and `s_defaultShadowRounding`. These are configured utilizing `static void setGlobalShadowDefaults(bool enable, ImVec2 offset, float blur, ImVec4 col, float rounding)`.
-  * **Instance Shadow Properties**: Managed via `hasShadow`, `shadowOffset`, `shadowBlur`, `shadowColor`, and `shadowRounding`.
-  * **Configuration**: `std::shared_ptr<Derived> setShadow(bool enable, ImVec2 offset, float blur, ImVec4 col, float rounding)` overrides instance shadows, and `std::shared_ptr<Derived> defaultShadow(bool enable)` resets the instance to use global defaults.
-  * **Shadow Rendering**: The final overridden `render()` method splits ImGui draw channels, executes the pure virtual `virtual void renderControl() = 0` in the foreground to obtain dimensions, draws the shadow in the background using `AddRectFilled` with simulated soft falloff iterations, and finally merges the channels.
+MUI implements a high-performance, high-quality shadow system that relies on a pre-generated texture atlas rather than expensive real-time blurring. This atlas contains pre-rendered shadow gradients for both rectangular (9-slice) and convex shapes.
+
+  * **Texture Generation**: On application startup (`App::init`), `ImGuiShadows::GenerateShadowTexture` is called. This function:
+      *   Generates a distance field for a base rectangle and a base circle.
+      *   Applies a falloff power curve and an optional Gaussian blur pass to create a soft-edge effect.
+      *   Composites these into a single texture atlas, calculating and storing UV coordinates for 9-slice rectangular rendering (`Uvs[0-8]`) and convex polygon rendering (`Uvs[9]`).
+  * **Rendering**: The `DrawShadowRect` and `DrawShadowConvexPoly` functions use this texture atlas to draw shadows efficiently.
+      *   `DrawShadowRect` uses a 9-slice technique, drawing the corners and stretching the edges to fit any rectangle size without distortion.
+      *   `DrawShadowConvexPoly` extrudes the edges of a polygon outwards and maps the convex shadow texture to the corners and edges, creating a soft, continuous shadow for arbitrary shapes.
+      *   The system supports `fill_background` for solid shadows and a more complex path for cutout shadows that subtracts the shape of the widget from the shadow geometry.
+  * **Styling**: Shadow properties are primarily controlled via the stylesheet system. The following properties can be set on a selector: `shadowEnabled`, `shadowOffset`, `shadowBlur`, `shadowColor`, `shadowRounding`, `shadowFillBackground`, and `shadowThickness`.
+  * **Programmatic Control**: Widgets also expose `setShadow(...)` for direct instance-level overrides.
 
 ### Signal Observation
 
@@ -70,7 +78,7 @@ The `mui::Control<Derived>` template inherits from `mui::IControl` and `std::ena
 
 The `mui::App` class is the central orchestrator for the lifecycle, threading, layout, and rendering backend.
 
-  * **Initialization**: `static void init(bool useOpenGL = false)` initializes SDL3 video and events, creates an SDL Window configured for high pixel density, creates either an OpenGL context or SDL Renderer, initiates ImGui with docking enabled, applies the current theme, and creates texture mapping callbacks for the file dialog system.
+  * **Initialization**: `static void init(const std::string &title, int width, int height, bool useOpenGL, bool enableShadows)` initializes SDL3, creates the main window, sets up the rendering backend (OpenGL or SDL_Renderer), and prepares ImGui. If `enableShadows` is true, it also generates the global shadow texture atlas.
   * **Execution**: `static void run()` executes the main blocking event loop, polling SDL events, tracking DPI changes, draining the thread-safe UI task queue, rendering the ImGui frame, updating docking nodes, processing message boxes, and dispatching the user's main loop callback.
   * **Termination**: `static void quit()` breaks the main loop, and `static void shutdown()` concludes the process.
   * **Event Hooks**: `static void setMainLoopCallback(std::function<void()> cb)` sets a callback executed every frame.
@@ -411,12 +419,19 @@ An implementation wrapping `ImGui::BeginTable` and sorting specifications.
 
 A standardized dual-column layout tailored for category-header grouped property editors.
 
+A standardized dual-column layout tailored for category-header grouped property editors, offering extensive customization over appearance and layout.
+
   * **Creation**: `static PropertyGridPtr create()`.
   * **Configuration**:
-      * `PropertyGridPtr addCategory(const std::string &name, bool defaultOpen = true)` inserts a logical partition mapped to a `TreeNode`.
-      * `PropertyGridPtr addProperty(const std::string &label, IControlPtr editor)` mounts a widget on the active category.
+      * `PropertyGridPtr addCategory(const std::string &name, const std::string &icon = "", ImVec4 color = ImVec4(0,0,0,0), ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen)`: Adds a new collapsible category. It supports an optional icon string, a custom header color, and `ImGuiTreeNodeFlags` for behavior customization (e.g., `ImGuiTreeNodeFlags_Framed`).
+      * `PropertyGridPtr addProperty(const std::string &label, IControlPtr editor, ImVec4 labelColor = ImVec4(0,0,0,0))`: Adds a property (a label and an editor widget) to the most recently added category. It supports a custom color for the property label.
       * `PropertyGridPtr setNameColumnWidth(float width)` enforces a fixed dimension for the label column.
-
+      * `PropertyGridPtr setValueColumnWeight(float weight)`: Sets the stretch weight of the right (value) column.
+      * `PropertyGridPtr setItemSpacingY(float spacing)` and `setCategorySpacingY(float spacing)`: Control vertical spacing between items and categories, respectively.
+      * `PropertyGridPtr setItemIndent(float indent)`: Sets the horizontal indentation for items within a category.
+  * **Flags and Appearance**:
+      * `PropertyGridPtr setZebraStripes(bool show)`: Toggles alternating row background colors for readability.
+      * `PropertyGridPtr setSpanCategoryHeaders(bool span)`: If true, category headers will span both columns instead of just the label column.
 ## 6.16 ColorEdit
 
   * **Creation**: `static ColorEditPtr create(float r = 1.0f, float g = 1.0f, float b = 1.0f, float a = 1.0f)`.
@@ -517,13 +532,17 @@ The `mui::Theme` class handles cross-platform font resolution, TOML deserializat
 
 ## 9.2 TOML Deserialization Engine
 When `App::setTheme(filepath, themeName)` is called, MUI parses a TOML file.
-* **Case-Insensitive Parsing:** MUI implements a custom lambda `findCaseInsensitive` that iterates over TOML tables and performs a `std::tolower` character-by-character comparison, ensuring that keys like `WindowBg` or `windowbg` map correctly.
-* **Style Variables:** Supports parsing floats, `ImVec2` (as JSON-like arrays `[x, y]`), and enumerations.
-    * `ImGuiDir` is parsed from strings `"none"`, `"left"`, `"right"`, `"up"`, `"down"`.
-    * `ImGuiTreeNodeFlags` and `ImGuiHoveredFlags` are parsed from arrays of strings, iterating and applying bitwise OR `|` operations against an internal `std::unordered_map` of flag names.
-* **Color Parsing:** * Accepts arrays of 3 or 4 floats (RGBA).
-    * Accepts Hex strings (`#RRGGBB` or `#RRGGBBAA`), leveraging `sscanf` to parse the hex pairs and dividing by `255.0f` to map them into ImGui's `0.0f - 1.0f` color space.
-    * Supports legacy/aliased keys like `tabactive` (mapping to `ImGuiCol_TabSelected`) and `navhighlight` (mapping to `ImGuiCol_NavCursor`).
+* **Parsing Logic**: The engine parses TOML tables where keys are CSS-like selectors (e.g., `.button`, `#my_id`, `Button.warning`). Property keys within each selector table are matched against internal maps for colors and style variables. Parsing is **case-sensitive**.
+* **Style Variables:** Supports parsing:
+    *   Floats for single-value variables (e.g., `FrameRounding = 4.0`).
+    *   `ImVec2` from JSON-like arrays (e.g., `WindowPadding = [8.0, 8.0]`).
+    *   Enumerations like `ImGuiDir` from strings (`"left"`, `"right"`, etc.).
+    *   Bitmask flags like `ImGuiTreeNodeFlags` from an array of strings (e.g., `["Framed", "DefaultOpen"]`).
+* **Color Parsing:**
+    *   Accepts arrays of 3 or 4 floats for RGBA values (e.g., `[1.0, 0.5, 0.0, 1.0]`).
+    *   Accepts hex strings in `#RRGGBB` or `#RRGGBBAA` format.
+    *   Supports legacy/aliased keys like `tabactive` (mapping to `ImGuiCol_TabSelected`).
+* **Shadow Properties**: The stylesheet can also define shadow properties for a selector: `shadowEnabled`, `shadowOffset`, `shadowBlur`, `shadowColor`, `shadowRounding`, `shadowFillBackground`, and `shadowThickness`.
 
 ---
 
@@ -609,3 +628,9 @@ MUI widgets expose setter methods that directly manipulate binary ImGui flags.
     * `setNoTooltip` -> `NoTooltip`
     * `setFittingPolicyScroll` -> `FittingPolicyScroll`
     * `setFittingPolicyResizeDown` -> `FittingPolicyResizeDown`
+
+* **`PropertyGrid` Flags (`PropertyGridFlags_`)**:
+    * `setVisible` -> `Visible`
+    * `setEnabled` -> `Enabled`
+    * `setZebraStripes` -> `ZebraStripes`
+    * `setSpanCategoryHeaders` -> `SpanCategoryHeaders`

@@ -22,6 +22,7 @@ IControlPtr createBoxSizingTab(const LabelPtr &statusLabel);
 IControlPtr createMoreControlsTab(const LabelPtr &statusLabel);
 IControlPtr createAdvancedTab(const LabelPtr &statusLabel);
 IControlPtr createPropertyGridTab(const LabelPtr &statusLabel);
+IControlPtr createPropertyGridShowcaseTab(const LabelPtr &statusLabel);
 IControlPtr createImageStackTab();
 IControlPtr createThemesTab();
 IControlPtr createShadowsTab();
@@ -101,6 +102,7 @@ WindowPtr createMainGalleryWindow()
                    << TabPage("Layouts", createLayoutsTab(lblStatus))
                    << TabPage("Box Sizing", createBoxSizingTab(lblStatus))
                    << TabPage("Properties", createPropertyGridTab(lblStatus))
+                   << TabPage("Properties 2", createPropertyGridShowcaseTab(lblStatus))
                    << TabPage("Advanced", createAdvancedTab(lblStatus))
                    << TabPage("More", createMoreControlsTab(lblStatus))
                    << TabPage("Images", createImageStackTab())
@@ -832,7 +834,7 @@ IControlPtr createPropertyGridTab(const LabelPtr &statusLabel)
     return UI::VBox(true, true)
            << Stretch(
                   UI::PropertyGrid(120.0f)
-                  << PropCat("Appearance")
+                  << PropCat("Appearance " ICON_FA_PALETTE)
                   << PropItem("Name", nameEntry)
                   << PropItem(
                          "Visible",
@@ -844,7 +846,7 @@ IControlPtr createPropertyGridTab(const LabelPtr &statusLabel)
                              }))
                   << PropItem("Color", UI::ColorEdit(0.9f, 0.2f, 0.2f, 1.0f))
                   << PropItem("Opacity", UI::SliderFloat(0.0f, 1.0f, 1.0f))
-                  << PropCat("Behavior")
+                  << PropCat("Behavior " ICON_FA_BOLT)
                   << PropItem(
                          "Enabled",
                          UI::ToggleSwitch(
@@ -854,9 +856,48 @@ IControlPtr createPropertyGridTab(const LabelPtr &statusLabel)
                                  statusLabel->setText(checked ? "Control Enabled" : "Control Disabled");
                              }))
                   << PropItem("Mode", modeCombo)
-                  << PropCat("Advanced", false)
+                  << PropCat("Advanced " ICON_FA_GEAR, false)
                   << PropItem("ID", UI::Label("0xDEADBEEF")->setColor({0.6f, 0.6f, 0.6f, 1.0f}))
                   << PropItem("File Path", mui::PathPicker::create()->setPath("C:/path/to/resource.dat")->setSpanAvailWidth(true)));
+}
+
+IControlPtr createPropertyGridShowcaseTab(const LabelPtr &statusLabel)
+{
+    // State for the advanced property grid
+    static auto fontSizeObs = MakeObs::Float(13.f);
+    static auto healthObs = MakeObs::Float(75.f);
+    static auto manaObs = MakeObs::Float(55.f);
+    static auto isInvincibleObs = MakeObs::Bool(false);
+    static auto godModeObs = MakeObs::Bool(false);
+    static auto debugFlagsObs = MakeObs::Int(0);
+    static auto themeObs = MakeObs::Int(0);
+
+    auto pg = UI::PropertyGrid(180.f)           // Set name column width
+              << PGValueColumnWeight{1.5f}      // Make value column wider
+              << PGItemSpacingY{4.f}            // Add some vertical space between items
+              << PGCategorySpacingY{8.f}        // And between categories
+              << PGItemIndent{25.f}             // A bit more indentation
+              << PGSpanCategoryHeaders{true}    // Make headers span both columns
+              << PGZebraStripes{false};         // Disable zebra stripes for this showcase
+                  
+    // Category with Icon and Color
+    pg << PropCat("Appearance " ICON_FA_BRUSH, ICON_FA_BRUSH, ImVec4(0.2f, 0.6f, 0.9f, 1.0f))
+       << PropItem("Theme", UI::ComboBoxBind(themeObs) << "Dark" << "Light" << "Classic")
+       << PropItem("Font Size", UI::SliderFloatBind(8.f, 24.f, fontSizeObs));
+
+    // Category with custom label colors and different flags
+    pg << PropCat(("Status " ICON_FA_HEART_PULSE), "", ImVec4(0, 0, 0, 0), ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen)
+       << PropItem("Health", UI::SliderFloatBind(0.f, 100.f, healthObs), {0.1f, 0.8f, 0.2f, 1.0f})
+       << PropItem("Mana", UI::SliderFloatBind(0.f, 100.f, manaObs), {0.2f, 0.4f, 0.9f, 1.0f})
+       << PropItem("Is Invincible", UI::CheckboxBind("", isInvincibleObs), {0.9f, 0.7f, 0.1f, 1.0f});
+
+    // A closed-by-default category
+    pg << PropCat(("Advanced " ICON_FA_GEAR), "", ImVec4(0, 0, 0, 0), 0) // flags = 0 means not open by default
+       << PropItem("Enable God Mode", UI::CheckboxBind("", godModeObs))
+       << PropItem("Debug Flags", UI::SpinboxBind(0, 1000, debugFlagsObs));
+
+    return UI::VBox(true, true)
+           << Stretch(pg);
 }
 
 IControlPtr createMoreControlsTab(const LabelPtr &lblStatus)
