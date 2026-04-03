@@ -29,7 +29,7 @@ namespace mui
 
         bool is_input = false;
         std::string input_buffer;
-        std::function<void(const std::string&)> on_input_ok;
+        std::function<void(const std::string &)> on_input_ok;
         std::string popup_id;
     };
 

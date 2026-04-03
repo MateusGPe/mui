@@ -170,6 +170,25 @@ namespace mui
 
     public:
         virtual ~Control() = default;
+        ImVec2 ApplySizeConstraints(ImVec2 naturalSize) const
+        {
+            float w = width;
+            if (spanAvailWidth)
+                w = ImGui::GetContentRegionAvail().x;
+            else if (useContainerWidth)
+                w = ImGui::CalcItemWidth();
+
+            if (w <= 0.0f)
+                w = naturalSize.x;
+
+            float h = height > 0.0f ? height : naturalSize.y;
+
+            // Apply global constraints
+            w = std::clamp(w, minSize.x, maxSize.x);
+            h = std::clamp(h, minSize.y, maxSize.y);
+
+            return ImVec2(w, h);
+        }
 
         std::shared_ptr<Derived> addClass(const std::string &cls)
         {

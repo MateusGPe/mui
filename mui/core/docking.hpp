@@ -40,6 +40,7 @@ namespace mui
         void setNoTabBar(bool noTabBar);
         void setHiddenTabBar(bool hiddenTabBar);
         bool isValid() const { return m_node != nullptr; }
+
     private:
         ImGuiDockNode *m_node;
     };

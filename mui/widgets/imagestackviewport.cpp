@@ -1,13 +1,14 @@
 // widgets/imagestackviewport.cpp
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imagestackviewport.hpp"
-#include "imagestackview.hpp" // Include the parent for state access
 #include "../core/app.hpp"
+#include "imagestackview.hpp" // Include the parent for state access
 #include <cmath>
 
 namespace mui
 {
-    ImageStackViewport::ImageStackViewport(ImageStackView *parent) : m_parent(parent)
+    ImageStackViewport::ImageStackViewport(ImageStackView *parent)
+        : m_parent(parent)
     {
         App::assertMainThread();
     }
@@ -38,7 +39,9 @@ namespace mui
                 if (((x / checker_size) + (y / checker_size)) % 2 == 0)
                 {
                     ImVec2 rect_min = canvas_p0 + ImVec2((float)x, (float)y);
-                    ImVec2 rect_max = canvas_p0 + ImVec2(std::min((float)x + checker_size, view_size.x), std::min((float)y + checker_size, view_size.y));
+                    ImVec2 rect_max =
+                        canvas_p0 + ImVec2(std::min((float)x + checker_size, view_size.x),
+                                           std::min((float)y + checker_size, view_size.y));
                     draw_list->AddRectFilled(rect_min, rect_max, IM_COL32(60, 60, 60, 255));
                 }
             }
@@ -46,7 +49,8 @@ namespace mui
         draw_list->AddRect(canvas_p0, canvas_p1, ImGui::GetColorU32(ImGuiCol_Border));
 
         // 2. Interaction Logic
-        ImGui::InvisibleButton("##canvas", view_size, ImGuiButtonFlags_MouseButtonLeft);
+        ImGui::InvisibleButton("##canvas", view_size,
+                               ImGuiButtonFlags_MouseButtonLeft);
         bool is_active = ImGui::IsItemActive();
         bool is_hovered = ImGui::IsItemHovered();
 
@@ -54,13 +58,15 @@ namespace mui
         {
             const char *text = "No Layers Loaded";
             ImVec2 text_size = ImGui::CalcTextSize(text);
-            draw_list->AddText(canvas_p0 + (view_size - text_size) * 0.5f, IM_COL32(150, 150, 150, 255), text);
+            draw_list->AddText(canvas_p0 + (view_size - text_size) * 0.5f,
+                               IM_COL32(150, 150, 150, 255), text);
         }
         else
         {
             float maxWidth = 0.0f;
             float maxHeight = 0.0f;
-            if (m_parent->m_singleLayerMode && m_parent->m_selectedLayer >= 0 && m_parent->m_selectedLayer < (int)m_parent->m_layers.size())
+            if (m_parent->m_singleLayerMode && m_parent->m_selectedLayer >= 0 &&
+                m_parent->m_selectedLayer < (int)m_parent->m_layers.size())
             {
                 maxWidth = m_parent->m_layers[m_parent->m_selectedLayer]->getWidth();
                 maxHeight = m_parent->m_layers[m_parent->m_selectedLayer]->getHeight();
@@ -81,7 +87,9 @@ namespace mui
                     float scaleX = view_size.x / maxWidth;
                     float scaleY = view_size.y / maxHeight;
                     m_parent->m_scale = std::min(scaleX, scaleY) * 0.95f;
-                    m_parent->m_translate = (view_size - (ImVec2(maxWidth, maxHeight) * m_parent->m_scale)) * 0.5f;
+                    m_parent->m_translate =
+                        (view_size - (ImVec2(maxWidth, maxHeight) * m_parent->m_scale)) *
+                        0.5f;
                 }
                 m_parent->m_firstRender = false;
             }
@@ -90,14 +98,17 @@ namespace mui
             if (is_hovered && ImGui::GetIO().MouseWheel != 0.0f)
             {
                 float wheel = ImGui::GetIO().MouseWheel;
-                float zoomRate = ImGui::GetIO().KeyShift ? 0.05f : 0.15f; // Slower zoom with Shift
+                float zoomRate =
+                    ImGui::GetIO().KeyShift ? 0.05f : 0.15f; // Slower zoom with Shift
                 float oldScale = m_parent->m_scale;
 
                 // The point we want to zoom into/out of is the center of the viewport
                 ImVec2 canvas_center = canvas_p0 + view_size * 0.5f;
 
-                // This is the position of the canvas center relative to the image's top-left corner (in screen space)
-                ImVec2 image_space_center = canvas_center - (canvas_p0 + m_parent->m_translate);
+                // This is the position of the canvas center relative to the image's
+                // top-left corner (in screen space)
+                ImVec2 image_space_center =
+                    canvas_center - (canvas_p0 + m_parent->m_translate);
 
                 // Calculate the new scale
                 float newScale = oldScale + wheel * zoomRate * oldScale;
@@ -106,8 +117,10 @@ namespace mui
                 // The ratio of the new scale to the old scale
                 float scaleRatio = newScale / oldScale;
 
-                // To keep the center point stationary on screen, we adjust the translation
-                m_parent->m_translate -= (image_space_center * scaleRatio) - image_space_center;
+                // To keep the center point stationary on screen, we adjust the
+                // translation
+                m_parent->m_translate -=
+                    (image_space_center * scaleRatio) - image_space_center;
                 m_parent->m_scale = newScale;
             }
 
@@ -123,14 +136,17 @@ namespace mui
             if (scaled_w < view_size.x)
                 m_parent->m_translate.x = (view_size.x - scaled_w) * 0.5f;
             else
-                m_parent->m_translate.x = std::clamp(m_parent->m_translate.x, view_size.x - scaled_w, 0.0f);
+                m_parent->m_translate.x =
+                    std::clamp(m_parent->m_translate.x, view_size.x - scaled_w, 0.0f);
             if (scaled_h < view_size.y)
                 m_parent->m_translate.y = (view_size.y - scaled_h) * 0.5f;
             else
-                m_parent->m_translate.y = std::clamp(m_parent->m_translate.y, view_size.y - scaled_h, 0.0f);
+                m_parent->m_translate.y =
+                    std::clamp(m_parent->m_translate.y, view_size.y - scaled_h, 0.0f);
 
             // 3. Render Layers
-            draw_list->PushClipRect(canvas_p0 + ImVec2(1, 1), canvas_p1 - ImVec2(1, 1), true);
+            draw_list->PushClipRect(canvas_p0 + ImVec2(1, 1), canvas_p1 - ImVec2(1, 1),
+                                    true);
             ImVec2 origin = canvas_p0 + m_parent->m_translate;
 
             for (int i = 0; i < (int)m_parent->m_layers.size(); ++i)
@@ -146,9 +162,13 @@ namespace mui
                     continue;
                 }
 
-                ImVec2 p1 = origin + ImVec2(layer->getWidth() * m_parent->m_scale, layer->getHeight() * m_parent->m_scale);
-                ImU32 col = ImGui::GetColorU32(ImVec4(1.0f, 1.0f, 1.0f, m_parent->m_singleLayerMode ? 1.0f : layer->getOpacity()));
-                draw_list->AddImage(layer->getTextureId(), origin, p1, ImVec2(0, 0), ImVec2(1, 1), col);
+                ImVec2 p1 = origin + ImVec2(layer->getWidth() * m_parent->m_scale,
+                                            layer->getHeight() * m_parent->m_scale);
+                ImU32 col = ImGui::GetColorU32(
+                    ImVec4(1.0f, 1.0f, 1.0f,
+                           m_parent->m_singleLayerMode ? 1.0f : layer->getOpacity()));
+                draw_list->AddImage(layer->getTextureId(), origin, p1, ImVec2(0, 0),
+                                    ImVec2(1, 1), col);
             }
             draw_list->PopClipRect();
         }

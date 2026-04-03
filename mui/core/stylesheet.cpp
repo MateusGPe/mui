@@ -1,11 +1,11 @@
 // core/stylesheet.cpp
 #include "stylesheet.hpp"
 #include "style_parser_utils.hpp" // Shared parsing utilities
-#include <string_view>
-#include <unordered_map>
 #include <algorithm>
 #include <cctype>
 #include <iostream>
+#include <string_view>
+#include <unordered_map>
 
 namespace mui
 {
@@ -22,7 +22,8 @@ namespace mui
                     continue;
 
                 std::string selector_str = std::string(selector_key.str());
-                StyleBlock &block = StyleSheet::select(selector_str); // This also increments version
+                StyleBlock &block =
+                    StyleSheet::select(selector_str); // This also increments version
 
                 const toml::table &properties = *selector_node.as_table();
 
@@ -41,11 +42,13 @@ namespace mui
                     }
 
                     // Check for style vars
-                    if (auto it = mui::styleVarMap.find(key_sv); it != mui::styleVarMap.end())
+                    if (auto it = mui::styleVarMap.find(key_sv);
+                        it != mui::styleVarMap.end())
                     {
                         if (prop_node.is_floating_point() || prop_node.is_integer())
                         {
-                            block.var(it->second, prop_node.value_or<float>(0.0f)); // Use value_or for safety
+                            block.var(it->second, prop_node.value_or<float>(
+                                                      0.0f)); // Use value_or for safety
                         }
                         else if (auto vec2 = mui::parse_vec2(prop_node))
                         {
@@ -98,11 +101,15 @@ namespace mui
 
     bool StyleSheet::loadFromFile(const std::string &filepath)
     {
-        try {
+        try
+        {
             toml::table tbl = toml::parse_file(filepath);
             return loadFromNode(tbl); // Call the new shared parsing logic
-        } catch (const toml::parse_error &err) {
-            std::cerr << "Error parsing stylesheet TOML file '" << filepath << "':\n" << err << std::endl;
+        }
+        catch (const toml::parse_error &err)
+        {
+            std::cerr << "Error parsing stylesheet TOML file '" << filepath << "':\n"
+                      << err << std::endl;
             return false;
         }
     }

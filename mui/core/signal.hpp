@@ -18,15 +18,15 @@ namespace mui
     public:
         Connection() = default;
         explicit Connection(std::shared_ptr<bool> alive) : m_alive(std::move(alive)) {}
-        
+
         // Explicitly drop the connection
-        void disconnect() 
+        void disconnect()
         {
-            m_alive.reset(); 
+            m_alive.reset();
         }
 
         // Check if still connected (hasn't been manually disconnected)
-        bool connected() const 
+        bool connected() const
         {
             return m_alive != nullptr;
         }
@@ -36,7 +36,8 @@ namespace mui
     class Signal
     {
     private:
-        struct Slot {
+        struct Slot
+        {
             std::weak_ptr<bool> alive;
             std::function<void(Args...)> cb;
         };
@@ -48,12 +49,13 @@ namespace mui
         ~Signal() = default;
 
         // Non-copyable to prevent accidental shared state issues
-        Signal(const Signal&) = delete;
-        Signal& operator=(const Signal&) = delete;
+        Signal(const Signal &) = delete;
+        Signal &operator=(const Signal &) = delete;
 
         [[nodiscard]] Connection connect(std::function<void(Args...)> cb)
         {
-            if (!cb) return Connection();
+            if (!cb)
+                return Connection();
 
             std::lock_guard<std::mutex> lock(m_mutex);
             auto alive = std::make_shared<bool>(true);
@@ -66,29 +68,35 @@ namespace mui
             std::vector<std::function<void(Args...)>> callbacks;
             {
                 std::lock_guard<std::mutex> lock(m_mutex);
-                
+
                 // Cleanup dead connections and collect active ones
                 auto it = m_slots.begin();
-                while (it != m_slots.end()) {
-                    if (it->alive.expired()) {
+                while (it != m_slots.end())
+                {
+                    if (it->alive.expired())
+                    {
                         it = m_slots.erase(it);
-                    } else {
+                    }
+                    else
+                    {
                         callbacks.push_back(it->cb);
                         ++it;
                     }
                 }
             }
-            
+
             // Execute outside the lock to allow re-entrancy and avoid deadlocks
-            for (const auto& cb : callbacks) {
+            for (const auto &cb : callbacks)
+            {
                 cb(args...);
             }
         }
-        
-        size_t slot_count() const 
+
+        size_t slot_count() const
         {
             std::lock_guard<std::mutex> lock(m_mutex);
-            return std::count_if(m_slots.begin(), m_slots.end(), [](const Slot& s) { return !s.alive.expired(); });
+            return std::count_if(m_slots.begin(), m_slots.end(), [](const Slot &s)
+                                 { return !s.alive.expired(); });
         }
 
         void clear()

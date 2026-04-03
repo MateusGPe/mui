@@ -13,16 +13,16 @@ namespace mui
         mutable std::mutex m_mutex;
 
     public:
-        mui::Signal<const T&> onValueChanged;
+        mui::Signal<const T &> onValueChanged;
 
         Observable() = default;
-        explicit Observable(const T& initialValue) : m_value(initialValue) {}
+        explicit Observable(const T &initialValue) : m_value(initialValue) {}
 
         // Non-copyable, thread-safe access only
-        Observable(const Observable&) = delete;
-        Observable& operator=(const Observable&) = delete;
+        Observable(const Observable &) = delete;
+        Observable &operator=(const Observable &) = delete;
 
-        void set(const T& new_val)
+        void set(const T &new_val)
         {
             bool changed = false;
             {
@@ -34,7 +34,7 @@ namespace mui
                 }
             }
 
-            // Emit the signal outside the lock to prevent deadlocks 
+            // Emit the signal outside the lock to prevent deadlocks
             // if listeners try to get/set the value or trigger UI updates.
             if (changed)
             {
@@ -49,7 +49,7 @@ namespace mui
         }
 
         // Convenience operators
-        Observable& operator=(const T& new_val)
+        Observable &operator=(const T &new_val)
         {
             set(new_val);
             return *this;

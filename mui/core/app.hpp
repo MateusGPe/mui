@@ -8,7 +8,7 @@
 #include <mutex>
 
 // Forward declare SDL_GLContext to avoid including SDL.h in the header
-using SDL_GLContext = struct SDL_GLContextState*;
+using SDL_GLContext = struct SDL_GLContextState *;
 struct SDL_Renderer;
 struct SDL_Texture;
 struct ImGuiStyle; // Forward declare ImGuiStyle
@@ -37,10 +37,10 @@ namespace mui
     public:
         App() = delete;
         ~App() = delete;
-        App(const App&) = delete;
-        App& operator=(const App&) = delete;
-        App(App&&) = delete;
-        App& operator=(App&&) = delete;
+        App(const App &) = delete;
+        App &operator=(const App &) = delete;
+        App(App &&) = delete;
+        App &operator=(App &&) = delete;
 
     private:
         // --- ADD THESE SHADOW MEMBERS ---
@@ -82,7 +82,7 @@ namespace mui
 
         static void setMainLoopCallback(std::function<void()> cb);
         static void setLayoutBuilder(std::function<void(DockBuilder &)> cb);
-        static void init(const std::string &title="MUI", int width=1280, int height=720, bool useOpenGL = true, bool enableShadows = true);
+        static void init(const std::string &title = "MUI", int width = 1280, int height = 720, bool useOpenGL = true, bool enableShadows = true);
         static void run();
         static void quit();
         static void shutdown();
@@ -95,12 +95,12 @@ namespace mui
         static ThemeType getTheme() { return currentTheme; }
         static void addMessageBox(ActiveMessageBox &&mb);
         static SDL_GLContext getGLContext();
-        static const std::string& getFilepath() { return filepath; }
+        static const std::string &getFilepath() { return filepath; }
         static float getDpiScale() { return currentDpiScale; }
         static void requestDpiUpdate() { dpiNeedsUpdate = true; }
         static bool isUsingTomlTheme() { return useTomlTheme; }
-        static const std::string& getCurrentThemeName() { return currentThemeName; }
-        static const std::string& getCurrentThemeFile() { return currentThemeFile; }
+        static const std::string &getCurrentThemeName() { return currentThemeName; }
+        static const std::string &getCurrentThemeFile() { return currentThemeFile; }
 
         // Color modifier methods
         static void setApplyGrayscale(bool apply);

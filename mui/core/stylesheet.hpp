@@ -168,9 +168,9 @@ namespace mui
         }
 
         // Load styles from a TOML file.
-        static bool loadFromFile(const std::string& filepath);
+        static bool loadFromFile(const std::string &filepath);
 
-        static bool loadFromNode(const toml::table& tbl); // New method for loading from a TOML node
+        static bool loadFromNode(const toml::table &tbl); // New method for loading from a TOML node
         static const StyleBlock *get(const std::string &selector)
         {
             auto it = m_styles.find(selector);

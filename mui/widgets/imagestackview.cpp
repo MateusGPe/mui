@@ -37,61 +37,34 @@ namespace mui
         m_sidebar = ImageStackSidebar::create(this);
 
         // Connect signals from sidebar to this view's methods
+        m_connections.push_back(m_sidebar->onLayerSelect.connect([this](int index)
+                                                                 {
+    m_selectedLayer = index;
+    m_slideshowTimer = 0.0f; }));
+        m_connections.push_back(m_sidebar->onLayerMoveUp.connect(
+            [this](int index)
+            { moveLayerUp(index); }));
+        m_connections.push_back(m_sidebar->onLayerMoveDown.connect(
+            [this](int index)
+            { moveLayerDown(index); }));
+        m_connections.push_back(m_sidebar->onLayerRemove.connect(
+            [this](int index)
+            { removeLayer(index); }));
         m_connections.push_back(
-            m_sidebar->onLayerSelect.connect(
-                [this](int index)
-                {
-                    m_selectedLayer = index;
-                    m_slideshowTimer = 0.0f;
-                }));
-        m_connections.push_back(
-            m_sidebar->onLayerMoveUp.connect(
-                [this](int index)
-                {
-                    moveLayerUp(index);
-                }));
-        m_connections.push_back(
-            m_sidebar->onLayerMoveDown.connect(
-                [this](int index)
-                {
-                    moveLayerDown(index);
-                }));
-        m_connections.push_back(
-            m_sidebar->onLayerRemove.connect(
-                [this](int index)
-                {
-                    removeLayer(index);
-                }));
-        m_connections.push_back(
-            m_sidebar->onFitView.connect(
-                [this]()
-                {
-                    fitToView();
-                }));
-        m_connections.push_back(
-            m_sidebar->onToggleThumbnailMode.connect(
-                [this](bool mode)
-                {
-                    setThumbnailMode(mode);
-                }));
-        m_connections.push_back(
-            m_sidebar->onToggleSingleLayerMode.connect(
-                [this](bool mode)
-                {
-                    setSingleLayerMode(mode);
-                }));
-        m_connections.push_back(
-            m_sidebar->onToggleSlideshowMode.connect(
-                [this](bool mode)
-                {
-                    setSlideshowMode(mode);
-                }));
+            m_sidebar->onFitView.connect([this]()
+                                         { fitToView(); }));
+        m_connections.push_back(m_sidebar->onToggleThumbnailMode.connect(
+            [this](bool mode)
+            { setThumbnailMode(mode); }));
+        m_connections.push_back(m_sidebar->onToggleSingleLayerMode.connect(
+            [this](bool mode)
+            { setSingleLayerMode(mode); }));
+        m_connections.push_back(m_sidebar->onToggleSlideshowMode.connect(
+            [this](bool mode)
+            { setSlideshowMode(mode); }));
     }
 
-    ImageStackView::~ImageStackView()
-    {
-        clearLayers();
-    }
+    ImageStackView::~ImageStackView() { clearLayers(); }
 
     ImageStackViewPtr ImageStackView::addLayer(ImagePtr image)
     {
@@ -105,7 +78,10 @@ namespace mui
         return self();
     }
 
-    ImageStackViewPtr ImageStackView::loadFromMemory(const std::string &name, int width, int height, int channels, const unsigned char *data)
+    ImageStackViewPtr ImageStackView::loadFromMemory(const std::string &name,
+                                                     int width, int height,
+                                                     int channels,
+                                                     const unsigned char *data)
     {
         auto image = Image::loadFromMemory(name, width, height, channels, data);
         if (image)
@@ -195,7 +171,8 @@ namespace mui
         return self();
     }
 
-    ImageStackViewPtr ImageStackView::setSlideshowMode(bool slideshow, float interval)
+    ImageStackViewPtr ImageStackView::setSlideshowMode(bool slideshow,
+                                                       float interval)
     {
         m_slideshowMode = slideshow;
         m_slideshowInterval = interval;
@@ -221,7 +198,8 @@ namespace mui
             if (m_slideshowTimer >= m_slideshowInterval)
             {
                 m_slideshowTimer = 0.0f;
-                m_selectedLayer--; // Decrement traverses top visually, simulating chronological
+                m_selectedLayer--; // Decrement traverses top visually, simulating
+                                   // chronological
                 if (m_selectedLayer < 0)
                     m_selectedLayer = (int)m_layers.size() - 1;
                 m_firstRender = true; // Auto-fit new sizes
@@ -233,12 +211,15 @@ namespace mui
         float avail_h = ImGui::GetContentRegionAvail().y;
 
         // Calculate canvas width, ensuring it never goes negative
-        float canvas_w = std::max(1.0f, avail_w - actual_sidebar_w - ImGui::GetStyle().ItemSpacing.x);
+        float canvas_w = std::max(1.0f, avail_w - actual_sidebar_w -
+                                            ImGui::GetStyle().ItemSpacing.x);
 
         // Render Viewport (Canvas)
         // Push 0 padding so the canvas draws edge-to-edge
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-        ImGui::BeginChild("##imagestack_viewport", ImVec2(canvas_w, avail_h), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+        ImGui::BeginChild("##imagestack_viewport", ImVec2(canvas_w, avail_h), false,
+                          ImGuiWindowFlags_NoScrollbar |
+                              ImGuiWindowFlags_NoScrollWithMouse);
         m_viewport->renderControl();
         ImGui::EndChild();
         ImGui::PopStyleVar();
@@ -246,7 +227,8 @@ namespace mui
         ImGui::SameLine();
 
         // Render Sidebar
-        ImGui::BeginChild("##imagestack_sidebar", ImVec2(actual_sidebar_w, avail_h), false);
+        ImGui::BeginChild("##imagestack_sidebar", ImVec2(actual_sidebar_w, avail_h),
+                          false);
         m_sidebar->renderControl();
         ImGui::EndChild();
 

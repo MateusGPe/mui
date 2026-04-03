@@ -54,199 +54,153 @@ namespace mui
         m_breadcrumb = BreadcrumbBar::create("");
         m_fileCombo = ComboBox::create();
 
-        m_fileCombo->onChanged(
-            [this](int idx)
-            {
-                if (idx >= 0)
-                {
-                    std::string selectedText = m_fileCombo->getText();
-                    if (selectedText.empty())
-                        return;
+        m_fileCombo->onChanged([this](int idx)
+                               {
+    if (idx >= 0) {
+      std::string selectedText = m_fileCombo->getText();
+      if (selectedText.empty())
+        return;
 
-                    bool is_dir = selectedText.rfind(ICON_FA_FOLDER, 0) == 0;
-                    std::string name;
+      bool is_dir = selectedText.rfind(ICON_FA_FOLDER, 0) == 0;
+      std::string name;
 
-                    if (is_dir)
-                        name = selectedText.substr(strlen(ICON_FA_FOLDER) + 1);
-                    else
-                        name = selectedText.substr(strlen(ICON_FA_FILE) + 1);
+      if (is_dir)
+        name = selectedText.substr(strlen(ICON_FA_FOLDER) + 1);
+      else
+        name = selectedText.substr(strlen(ICON_FA_FILE) + 1);
 
-                    std::filesystem::path dir = m_breadcrumb->getPath();
-                    fixDrivePath(dir);
-                    if (!std::filesystem::is_directory(dir))
-                        dir = dir.parent_path();
-                    std::string fullPath = (dir / name).string();
+      std::filesystem::path dir = m_breadcrumb->getPath();
+      fixDrivePath(dir);
+      if (!std::filesystem::is_directory(dir))
+        dir = dir.parent_path();
+      std::string fullPath = (dir / name).string();
 
-                    App::queueMain(
-                        [this, is_dir, fullPath, name]()
-                        {
-                            if (is_dir)
-                            {
-                                if (m_mode == PathPickerMode::Folder)
-                                {
-                                    // For folder mode, selecting a directory from combo means it's the chosen folder
-                                    m_path = fullPath;                                                             // Store the full folder path
-                                    m_breadcrumb->setPath(std::filesystem::path(fullPath).parent_path().string()); // Breadcrumb shows parent
-                                    if (m_fileEntry)
-                                        m_fileEntry->setText(name); // FileEntry shows folder name
-                                    onPathChangedSignal(fullPath);
-                                }
-                                else
-                                {
-                                    // For file/savefile mode, selecting a directory from combo means navigate into it
-                                    setPath(fullPath);
-                                    onPathChangedSignal(fullPath);
-                                }
-                            }
-                            else
-                            {
-                                m_path = fullPath;
-                                if (m_fileEntry)
-                                    m_fileEntry->setText(name);
-                                onPathChangedSignal(fullPath);
-                            }
-                        });
-                }
-            });
+      App::queueMain([this, is_dir, fullPath, name]() {
+        if (is_dir) {
+          if (m_mode == PathPickerMode::Folder) {
+            // For folder mode, selecting a directory from combo means it's the
+            // chosen folder
+            m_path = fullPath; // Store the full folder path
+            m_breadcrumb->setPath(std::filesystem::path(fullPath)
+                                      .parent_path()
+                                      .string()); // Breadcrumb shows parent
+            if (m_fileEntry)
+              m_fileEntry->setText(name); // FileEntry shows folder name
+            onPathChangedSignal(fullPath);
+          } else {
+            // For file/savefile mode, selecting a directory from combo means
+            // navigate into it
+            setPath(fullPath);
+            onPathChangedSignal(fullPath);
+          }
+        } else {
+          m_path = fullPath;
+          if (m_fileEntry)
+            m_fileEntry->setText(name);
+          onPathChangedSignal(fullPath);
+        }
+      });
+    } });
 
-        m_fileEntry = Entry::create()
-                          ->setHint("File Name")
-                          ->onChanged(
-                              [this]()
-                              {
-                                  std::filesystem::path dir = m_breadcrumb->getPath();
-                                  fixDrivePath(dir);
-                                  std::error_code ec;
-                                  if (!std::filesystem::is_directory(dir, ec))
-                                  {
-                                      dir = dir.parent_path();
-                                  }
-                                  std::string fullPath = (dir / m_fileEntry->getText()).string();
-                                  m_path = fullPath;
-                                  onPathChangedSignal(fullPath);
-                              });
+        m_fileEntry = Entry::create()->setHint("File Name")->onChanged([this]()
+                                                                       {
+    std::filesystem::path dir = m_breadcrumb->getPath();
+    fixDrivePath(dir);
+    std::error_code ec;
+    if (!std::filesystem::is_directory(dir, ec)) {
+      dir = dir.parent_path();
+    }
+    std::string fullPath = (dir / m_fileEntry->getText()).string();
+    m_path = fullPath;
+    onPathChangedSignal(fullPath); });
 
-        m_upButton = IconButton::create(ICON_FA_ARROW_UP)
-                         ->onClick(
-                             [this]()
-                             {
-                                 std::filesystem::path p(m_breadcrumb->getPath());
-                                 fixDrivePath(p);
-                                 if (p.has_parent_path() && p.parent_path() != p)
-                                 {
-                                     auto newPath = p.parent_path().string();
-                                     setPath(newPath);
-                                     onPathChangedSignal(newPath);
-                                 }
-                             });
+        m_upButton = IconButton::create(ICON_FA_ARROW_UP)->onClick([this]()
+                                                                   {
+    std::filesystem::path p(m_breadcrumb->getPath());
+    fixDrivePath(p);
+    if (p.has_parent_path() && p.parent_path() != p) {
+      auto newPath = p.parent_path().string();
+      setPath(newPath);
+      onPathChangedSignal(newPath);
+    } });
 
-        m_refreshButton = IconButton::create(
-                              ICON_FA_ARROW_ROTATE_RIGHT)
-                              ->onClick([this]()
-                                        { updateFileList(); });
+        m_refreshButton =
+            IconButton::create(ICON_FA_ARROW_ROTATE_RIGHT)->onClick([this]()
+                                                                    { updateFileList(); });
 
-        m_favoritesButton = IconButton::create(
-                                ICON_FA_STAR)
-                                ->onClick([this]()
-                                          { m_openFavoritesPopup = true; });
+        m_favoritesButton = IconButton::create(ICON_FA_STAR)->onClick([this]()
+                                                                      { m_openFavoritesPopup = true; });
 
-        m_newFolderButton = IconButton::create(
-                                ICON_FA_FOLDER_PLUS)
-                                ->onClick([this]()
-                                          { openNewFolderPopup(); });
+        m_newFolderButton =
+            IconButton::create(ICON_FA_FOLDER_PLUS)->onClick([this]()
+                                                             { openNewFolderPopup(); });
 
-        m_filterCombo = ComboBox::create()
-                            ->onChanged(
-                                [this](int idx)
-                                {
-                                    if (idx != m_filterSelection)
-                                    {
-                                        m_filterSelection = idx;
-                                        App::queueMain(
-                                            [this]()
-                                            {
-                                                updateFileList();
-                                            });
-                                    }
-                                });
+        m_filterCombo = ComboBox::create()->onChanged([this](int idx)
+                                                      {
+    if (idx != m_filterSelection) {
+      m_filterSelection = idx;
+      App::queueMain([this]() { updateFileList(); });
+    } });
         m_filterCombo->setMinWidth(150.f * App::getDpiScale());
 
-        m_browseButton =
-            IconButton::create(ICON_FA_FOLDER_OPEN)
-                ->onClick(
-                    [this]()
-                    {
-                        auto onSuccess = [this](const std::string &p)
-                        {
-                            std::filesystem::path pathObj(p);
-                            if (m_mode == PathPickerMode::Folder)
-                            {
-                                if (!std::filesystem::is_directory(pathObj))
-                                {
-                                    Dialogs::msgBoxError("Error", "Selected path is not a folder.");
-                                    return;
-                                }
-                                m_path = p;                                            // Store the full folder path
-                                m_breadcrumb->setPath(pathObj.parent_path().string()); // Breadcrumb shows parent
-                                if (m_fileEntry)
-                                    m_fileEntry->setText(pathObj.filename().string()); // FileEntry shows folder name
-                                onPathChangedSignal(p);
-                                return;
-                            }
-                            setPath(p);
-                            onPathChangedSignal(p);
-                        };
+        m_browseButton = IconButton::create(ICON_FA_FOLDER_OPEN)->onClick([this]()
+                                                                          {
+    auto onSuccess = [this](const std::string &p) {
+      std::filesystem::path pathObj(p);
+      if (m_mode == PathPickerMode::Folder) {
+        if (!std::filesystem::is_directory(pathObj)) {
+          Dialogs::msgBoxError("Error", "Selected path is not a folder.");
+          return;
+        }
+        m_path = p; // Store the full folder path
+        m_breadcrumb->setPath(
+            pathObj.parent_path().string()); // Breadcrumb shows parent
+        if (m_fileEntry)
+          m_fileEntry->setText(
+              pathObj.filename().string()); // FileEntry shows folder name
+        onPathChangedSignal(p);
+        return;
+      }
+      setPath(p);
+      onPathChangedSignal(p);
+    };
 
-                        auto onCancel = []() {};
+    auto onCancel = []() {};
 
-                        if (m_mode == PathPickerMode::File)
-                        {
-                            Dialogs::openFile("Select File",
-                                              m_filter.empty() ? "All Files {*.*}"
-                                                               : m_filter,
-                                              onSuccess, onCancel);
-                        }
-                        else if (m_mode == PathPickerMode::SaveFile)
-                        {
-                            Dialogs::saveFile("Save File",
-                                              m_filter.empty() ? "All Files {*.*} "
-                                                               : m_filter,
-                                              onSuccess, onCancel);
-                        }
-                        else if (m_mode == PathPickerMode::Folder)
-                        {
-                            Dialogs::selectFolder("Select Folder", onSuccess,
-                                                  onCancel);
-                        }
-                    });
+    if (m_mode == PathPickerMode::File) {
+      Dialogs::openFile("Select File",
+                        m_filter.empty() ? "All Files {*.*}" : m_filter,
+                        onSuccess, onCancel);
+    } else if (m_mode == PathPickerMode::SaveFile) {
+      Dialogs::saveFile("Save File",
+                        m_filter.empty() ? "All Files {*.*} " : m_filter,
+                        onSuccess, onCancel);
+    } else if (m_mode == PathPickerMode::Folder) {
+      Dialogs::selectFolder("Select Folder", onSuccess, onCancel);
+    } });
 
-        m_breadcrumb->onPathNavigated(
-            [this](const std::string &p)
-            {
-                std::error_code ec;
-                std::filesystem::path pathObj(p);
-                fixDrivePath(pathObj);
-                std::string new_path = pathObj.string();
+        m_breadcrumb->onPathNavigated([this](const std::string &p)
+                                      {
+    std::error_code ec;
+    std::filesystem::path pathObj(p);
+    fixDrivePath(pathObj);
+    std::string new_path = pathObj.string();
 
-                if (m_mode != PathPickerMode::Folder)
-                {
-                    // If it's a directory, try to preserve the existing filename
-                    if (std::filesystem::is_directory(pathObj, ec))
-                    {
-                        std::filesystem::path current(m_path);
-                        if (!current.empty() && !std::filesystem::is_directory(current, ec))
-                        {
-                            new_path = (pathObj / current.filename()).string();
-                        }
-                    }
-                    // If it's NOT a directory, it means the user manually pasted a full
-                    // path to a specific file. We will just pass that through directly.
-                }
+    if (m_mode != PathPickerMode::Folder) {
+      // If it's a directory, try to preserve the existing filename
+      if (std::filesystem::is_directory(pathObj, ec)) {
+        std::filesystem::path current(m_path);
+        if (!current.empty() && !std::filesystem::is_directory(current, ec)) {
+          new_path = (pathObj / current.filename()).string();
+        }
+      }
+      // If it's NOT a directory, it means the user manually pasted a full
+      // path to a specific file. We will just pass that through directly.
+    }
 
-                // Route through setPath to cleanly separate the file and directory values
-                setPath(new_path);
-                onPathChangedSignal(m_path);
-            });
+    // Route through setPath to cleanly separate the file and directory values
+    setPath(new_path);
+    onPathChangedSignal(m_path); });
 
         rebuildLayout();
     }
@@ -257,9 +211,7 @@ namespace mui
             return;
 
         Dialogs::msgBoxInput(
-            "New Folder",
-            "Enter new folder name:",
-            "",
+            "New Folder", "Enter new folder name:", "",
             [this](const std::string &name)
             {
                 if (!name.empty() && !m_breadcrumb->getPath().empty())
@@ -481,9 +433,7 @@ namespace mui
 
                     std::transform(lower_e.begin(), lower_e.end(), lower_e.begin(),
                                    [](unsigned char c)
-                                   {
-                                       return std::tolower(c);
-                                   });
+                                   { return std::tolower(c); });
                     lower_exts.push_back(lower_e);
                 }
             }
@@ -497,9 +447,7 @@ namespace mui
                     std::string file_ext = p.extension().string();
                     std::transform(file_ext.begin(), file_ext.end(), file_ext.begin(),
                                    [](unsigned char c)
-                                   {
-                                       return std::tolower(c);
-                                   });
+                                   { return std::tolower(c); });
 
                     bool found = false;
                     for (const auto &e : lower_exts)
@@ -560,7 +508,8 @@ namespace mui
                         preview = selectedText.substr(offset);
                 }
             }
-            else if (!m_path.empty() && (m_mode == PathPickerMode::Folder || !std::filesystem::is_directory(m_path)))
+            else if (!m_path.empty() && (m_mode == PathPickerMode::Folder ||
+                                         !std::filesystem::is_directory(m_path)))
             {
                 preview = std::filesystem::path(m_path).filename().string();
             }
@@ -764,22 +713,12 @@ namespace mui
     {
         setPath(observable->get());
         m_connections.push_back(
-            observable
-                ->onValueChanged
-                .connect(
-                    [this](const std::string &val)
-                    {
-                        mui::App::queueMain(
-                            [this, val]()
-                            {
-                                this->setPath(val);
-                            });
-                    }));
+            observable->onValueChanged.connect([this](const std::string &val)
+                                               { mui::App::queueMain([this, val]()
+                                                                     { this->setPath(val); }); }));
         m_connections.push_back(onPathChangedSignal.connect(
             [observable](const std::string &val)
-            {
-                observable->set(val);
-            }));
+            { observable->set(val); }));
         return self();
     }
 

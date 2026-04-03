@@ -90,7 +90,6 @@ namespace mui
         return std::nullopt;
     }
 
-
     // Shared mappings for ImGuiCol and ImGuiStyleVar
     extern const std::unordered_map<std::string_view, ImGuiCol, ci_hash, ci_equal> colorMap;
     extern const std::unordered_map<std::string_view, ImGuiStyleVar, ci_hash, ci_equal> styleVarMap;

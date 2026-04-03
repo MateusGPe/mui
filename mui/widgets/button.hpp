@@ -45,7 +45,7 @@ namespace mui
         ButtonPtr setText(const std::string &t);
         ButtonPtr setType(ButtonType t);
         ButtonPtr setColor(ImVec4 c, ImVec4 hover, ImVec4 active);
-        
+
         // Backward compatibility for the fluent builder pattern
         ButtonPtr onClick(std::function<void()> cb);
     };

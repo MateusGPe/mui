@@ -21,34 +21,34 @@ namespace mui
         char *buffer = nullptr;
         size_t bufferSize = 0;
         ImGuiInputTextFlags m_flags;
-    
+
         std::string hint;
         bool isMultiline = false;
         bool m_isInvalid = false; // New member to track invalid state
         bool withContextMenu = true;
-    
+
         int selStart = 0;
         int selEnd = 0;
 
-		Entry(const std::string &initialText = "", bool password = false, bool multiline = false, float h = 0.0f);
+        Entry(const std::string &initialText = "", bool password = false, bool multiline = false, float h = 0.0f);
         Entry(char *buf, size_t buf_size);
-    
+
     public:
         mui::Signal<std::string> onChangedSignal;
         mui::Signal<std::string> onEnterSignal;
-    
+
         static EntryPtr create(const std::string &initialText = "", bool password = false, bool multiline = false, float h = 0.0f)
         {
             return std::shared_ptr<Entry>(new Entry(initialText, password, multiline, h));
         }
-    
+
         static EntryPtr create(char *buf, size_t buf_size)
         {
             return std::shared_ptr<Entry>(new Entry(buf, buf_size));
         }
-    
+
         void renderControl() override;
-    
+
         std::string getText() const;
         EntryPtr setText(const std::string &t);
         EntryPtr setHint(const std::string &h);
@@ -59,16 +59,16 @@ namespace mui
         EntryPtr setWidth(float w);
         EntryPtr setWithContextMenu(bool c);
         EntryPtr setUseContainerWidth(bool use);
-        
+
         EntryPtr setCharsDecimal(bool b);
         EntryPtr setCharsHexadecimal(bool b);
         EntryPtr setCharsUppercase(bool b);
         EntryPtr setAllowTabInput(bool b);
         EntryPtr setCtrlEnterForNewLine(bool b);
         EntryPtr setInvalid(bool invalid); // New method to set invalid state
-    
+
         EntryPtr bind(std::shared_ptr<Observable<std::string>> observable);
-    
+
         // Backward compatibility
         EntryPtr onChanged(std::function<void()> cb);
         EntryPtr onEnter(std::function<void(const std::string &)> cb);
@@ -81,6 +81,7 @@ namespace mui
     protected:
         std::string getTypeName() const override { return "PasswordEntry"; }
         PasswordEntry();
+
     public:
         static PasswordEntryPtr create() { return std::shared_ptr<PasswordEntry>(new PasswordEntry()); }
     };
@@ -93,6 +94,7 @@ namespace mui
     protected:
         std::string getTypeName() const override { return "SearchEntry"; }
         SearchEntry();
+
     public:
         static SearchEntryPtr create() { return std::shared_ptr<SearchEntry>(new SearchEntry()); }
     };

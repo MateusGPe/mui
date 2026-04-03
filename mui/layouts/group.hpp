@@ -30,7 +30,7 @@ namespace mui
         GroupPtr setChild(IControlPtr c);
         GroupPtr setMargined(bool margined);
 
-        const std::string& getTitle() const;
+        const std::string &getTitle() const;
         GroupPtr setTitle(const std::string &title);
         bool getMargined() const;
 

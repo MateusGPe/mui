@@ -7,32 +7,32 @@
 
 namespace mui_dlg
 {
-  class FileTreeNode
-  {
-  public:
-    FileTreeNode(const std::string &path)
+    class FileTreeNode
     {
-      Path = std::filesystem::path(path.c_str());
-      Read = false;
-    }
+    public:
+        FileTreeNode(const std::string &path)
+        {
+            Path = std::filesystem::path(path.c_str());
+            Read = false;
+        }
 
-    std::filesystem::path Path;
-    bool Read;
-    std::vector<FileTreeNode *> Children;
-  };
+        std::filesystem::path Path;
+        bool Read;
+        std::vector<FileTreeNode *> Children;
+    };
 
-  class FileData
-  {
-  public:
-    FileData(const std::filesystem::path &path);
+    class FileData
+    {
+    public:
+        FileData(const std::filesystem::path &path);
 
-    std::filesystem::path Path;
-    bool IsDirectory;
-    size_t Size;
-    time_t DateModified;
+        std::filesystem::path Path;
+        bool IsDirectory;
+        size_t Size;
+        time_t DateModified;
 
-    bool HasIconPreview;
-    void *IconPreview;
-    int IconPreviewWidth, IconPreviewHeight;
-  };
+        bool HasIconPreview;
+        void *IconPreview;
+        int IconPreviewWidth, IconPreviewHeight;
+    };
 } // namespace mui_dlg

@@ -17,7 +17,7 @@ namespace mui
         PropertyGridFlags_Enabled = 1 << 1,
         PropertyGridFlags_ZebraStripes = 1 << 2,
         PropertyGridFlags_SpanCategoryHeaders = 1 << 3,
-        
+
         PropertyGridFlags_Default = PropertyGridFlags_Visible | PropertyGridFlags_Enabled | PropertyGridFlags_ZebraStripes
     };
 
@@ -28,7 +28,7 @@ namespace mui
         struct PropertyItem
         {
             std::string label;
-            ImVec4 labelColor; // New: Custom color for the label
+            ImVec4 labelColor;          // New: Custom color for the label
             bool useLabelColor = false; // New: Flag to indicate if custom color is used
             IControlPtr editor;
         };
@@ -36,8 +36,8 @@ namespace mui
         struct PropertyCategory
         {
             std::string name;
-            std::string icon; // New: Icon for the category header
-            ImVec4 color; // New: Custom color for the category header
+            std::string icon;            // New: Icon for the category header
+            ImVec4 color;                // New: Custom color for the category header
             bool useCustomColor = false; // New: Flag to indicate if custom color is used
             std::vector<PropertyItem> items;
             ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen; // New: ImGuiTreeNodeFlags for the header
@@ -46,9 +46,9 @@ namespace mui
         std::vector<PropertyCategory> categories;
         float nameColumnWidth = 150.0f;
         float valueColumnWeight = 1.0f; // New: Weight for the value column in stretch mode
-        float itemSpacingY = -1.0f; // New: Vertical spacing between items (-1.0f for default)
+        float itemSpacingY = -1.0f;     // New: Vertical spacing between items (-1.0f for default)
         float categorySpacingY = -1.0f; // New: Vertical spacing between categories (-1.0f for default)
-        float itemIndent = -1.0f; // New: Indentation for items under categories (-1.0f for default)
+        float itemIndent = -1.0f;       // New: Indentation for items under categories (-1.0f for default)
         uint32_t m_flags = PropertyGridFlags_Default;
         PropertyGrid();
 
@@ -59,12 +59,12 @@ namespace mui
 
         // Adds a new collapsing category header.
         // New parameters: icon, color, and ImGuiTreeNodeFlags for more customization.
-        PropertyGridPtr addCategory(const std::string &name, const std::string &icon = "", ImVec4 color = ImVec4(0,0,0,0), ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen);
+        PropertyGridPtr addCategory(const std::string &name, const std::string &icon = "", ImVec4 color = ImVec4(0, 0, 0, 0), ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen);
 
         // Adds a property to the *most recently added* category.
         // If no category was added yet, it creates a flat/hidden category automatically.
         // New parameter: labelColor for custom label styling.
-        PropertyGridPtr addProperty(const std::string &label, IControlPtr editor, ImVec4 labelColor = ImVec4(0,0,0,0));
+        PropertyGridPtr addProperty(const std::string &label, IControlPtr editor, ImVec4 labelColor = ImVec4(0, 0, 0, 0));
 
         // Set the default width of the property name column (the left column).
         PropertyGridPtr setNameColumnWidth(float width);

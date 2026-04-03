@@ -1,10 +1,10 @@
 // widgets/imagestacksidebar.cpp
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imagestacksidebar.hpp"
-#include "imagestackview.hpp"
 #include "../core/app.hpp"
 #include "../core/scoped.hpp"
 #include "../include/IconsFontAwesome6.h"
+#include "imagestackview.hpp"
 
 #ifndef ICON_FA_EYE
 #define ICON_FA_EYE "\xef\x81\xae"
@@ -45,7 +45,8 @@
 
 namespace mui
 {
-    ImageStackSidebar::ImageStackSidebar(ImageStackView *parent) : m_parent(parent)
+    ImageStackSidebar::ImageStackSidebar(ImageStackView *parent)
+        : m_parent(parent)
     {
         App::assertMainThread();
     }
@@ -63,20 +64,25 @@ namespace mui
             onToggleThumbnailMode(!m_parent->m_thumbnailMode);
         }
         if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
-            ImGui::SetTooltip(m_parent->m_thumbnailMode ? "Switch to List View" : "Switch to Grid View");
+            ImGui::SetTooltip(m_parent->m_thumbnailMode ? "Switch to List View"
+                                                        : "Switch to Grid View");
 
         ImGui::SameLine();
-        if (ImGui::Button(m_parent->m_singleLayerMode ? ICON_FA_IMAGES : ICON_FA_IMAGE))
+        if (ImGui::Button(m_parent->m_singleLayerMode ? ICON_FA_IMAGES
+                                                      : ICON_FA_IMAGE))
         {
             onToggleSingleLayerMode(!m_parent->m_singleLayerMode);
         }
         if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
-            ImGui::SetTooltip(m_parent->m_singleLayerMode ? "Switch to Stack View" : "Switch to Single View");
+            ImGui::SetTooltip(m_parent->m_singleLayerMode ? "Switch to Stack View"
+                                                          : "Switch to Single View");
 
         ImGui::Separator();
 
-        // Use a negative height to dynamically reserve space for the bottom controls, avoiding double scrollbars
-        float bottom_reserved = ImGui::GetFrameHeight() + ImGui::GetStyle().ItemSpacing.y * 3.0f;
+        // Use a negative height to dynamically reserve space for the bottom controls,
+        // avoiding double scrollbars
+        float bottom_reserved =
+            ImGui::GetFrameHeight() + ImGui::GetStyle().ItemSpacing.y * 3.0f;
         ImGui::BeginChild("##layer_list", ImVec2(0, -bottom_reserved));
 
         if (m_parent->m_thumbnailMode)
@@ -94,8 +100,12 @@ namespace mui
                 ImVec2 cursor = ImGui::GetCursorScreenPos();
                 if (isSelected)
                 {
-                    ImGui::GetWindowDrawList()->AddRectFilled(cursor, cursor + ImVec2(thumb_size, thumb_size), ImGui::GetColorU32(ImGuiCol_Header));
-                    ImGui::GetWindowDrawList()->AddRect(cursor, cursor + ImVec2(thumb_size, thumb_size), ImGui::GetColorU32(ImGuiCol_Border));
+                    ImGui::GetWindowDrawList()->AddRectFilled(
+                        cursor, cursor + ImVec2(thumb_size, thumb_size),
+                        ImGui::GetColorU32(ImGuiCol_Header));
+                    ImGui::GetWindowDrawList()->AddRect(
+                        cursor, cursor + ImVec2(thumb_size, thumb_size),
+                        ImGui::GetColorU32(ImGuiCol_Border));
                 }
 
                 if (ImGui::InvisibleButton("##thumb", ImVec2(thumb_size, thumb_size)))
@@ -103,7 +113,10 @@ namespace mui
                     onLayerSelect(i);
                 }
 
-                float aspect = m_parent->m_layers[i]->getWidth() / (m_parent->m_layers[i]->getHeight() == 0 ? 1.0f : m_parent->m_layers[i]->getHeight());
+                float aspect = m_parent->m_layers[i]->getWidth() /
+                               (m_parent->m_layers[i]->getHeight() == 0
+                                    ? 1.0f
+                                    : m_parent->m_layers[i]->getHeight());
                 ImVec2 draw_size = ImVec2(thumb_size, thumb_size);
                 if (aspect > 1.0f)
                     draw_size.y = thumb_size / aspect;
@@ -113,18 +126,19 @@ namespace mui
                 float pad = 4.0f * App::getDpiScale();
                 draw_size -= ImVec2(pad * 2, pad * 2);
 
-                ImVec2 thumb_offset = ImVec2((thumb_size - draw_size.x) * 0.5f, (thumb_size - draw_size.y) * 0.5f);
+                ImVec2 thumb_offset = ImVec2((thumb_size - draw_size.x) * 0.5f,
+                                             (thumb_size - draw_size.y) * 0.5f);
 
-                ImU32 col = ImGui::GetColorU32(ImVec4(1.0f, 1.0f, 1.0f, m_parent->m_layers[i]->isVisible() ? 1.0f : 0.3f));
+                ImU32 col = ImGui::GetColorU32(ImVec4(
+                    1.0f, 1.0f, 1.0f, m_parent->m_layers[i]->isVisible() ? 1.0f : 0.3f));
                 ImGui::GetWindowDrawList()->AddImage(
-                    m_parent->m_layers[i]->getTextureId(),
-                    cursor + thumb_offset,
-                    cursor + thumb_offset + draw_size,
-                    ImVec2(0, 0), ImVec2(1, 1), col);
+                    m_parent->m_layers[i]->getTextureId(), cursor + thumb_offset,
+                    cursor + thumb_offset + draw_size, ImVec2(0, 0), ImVec2(1, 1), col);
 
                 if (ImGui::BeginPopupContextItem("##layer_ctx"))
                 {
-                    if (ImGui::MenuItem("Move Up", nullptr, false, i < (int)m_parent->m_layers.size() - 1))
+                    if (ImGui::MenuItem("Move Up", nullptr, false,
+                                        i < (int)m_parent->m_layers.size() - 1))
                         onLayerMoveUp(i);
                     if (ImGui::MenuItem("Move Down", nullptr, false, i > 0))
                         onLayerMoveDown(i);
@@ -153,13 +167,17 @@ namespace mui
                 if (isSelected)
                 {
                     ImVec2 p_min = ImGui::GetCursorScreenPos();
-                    ImVec2 p_max = ImVec2(p_min.x + ImGui::GetContentRegionAvail().x, p_min.y + 60 * App::getDpiScale());
-                    ImGui::GetWindowDrawList()->AddRectFilled(p_min, p_max, ImGui::GetColorU32(ImGuiCol_Header));
+                    ImVec2 p_max = ImVec2(p_min.x + ImGui::GetContentRegionAvail().x,
+                                          p_min.y + 60 * App::getDpiScale());
+                    ImGui::GetWindowDrawList()->AddRectFilled(
+                        p_min, p_max, ImGui::GetColorU32(ImGuiCol_Header));
                 }
 
                 ImGui::BeginGroup();
 
-                if (ImGui::Button(m_parent->m_layers[i]->isVisible() ? ICON_FA_EYE : ICON_FA_EYE_SLASH))
+                if (ImGui::Button(m_parent->m_layers[i]->isVisible()
+                                      ? ICON_FA_EYE
+                                      : ICON_FA_EYE_SLASH))
                 {
                     m_parent->m_layers[i]->setVisible(!m_parent->m_layers[i]->isVisible());
                 }
@@ -168,7 +186,10 @@ namespace mui
 
                 float thumb_size = 40.0f * App::getDpiScale();
                 ImVec2 avail_thumb(thumb_size, thumb_size);
-                float aspect = m_parent->m_layers[i]->getWidth() / (m_parent->m_layers[i]->getHeight() == 0 ? 1.0f : m_parent->m_layers[i]->getHeight());
+                float aspect = m_parent->m_layers[i]->getWidth() /
+                               (m_parent->m_layers[i]->getHeight() == 0
+                                    ? 1.0f
+                                    : m_parent->m_layers[i]->getHeight());
                 ImVec2 draw_size = avail_thumb;
                 if (aspect > 1.0f)
                     draw_size.y = thumb_size / aspect;
@@ -176,14 +197,19 @@ namespace mui
                     draw_size.x = thumb_size * aspect;
 
                 ImVec2 cursor = ImGui::GetCursorScreenPos();
-                ImVec2 thumb_offset = ImVec2((thumb_size - draw_size.x) * 0.5f, (thumb_size - draw_size.y) * 0.5f);
+                ImVec2 thumb_offset = ImVec2((thumb_size - draw_size.x) * 0.5f,
+                                             (thumb_size - draw_size.y) * 0.5f);
 
-                ImGui::GetWindowDrawList()->AddImage(m_parent->m_layers[i]->getTextureId(), cursor + thumb_offset, cursor + thumb_offset + draw_size);
+                ImGui::GetWindowDrawList()->AddImage(
+                    m_parent->m_layers[i]->getTextureId(), cursor + thumb_offset,
+                    cursor + thumb_offset + draw_size);
                 ImGui::Dummy(avail_thumb);
                 ImGui::SameLine();
 
                 ImGui::BeginGroup();
-                if (ImGui::Selectable(m_parent->m_layers[i]->getName().c_str(), isSelected, ImGuiSelectableFlags_AllowOverlap, ImVec2(0, 0)))
+                if (ImGui::Selectable(m_parent->m_layers[i]->getName().c_str(),
+                                      isSelected, ImGuiSelectableFlags_AllowOverlap,
+                                      ImVec2(0, 0)))
                 {
                     onLayerSelect(i);
                 }
@@ -201,7 +227,8 @@ namespace mui
 
                 if (ImGui::BeginPopupContextItem("##layer_ctx"))
                 {
-                    if (ImGui::MenuItem("Move Up", nullptr, false, i < (int)m_parent->m_layers.size() - 1))
+                    if (ImGui::MenuItem("Move Up", nullptr, false,
+                                        i < (int)m_parent->m_layers.size() - 1))
                         onLayerMoveUp(i);
                     if (ImGui::MenuItem("Move Down", nullptr, false, i > 0))
                         onLayerMoveDown(i);
@@ -219,7 +246,9 @@ namespace mui
 
         ImGui::Separator();
 
-        ImGui::BeginDisabled(m_parent->m_layers.empty() || m_parent->m_selectedLayer < 0 || m_parent->m_selectedLayer >= (int)m_parent->m_layers.size());
+        ImGui::BeginDisabled(
+            m_parent->m_layers.empty() || m_parent->m_selectedLayer < 0 ||
+            m_parent->m_selectedLayer >= (int)m_parent->m_layers.size());
         if (ImGui::Button(ICON_FA_ARROW_UP))
             onLayerMoveUp(m_parent->m_selectedLayer);
         ImGui::SameLine();

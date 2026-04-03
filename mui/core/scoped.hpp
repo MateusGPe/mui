@@ -90,15 +90,18 @@ namespace mui
         ScopedID(const ScopedID &) = delete;
         ScopedID &operator=(const ScopedID &) = delete;
 
-        void push(int id) {
+        void push(int id)
+        {
             ImGui::PushID(id);
             m_count++;
         }
-        void push(const char *str_id) {
+        void push(const char *str_id)
+        {
             ImGui::PushID(str_id);
             m_count++;
         }
-        void push(const std::string &str_id) {
+        void push(const std::string &str_id)
+        {
             ImGui::PushID(str_id.c_str());
             m_count++;
         }

@@ -213,7 +213,7 @@ namespace mui
     public:
         static FlowBoxPtr create() { return std::shared_ptr<FlowBox>(new FlowBox()); }
         void renderControl() override;
-        
+
         FlowBoxPtr setAlign(Align align)
         {
             m_align = align;

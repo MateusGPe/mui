@@ -22,28 +22,28 @@ namespace mui
         std::string m_customPreview;
         bool m_useCustomPreview = false;
         ImGuiComboFlags m_flags;
-    
+
         ComboBox();
 
     public:
         mui::Signal<int> onChangedSignal;
-        
+
         static ComboBoxPtr create() { return std::shared_ptr<ComboBox>(new ComboBox()); }
-    
+
         void renderControl() override;
-    
+
         ComboBoxPtr append(const std::string &item);
         ComboBoxPtr clear();
-    
+
         int getSelectedIndex() const;
         std::string getText() const;
         ComboBoxPtr setSelectedIndex(int index);
         ComboBoxPtr bind(std::shared_ptr<Observable<int>> observable);
-        ComboBoxPtr setCustomPreviewValue(const std::string& preview);
+        ComboBoxPtr setCustomPreviewValue(const std::string &preview);
         ComboBoxPtr onChanged(std::function<void(int)> cb);
         ComboBoxPtr setSpanAvailWidth(bool span);
         ComboBoxPtr setMinWidth(float w);
-    
+
         ComboBoxPtr setPopupAlignLeft(bool b);
         ComboBoxPtr setHeightSmall(bool b);
         ComboBoxPtr setHeightRegular(bool b);

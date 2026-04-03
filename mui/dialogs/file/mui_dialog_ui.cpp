@@ -21,93 +21,93 @@
 
 namespace
 {
-  inline float GetGuiElementSize() { return ImGui::GetFrameHeight(); }
+    inline float GetGuiElementSize() { return ImGui::GetFrameHeight(); }
 } // namespace
 
 namespace mui_dlg
 {
-  bool FolderNode(const char *label, ImTextureID icon, bool &clicked)
-  {
-    clicked = false;
-    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow |
-                               ImGuiTreeNodeFlags_OpenOnDoubleClick |
-                               ImGuiTreeNodeFlags_SpanAvailWidth;
-
-    std::string displayStr = label;
-    if (icon)
+    bool FolderNode(const char *label, ImTextureID icon, bool &clicked)
     {
-      displayStr = std::string("    ") + label;
-    }
-    else
-    {
-      displayStr = std::string(ICON_FA_FOLDER) + " " + label;
-    }
+        clicked = false;
+        ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow |
+                                   ImGuiTreeNodeFlags_OpenOnDoubleClick |
+                                   ImGuiTreeNodeFlags_SpanAvailWidth;
 
-    bool nodeOpen = ImGui::TreeNodeEx(label, flags, "%s", displayStr.c_str());
+        std::string displayStr = label;
+        if (icon)
+        {
+            displayStr = std::string("    ") + label;
+        }
+        else
+        {
+            displayStr = std::string(ICON_FA_FOLDER) + " " + label;
+        }
 
-    if (ImGui::IsItemClicked(0))
-    {
-      clicked = true;
-    }
+        bool nodeOpen = ImGui::TreeNodeEx(label, flags, "%s", displayStr.c_str());
 
-    if (icon)
-    {
-      ImVec2 min = ImGui::GetItemRectMin();
-      float fontSize = ImGui::GetFontSize();
-      float iconX = min.x + ImGui::GetTreeNodeToLabelSpacing() - fontSize -
-                    ImGui::GetStyle().ItemInnerSpacing.x;
-      float iconY = min.y + (ImGui::GetItemRectSize().y - fontSize) * 0.5f;
-      ImGui::GetWindowDrawList()->AddImage(
-          icon, ImVec2(iconX, iconY), ImVec2(iconX + fontSize, iconY + fontSize));
-    }
+        if (ImGui::IsItemClicked(0))
+        {
+            clicked = true;
+        }
 
-    return nodeOpen;
-  }
+        if (icon)
+        {
+            ImVec2 min = ImGui::GetItemRectMin();
+            float fontSize = ImGui::GetFontSize();
+            float iconX = min.x + ImGui::GetTreeNodeToLabelSpacing() - fontSize -
+                          ImGui::GetStyle().ItemInnerSpacing.x;
+            float iconY = min.y + (ImGui::GetItemRectSize().y - fontSize) * 0.5f;
+            ImGui::GetWindowDrawList()->AddImage(
+                icon, ImVec2(iconX, iconY), ImVec2(iconX + fontSize, iconY + fontSize));
+        }
 
-  bool FileIcon(const char *label, bool isSelected, ImTextureID icon,
-                bool isDirectory, ImVec2 size, bool hasPreview, int previewWidth,
-                int previewHeight)
-  {
-    bool ret = false;
-    float iconSize = size.y - ImGui::GetFontSize() * 2;
-    ImGui::PushID(label);
-    auto btn = mui::IconButton::create(label)
-                   ->setLayout(mui::IconButtonLayout::Vertical)
-                   ->setSize(size.x, size.y)
-                   ->setSelected(isSelected)
-                   ->onClick([&]()
-                             { ret = true; })
-                   ->onDoubleClick([&]()
-                                   { ret = true; });
-
-    if (hasPreview && icon)
-    {
-      float scale =
-          std::min<float>(size.x / previewWidth, iconSize / previewHeight);
-      btn->setIconSize(previewWidth * scale, previewHeight * scale);
-      btn->setIconTexture(icon);
-    }
-    else if (icon)
-    {
-      btn->setIconSize(iconSize, iconSize);
-      btn->setIconTexture(icon);
-    }
-    else
-    {
-      btn->setIconSize(iconSize, iconSize);
-      btn->setIconText(isDirectory ? ICON_FA_FOLDER : ICON_FA_FILE);
+        return nodeOpen;
     }
 
-    btn->render();
+    bool FileIcon(const char *label, bool isSelected, ImTextureID icon,
+                  bool isDirectory, ImVec2 size, bool hasPreview, int previewWidth,
+                  int previewHeight)
+    {
+        bool ret = false;
+        float iconSize = size.y - ImGui::GetFontSize() * 2;
+        ImGui::PushID(label);
+        auto btn = mui::IconButton::create(label)
+                       ->setLayout(mui::IconButtonLayout::Vertical)
+                       ->setSize(size.x, size.y)
+                       ->setSelected(isSelected)
+                       ->onClick([&]()
+                                 { ret = true; })
+                       ->onDoubleClick([&]()
+                                       { ret = true; });
 
-    float windowSpace =
-        ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
-    float lastButtomPos = ImGui::GetItemRectMax().x;
-    float thisButtonPos =
-        lastButtomPos + ImGui::GetStyle().ItemSpacing.x + size.x;
-    if (thisButtonPos < windowSpace)
-      ImGui::SameLine();
-    ImGui::PopID();
-    return ret;
-  }
+        if (hasPreview && icon)
+        {
+            float scale =
+                std::min<float>(size.x / previewWidth, iconSize / previewHeight);
+            btn->setIconSize(previewWidth * scale, previewHeight * scale);
+            btn->setIconTexture(icon);
+        }
+        else if (icon)
+        {
+            btn->setIconSize(iconSize, iconSize);
+            btn->setIconTexture(icon);
+        }
+        else
+        {
+            btn->setIconSize(iconSize, iconSize);
+            btn->setIconText(isDirectory ? ICON_FA_FOLDER : ICON_FA_FILE);
+        }
+
+        btn->render();
+
+        float windowSpace =
+            ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
+        float lastButtomPos = ImGui::GetItemRectMax().x;
+        float thisButtonPos =
+            lastButtomPos + ImGui::GetStyle().ItemSpacing.x + size.x;
+        if (thisButtonPos < windowSpace)
+            ImGui::SameLine();
+        ImGui::PopID();
+        return ret;
+    }
 } // namespace mui_dlg

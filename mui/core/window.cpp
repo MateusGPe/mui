@@ -171,7 +171,8 @@ namespace mui
         if (!isOpen)
         {
             isOpen = true;
-            if (std::find(App::activeWindows.begin(), App::activeWindows.end(), this) == App::activeWindows.end())
+            if (std::find(App::activeWindows.begin(), App::activeWindows.end(), this) ==
+                App::activeWindows.end())
             {
                 App::activeWindows.push_back(this);
             }
