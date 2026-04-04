@@ -259,7 +259,7 @@ namespace mui_dlg
             }
 
             if (ImGui::BeginPopupModal(m_currentTitle.c_str(), &m_isOpen,
-                                       ImGuiWindowFlags_NoScrollbar))
+                                       ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse))
             {
                 m_renderFileDialog();
                 ImGui::EndPopup();

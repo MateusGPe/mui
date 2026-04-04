@@ -155,7 +155,7 @@ namespace mui
             {
                 ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoSavedSettings;
                 if (!showChildScrollbars)
-                    window_flags |= ImGuiWindowFlags_NoScrollbar;
+                    window_flags |= ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
                 ImGui::BeginChild("##box_item", ImVec2(0, child_height), 0, window_flags);
                 ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, original_spacing);
                 ImGui::PushItemWidth(-1.0f); // Stretch children fill width
@@ -593,7 +593,7 @@ namespace mui
                     ImGuiChildFlags flags = fillHeight ? 0 : ImGuiChildFlags_AutoResizeY;
                     ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoSavedSettings;
                     if (!showChildScrollbars)
-                        window_flags |= ImGuiWindowFlags_NoScrollbar;
+                        window_flags |= ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
                     ImGui::BeginChild(
                         "##flow_item",
                         ImVec2(child_width,
