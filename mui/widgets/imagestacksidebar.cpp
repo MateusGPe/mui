@@ -3,7 +3,7 @@
 #include "imagestacksidebar.hpp"
 #include "../core/app.hpp"
 #include "../core/scoped.hpp"
-#include "../include/IconsFontAwesome6.h"
+#include "../include/IconsFontAwesome7.h"
 #include "imagestackview.hpp"
 
 #ifndef ICON_FA_EYE

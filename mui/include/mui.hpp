@@ -6,7 +6,7 @@
 #include "../core/ui_builder.hpp"
 #include "../core/window.hpp"
 #include "../dialogs/dialogs.hpp"
-#include "../include/IconsFontAwesome6.h"
+#include "../include/IconsFontAwesome7.h"
 #include "../include/core.hpp"
 #include "../layouts/box.hpp"
 #include "../layouts/grid.hpp"

@@ -14,8 +14,9 @@
 #include <fontconfig/fontconfig.h>
 #endif
 
-#include "../include/IconsFontAwesome6.h"
+#include "../include/IconsFontAwesome7.h"
 #include "fa_solid_900.hpp"
+#include "fa_regular_400.hpp" // Include the new regular font header
 #include "style_parser_utils.hpp" // Shared parsing utilities
 #include "stylesheet.hpp"
 #include <imgui_internal.h>
@@ -130,6 +131,18 @@ namespace mui
         io.Fonts->AddFontFromMemoryCompressedTTF(fa_solid_900_compressed_data,
                                                  fa_solid_900_compressed_size,
                                                  fontSize, &icon_config, icon_ranges);
+        
+        // 3. Load the Regular Icon Font as a separate font object.
+        // This allows using both solid and regular icons by switching fonts.
+        ImFontConfig icon_config_regular;
+        icon_config_regular.OversampleH = 3;
+        icon_config_regular.OversampleV = 3;
+        icon_config_regular.PixelSnapH = true;
+        // NOTE: MergeMode is false by default, which creates a new font.
+        // This font will be accessible via io.Fonts->Fonts[1].
+        io.Fonts->AddFontFromMemoryCompressedTTF(fa_regular_400_compressed_data,
+                                                 fa_regular_400_compressed_size,
+                                                 fontSize, &icon_config_regular, icon_ranges);
     }
 
     void Theme::applyStyle(float dpiScale)

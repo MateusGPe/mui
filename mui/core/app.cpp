@@ -1,7 +1,7 @@
 #include "app.hpp"
 #include "../dialogs/dialogs.hpp"
 #include "../dialogs/file/mui_dialog.h"
-#include "../include/IconsFontAwesome6.h"
+#include "../include/IconsFontAwesome7.h"
 #include "docking.hpp"
 #include "theme.hpp"
 #include "window.hpp"

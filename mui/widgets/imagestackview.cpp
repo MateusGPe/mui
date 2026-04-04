@@ -3,7 +3,7 @@
 #include "imagestackview.hpp"
 #include "../core/app.hpp"
 #include "../core/scoped.hpp"
-#include "../include/IconsFontAwesome6.h"
+#include "../include/IconsFontAwesome7.h"
 
 #ifndef ICON_FA_EYE
 #define ICON_FA_EYE "\xef\x81\xae"

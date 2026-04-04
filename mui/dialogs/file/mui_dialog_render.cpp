@@ -3,7 +3,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-#include "IconsFontAwesome6.h"
+#include "IconsFontAwesome7.h"
 #include "mui_dialog.h"
 #include "mui_dialog_ui.h"
 #include "stb_image.h"

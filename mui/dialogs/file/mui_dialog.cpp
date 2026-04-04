@@ -4,7 +4,7 @@
 
 #include "mui_dialog.h"
 #include "../../core/app.hpp" // Added for mui::App::assertMainThread()
-#include "../../include/IconsFontAwesome6.h"
+#include "../../include/IconsFontAwesome7.h"
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <sstream>

@@ -2,7 +2,7 @@
 #include "breadcrumb.hpp"
 #include "../core/app.hpp"
 #include "../core/scoped.hpp"
-#include "IconsFontAwesome6.h"
+#include "IconsFontAwesome7.h"
 #include "entry.hpp"
 #include <algorithm>
 #include <cstring>

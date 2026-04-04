@@ -4,7 +4,7 @@
 #include "../core/scoped.hpp"
 #include "../dialogs/dialogs.hpp"
 #include "../dialogs/file/mui_dialog.h"
-#include "../include/IconsFontAwesome6.h"
+#include "../include/IconsFontAwesome7.h"
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
