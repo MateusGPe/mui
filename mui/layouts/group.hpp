@@ -17,6 +17,8 @@ namespace mui
         IControlPtr child;
         bool margined = false;
         bool m_open = true;
+        bool was_collapsed = false;
+        bool *show_close_button = nullptr;
         int m_flags = 0;
 
         Group(const std::string &title);
@@ -35,6 +37,9 @@ namespace mui
         bool getMargined() const;
 
         bool isOpen() const;
+        bool getShowCloseButton();
+
+        GroupPtr showCloseButton(bool show);
         GroupPtr setOpen(bool open);
         GroupPtr onToggled(std::function<void(bool)> cb);
         GroupPtr bindTitle(std::shared_ptr<Observable<std::string>> observable);

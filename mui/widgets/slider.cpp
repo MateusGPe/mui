@@ -26,7 +26,8 @@ namespace mui
         ImGui::BeginDisabled(!enabled);
 
         ImGuiSliderFlags flags = logarithmic ? ImGuiSliderFlags_Logarithmic : 0;
-        if (ImGui::SliderInt("##slider", &value, minVal, maxVal, format.c_str(), flags))
+        if (ImGui::SliderInt("##slider", &value, minVal, maxVal, format.c_str(),
+                             flags))
         {
             this->onChangedSignal(value);
         }

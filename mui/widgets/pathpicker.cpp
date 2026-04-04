@@ -9,6 +9,7 @@
 #include <cctype>
 #include <filesystem>
 #include <imgui.h>
+#include <iostream>
 #include <sstream>
 
 #ifndef ICON_FA_FOLDER_OPEN
@@ -32,6 +33,11 @@
 #ifndef ICON_FA_STAR
 #define ICON_FA_STAR "\xef\x80\x85"
 #endif
+
+#define FOLDER_PREFIX_STR (ICON_FA_FOLDER " ")
+#define FILE_PREFIX_STR (ICON_FA_FILE " ")
+#define FOLDER_PREFIX (std::string(FOLDER_PREFIX_STR))
+#define FILE_PREFIX (std::string(FILE_PREFIX_STR))
 
 namespace mui
 {
@@ -65,9 +71,9 @@ namespace mui
       std::string name;
 
       if (is_dir)
-        name = selectedText.substr(strlen(ICON_FA_FOLDER) + 1);
+        name = selectedText.substr(strlen(FOLDER_PREFIX_STR));
       else
-        name = selectedText.substr(strlen(ICON_FA_FILE) + 1);
+        name = selectedText.substr(strlen(FILE_PREFIX_STR));
 
       std::filesystem::path dir = m_breadcrumb->getPath();
       fixDrivePath(dir);
@@ -78,18 +84,12 @@ namespace mui
       App::queueMain([this, is_dir, fullPath, name]() {
         if (is_dir) {
           if (m_mode == PathPickerMode::Folder) {
-            // For folder mode, selecting a directory from combo means it's the
-            // chosen folder
             m_path = fullPath; // Store the full folder path
-            m_breadcrumb->setPath(std::filesystem::path(fullPath)
-                                      .parent_path()
-                                      .string()); // Breadcrumb shows parent
-            if (m_fileEntry)
-              m_fileEntry->setText(name); // FileEntry shows folder name
+            m_breadcrumb->setPath(
+                std::filesystem::path(fullPath).parent_path().string());
+            m_fileEntry->setText(name);
             onPathChangedSignal(fullPath);
           } else {
-            // For file/savefile mode, selecting a directory from combo means
-            // navigate into it
             setPath(fullPath);
             onPathChangedSignal(fullPath);
           }
@@ -147,20 +147,22 @@ namespace mui
                                                                           {
     auto onSuccess = [this](const std::string &p) {
       std::filesystem::path pathObj(p);
+
+      // Safety check to ensure a file wasn't picked when we need a folder
       if (m_mode == PathPickerMode::Folder) {
         if (!std::filesystem::is_directory(pathObj)) {
           Dialogs::msgBoxError("Error", "Selected path is not a folder.");
           return;
         }
-        m_path = p; // Store the full folder path
-        m_breadcrumb->setPath(
-            pathObj.parent_path().string()); // Breadcrumb shows parent
-        if (m_fileEntry)
-          m_fileEntry->setText(
-              pathObj.filename().string()); // FileEntry shows folder name
+        auto fileName = pathObj.filename().string();
+        pathObj.assign(pathObj.parent_path());
+        setPath(pathObj.string());
+        m_fileCombo->setSelected(FOLDER_PREFIX + fileName);
         onPathChangedSignal(p);
         return;
       }
+
+      // Fall through to setPath which handles routing for all modes properly
       setPath(p);
       onPathChangedSignal(p);
     };
@@ -173,7 +175,7 @@ namespace mui
                         onSuccess, onCancel);
     } else if (m_mode == PathPickerMode::SaveFile) {
       Dialogs::saveFile("Save File",
-                        m_filter.empty() ? "All Files {*.*} " : m_filter,
+                        m_filter.empty() ? "All Files {*.*}" : m_filter,
                         onSuccess, onCancel);
     } else if (m_mode == PathPickerMode::Folder) {
       Dialogs::selectFolder("Select Folder", onSuccess, onCancel);
@@ -405,8 +407,7 @@ namespace mui
 
         for (const auto &p : directories)
         {
-            m_fileCombo->append(std::string(ICON_FA_FOLDER) + " " +
-                                p.filename().string());
+            m_fileCombo->append(FOLDER_PREFIX + p.filename().string());
             current_item_index++;
         }
 
@@ -462,7 +463,7 @@ namespace mui
                         continue;
                 }
 
-                m_fileCombo->append(std::string(ICON_FA_FILE) + " " + fname);
+                m_fileCombo->append(FILE_PREFIX + fname);
                 if (!currentFilename.empty() && fname == currentFilename)
                     targetIdx = current_item_index;
                 current_item_index++;
@@ -472,7 +473,7 @@ namespace mui
         if (targetIdx == -1 && !currentFilename.empty() &&
             m_mode == PathPickerMode::File)
         {
-            m_fileCombo->append(std::string(ICON_FA_FILE) + " " + currentFilename);
+            m_fileCombo->append(FILE_PREFIX + currentFilename);
             targetIdx = current_item_index;
         }
 
@@ -503,7 +504,7 @@ namespace mui
                 {
                     bool is_dir = selectedText.rfind(ICON_FA_FOLDER, 0) == 0;
                     size_t offset =
-                        is_dir ? strlen(ICON_FA_FOLDER) + 1 : strlen(ICON_FA_FILE) + 1;
+                        is_dir ? strlen(FOLDER_PREFIX_STR) : strlen(FILE_PREFIX_STR);
                     if (selectedText.length() > offset)
                         preview = selectedText.substr(offset);
                 }
@@ -518,20 +519,16 @@ namespace mui
 
         ImGui::BeginDisabled(!enabled);
 
-        if (spanAvailWidth)
-        {
-            m_layout->setSpanAvailWidth(true);
-        }
-        else if (width > 0)
-        {
-            m_layout->setWidth(width);
-        }
-        else if (useContainerWidth)
-        {
-            m_layout->setUseContainerWidth(true);
-        }
+        ImVec2 final_size = ApplySizeConstraints({0.f, ImGui::GetFrameHeight()});
+        ImGui::BeginChild("##pathpicker_wrapper", final_size, false,
+                          ImGuiWindowFlags_NoScrollbar |
+                              ImGuiWindowFlags_NoScrollWithMouse);
 
+        // The internal HBox should fill the space provided by the child window.
+        m_layout->setSpanAvailWidth(true);
         m_layout->render();
+
+        ImGui::EndChild();
 
         if (m_openFavoritesPopup)
         {

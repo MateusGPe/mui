@@ -126,7 +126,7 @@ namespace mui_dlg
         std::string m_filter;
         std::vector<std::vector<std::string>> m_filterExtensions;
         size_t m_filterSelection;
-        void m_parseFilter(const std::string &filter);
+        void m_parseFilter();
 
         std::vector<int> m_iconIndices;
         std::vector<std::string>

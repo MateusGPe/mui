@@ -34,7 +34,9 @@ namespace mui
         const float switch_width = switch_height * 1.8f;
         const ImVec2 label_size = ImGui::CalcTextSize(label.c_str(), NULL, true);
 
-        float natural_w = switch_width + (label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f);
+        float natural_w =
+            switch_width +
+            (label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f);
         float natural_h = std::max(switch_height, label_size.y);
         ImVec2 final_size = ApplySizeConstraints(ImVec2(natural_w, natural_h));
         float w = final_size.x;

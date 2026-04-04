@@ -17,9 +17,9 @@ namespace mui
             return;
         ScopedControlID id(this);
 
-        bool was_open = m_open;
+        bool collapsed = was_collapsed;
 
-        if (ImGui::CollapsingHeader(title.c_str(), &m_open, m_flags))
+        if (ImGui::CollapsingHeader(title.c_str(), show_close_button, m_flags))
         {
             if (margined)
                 ImGui::Indent();
@@ -34,11 +34,13 @@ namespace mui
             }
             if (margined)
                 ImGui::Unindent();
+            collapsed = false;
         }
 
-        if (m_open != was_open)
+        if (collapsed != was_collapsed)
         {
-            onToggledSignal(m_open);
+            was_collapsed = collapsed;
+            onToggledSignal(was_collapsed);
         }
     }
 
@@ -61,6 +63,12 @@ namespace mui
     bool Group::getMargined() const { return margined; }
 
     bool Group::isOpen() const { return m_open; }
+    bool Group::getShowCloseButton() { return show_close_button != nullptr; }
+    GroupPtr Group::showCloseButton(bool show)
+    {
+        show_close_button = show ? &m_open : nullptr;
+        return self();
+    }
     GroupPtr Group::setOpen(bool open)
     {
         m_open = open;

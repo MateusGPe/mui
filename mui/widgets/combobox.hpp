@@ -38,6 +38,7 @@ namespace mui
         int getSelectedIndex() const;
         std::string getText() const;
         ComboBoxPtr setSelectedIndex(int index);
+        ComboBoxPtr setSelected(const std::string &text);
         ComboBoxPtr bind(std::shared_ptr<Observable<int>> observable);
         ComboBoxPtr setCustomPreviewValue(const std::string &preview);
         ComboBoxPtr onChanged(std::function<void(int)> cb);

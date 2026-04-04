@@ -245,6 +245,8 @@ WindowPtr createInspectorWindow()
     win << (UI::VBox(false)
             << (UI::Group("Theme Controls")
                     ->setMargined(true)
+                    ->defaultOpen(true)
+                    ->showCloseButton(true)
                 << (UI::FlowBox(mui::FlowBox::Align::Center)
                         ->setPadded(true)
                     << btnPrev
@@ -507,7 +509,7 @@ IControlPtr createDialogsTab(const WindowPtr &win, const LabelPtr &lblStatus)
         {
             Dialogs::openFile(
                 "Open File",
-                "All Files {*.*}",
+                "All Files {*.*};Image Files {.png,.jpg,.jpeg,.bmp};Text Files {.txt,.md}",
                 [lblStatus](const std::string &path)
                 {
                     Dialogs::msgBox("File Selected", "Path: " + path);

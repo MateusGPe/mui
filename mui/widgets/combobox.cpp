@@ -86,6 +86,18 @@ namespace mui
         return self();
     }
 
+    ComboBoxPtr ComboBox::setSelected(const std::string &text)
+    {
+        for (int i = 0; i < (int)items.size(); ++i)
+        {
+            if (items[i] == text)
+            {
+                return setSelectedIndex(i);
+            }
+        }
+        return self();
+    }
+
     ComboBoxPtr ComboBox::setCustomPreviewValue(const std::string &preview)
     {
         m_customPreview = true;

@@ -175,7 +175,7 @@ namespace mui_dlg
         m_isMultiselect = false;
         m_type = MUI_DIALOG_SAVE;
 
-        m_parseFilter(filter);
+        m_parseFilter();
         if (!startingDir.empty())
             m_setDirectory(std::filesystem::path(startingDir), false);
         else
@@ -203,8 +203,9 @@ namespace mui_dlg
         m_selectedFileItem = -1;
         m_isMultiselect = isMultiselect;
         m_type = filter.empty() ? MUI_DIALOG_DIRECTORY : MUI_DIALOG_FILE;
+        m_filter.assign(filter);
 
-        m_parseFilter(filter);
+        m_parseFilter();
         if (!startingDir.empty())
             m_setDirectory(std::filesystem::path(startingDir), false);
         else
@@ -231,8 +232,9 @@ namespace mui_dlg
         m_selectedFileItem = -1;
         m_isMultiselect = false;
         m_type = MUI_DIALOG_DIRECTORY;
+        m_filter.clear();
 
-        m_parseFilter("");
+        m_parseFilter();
         if (!startingDir.empty())
             m_setDirectory(std::filesystem::path(startingDir), false);
         else
@@ -442,27 +444,28 @@ namespace mui_dlg
         return true;
     }
 
-    void FileDialog::m_parseFilter(const std::string &filter)
+    void FileDialog::m_parseFilter()
     {
         m_filterExtensions.clear();
         m_filterSelection = 0;
         m_filterCombo->clear();
 
-        if (filter.empty())
+        if (m_filter.empty())
             return;
 
         size_t current_pos = 0;
-        while (current_pos < filter.length())
+        while (current_pos < m_filter.length())
         {
-            size_t brace_open = filter.find('{', current_pos);
+            current_pos = m_filter.find_first_not_of(" \t\n\r;", current_pos);
+            size_t brace_open = m_filter.find('{', current_pos);
             if (brace_open == std::string::npos)
                 break;
 
-            size_t brace_close = filter.find('}', brace_open);
+            size_t brace_close = m_filter.find('}', brace_open);
             if (brace_close == std::string::npos)
                 break;
 
-            std::string name = filter.substr(current_pos, brace_open - current_pos);
+            std::string name = m_filter.substr(current_pos, brace_open - current_pos);
             name.erase(0, name.find_first_not_of(" \t\n\r"));
             if (!name.empty())
             {
@@ -470,7 +473,7 @@ namespace mui_dlg
             }
 
             std::string exts_str =
-                filter.substr(brace_open + 1, brace_close - brace_open - 1);
+                m_filter.substr(brace_open + 1, brace_close - brace_open - 1);
             std::vector<std::string> exts;
             std::stringstream ss(exts_str);
             std::string ext;
@@ -487,7 +490,7 @@ namespace mui_dlg
             m_filterCombo->append(name);
 
             current_pos = brace_close + 1;
-            if (current_pos < filter.length() && filter[current_pos] == ',')
+            if (current_pos < m_filter.length() && m_filter[current_pos] == ',')
             {
                 current_pos++;
             }

@@ -28,8 +28,9 @@ namespace mui
         }
 
         bool clicked = false;
-        
-        float natural_w = ImGui::CalcTextSize(text.c_str(), NULL, true).x + ImGui::GetStyle().FramePadding.x * 2.0f;
+
+        float natural_w = ImGui::CalcTextSize(text.c_str(), NULL, true).x +
+                          ImGui::GetStyle().FramePadding.x * 2.0f;
         float natural_h = ImGui::GetFrameHeight();
         ImVec2 buttonSize = ApplySizeConstraints(ImVec2(natural_w, natural_h));
 

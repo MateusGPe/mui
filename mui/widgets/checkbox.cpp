@@ -33,8 +33,11 @@ namespace mui
         const float check_box_size = ImGui::GetFrameHeight() * scale;
         const ImVec2 label_size = ImGui::CalcTextSize(text.c_str(), NULL, true);
 
-        float natural_w = check_box_size + (label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f);
-        float natural_h = std::max(check_box_size, label_size.y) + style.FramePadding.y * 2.0f;
+        float natural_w =
+            check_box_size +
+            (label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f);
+        float natural_h =
+            std::max(check_box_size, label_size.y) + style.FramePadding.y * 2.0f;
         ImVec2 final_size = ApplySizeConstraints(ImVec2(natural_w, natural_h));
         float w = final_size.x;
         float h = final_size.y;

@@ -12,8 +12,9 @@ namespace mui
         inlineShadowEnabled =
             false; // PropertyGrid typically doesn't have its own shadow
                    // Initialize new members to default/sentinel values
-                   // nameColumnWidth, valueColumnWeight, itemSpacingY, categorySpacingY,
-                   // itemIndent are already initialized in .hpp or have meaningful defaults.
+                   // nameColumnWidth, valueColumnWeight, itemSpacingY,
+                   // categorySpacingY, itemIndent are already initialized in .hpp or
+                   // have meaningful defaults.
     }
 
     void PropertyGrid::renderControl()

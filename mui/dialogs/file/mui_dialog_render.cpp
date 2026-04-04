@@ -369,16 +369,6 @@ namespace mui_dlg
         }
         ImGui::EndChild();
 
-        // Update bottom toolbar state
-        m_filterCombo->clear();
-        const char *p = m_filter.c_str();
-        while (*p)
-        {
-            m_filterCombo->append(p);
-            p += strlen(p) + 1;
-        }
-        m_filterCombo->setSelectedIndex(m_filterSelection);
-
         if (m_type != MUI_DIALOG_DIRECTORY)
             m_filterCombo->show();
         else

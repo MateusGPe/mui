@@ -52,7 +52,9 @@ namespace mui
         }
 
         float natural_w = contentWidth + style.FramePadding.x * 2.0f;
-        float natural_h = std::max((iconTex || !iconText.empty() ? iconSize.y : 0.0f), ImGui::GetFontSize()) + style.FramePadding.y * 2.0f;
+        float natural_h = std::max((iconTex || !iconText.empty() ? iconSize.y : 0.0f),
+                                   ImGui::GetFontSize()) +
+                          style.FramePadding.y * 2.0f;
 
         ImVec2 actualSize = ApplySizeConstraints(ImVec2(natural_w, natural_h));
         ImVec2 pos = window->DC.CursorPos;

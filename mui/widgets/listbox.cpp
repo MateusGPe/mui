@@ -18,7 +18,8 @@ namespace mui
         ScopedControlID id(this);
         ImGui::BeginDisabled(!enabled);
 
-        ImVec2 final_size = ApplySizeConstraints(ImVec2(0.0f, visibleItemsCount * ImGui::GetTextLineHeightWithSpacing()));
+        ImVec2 final_size = ApplySizeConstraints(
+            ImVec2(0.0f, visibleItemsCount * ImGui::GetTextLineHeightWithSpacing()));
 
         if (ImGui::BeginListBox("##listbox", final_size))
         {

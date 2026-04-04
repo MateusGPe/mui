@@ -39,7 +39,8 @@ namespace mui
         if (onEnterSignal.slot_count() > 0)
             flags |= ImGuiInputTextFlags_EnterReturnsTrue;
 
-        ImGuiInputTextCallback callback = [](ImGuiInputTextCallbackData *data) -> int
+        ImGuiInputTextCallback callback =
+            [](ImGuiInputTextCallbackData *data) -> int
         {
             Entry *entry = (Entry *)data->UserData;
             if (entry)
@@ -89,9 +90,9 @@ namespace mui
             else
             {
                 if (isMultiline)
-                    changed = ImGui::InputTextMultiline(
-                        "##entry", &text, ImVec2(final_size.x, final_size.y),
-                        flags, callback, this);
+                    changed = ImGui::InputTextMultiline("##entry", &text,
+                                                        ImVec2(final_size.x, final_size.y),
+                                                        flags, callback, this);
                 else if (!hint.empty())
                     changed = ImGui::InputTextWithHint("##entry", hint.c_str(), &text,
                                                        flags, callback, this);
