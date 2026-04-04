@@ -16,6 +16,12 @@ namespace mui
             return;
         ScopedControlID id(this);
         ImGui::BeginDisabled(!enabled);
+
+        ImVec2 final_size = ApplySizeConstraints(ImVec2(0.0f, 0.0f));
+        ScopedItemWidth item_width;
+        if (final_size.x > 0.0f)
+            item_width.push(final_size.x);
+
         if (ImGui::InputInt("##spin", &value, 1, 100))
         {
             value = std::clamp(value, minVal, maxVal);
@@ -33,11 +39,11 @@ namespace mui
     SpinboxPtr Spinbox::bind(std::shared_ptr<Observable<int>> observable)
     {
         setValue(observable->get());
-        m_connections.push_back(
+        addConnection(
             observable->onValueChanged.connect([this](const int &val)
                                                { mui::App::queueMain([this, val]()
                                                                      { this->setValue(val); }); }));
-        m_connections.push_back(
+        addConnection(
             onChangedSignal.connect([observable](int val)
                                     { observable->set(val); }));
         return self();
@@ -46,7 +52,7 @@ namespace mui
     SpinboxPtr Spinbox::onChanged(std::function<void()> cb)
     {
         if (cb)
-            m_connections.push_back(onChangedSignal.connect([cb](int)
+            addConnection(onChangedSignal.connect([cb](int)
                                                             { cb(); }));
         return self();
     }

@@ -152,11 +152,11 @@ namespace mui
                                 const std::string &tip, bool textHover)
     {
         int index = (int)icons.size();
-        icons.push_back({icon, tip, textHover});
+        icons.push_back({icon, tip, textHover, -1.0f});
 
         if (onClick)
         {
-            m_connections.push_back(onIconClickedSignal.connect(
+            addConnection(onIconClickedSignal.connect(
                 [index, cb = std::move(onClick)](int clickedIndex)
                 {
                     if (clickedIndex == index)

@@ -67,7 +67,7 @@ namespace mui
     TabPtr Tab::onSelected(std::function<void(int)> cb)
     {
         if (cb)
-            m_connections.push_back(onSelectedSignal.connect(std::move(cb)));
+            addConnection(onSelectedSignal.connect(std::move(cb)));
         return self();
     }
     int Tab::getNumPages() const { return pages.size(); }
@@ -83,11 +83,11 @@ namespace mui
     TabPtr Tab::bindSelected(std::shared_ptr<Observable<int>> observable)
     {
         setSelected(observable->get());
-        m_connections.push_back(
+        addConnection(
             observable->onValueChanged.connect([this](const int &val)
                                                { mui::App::queueMain([this, val]()
                                                                      { this->setSelected(val); }); }));
-        m_connections.push_back(onSelectedSignal.connect(
+        addConnection(onSelectedSignal.connect(
             [observable](int val)
             { observable->set(val); }));
         return self();

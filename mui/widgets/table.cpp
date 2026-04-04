@@ -20,10 +20,12 @@ namespace mui
         ScopedControlID id(this);
 
         ImGuiTableFlags flags = m_flags;
-        if (spanAvailWidth)
+        ImVec2 final_size = ApplySizeConstraints(ImVec2(0.0f, 0.0f));
+
+        if (final_size.x > 0.0f)
             flags |= ImGuiTableFlags_SizingStretchProp;
 
-        ImVec2 size = ImVec2(spanAvailWidth ? -FLT_MIN : 0, 0);
+        ImVec2 size = ImVec2(final_size.x > 0.0f ? final_size.x : 0.0f, final_size.y > 0.0f ? final_size.y : 0.0f);
 
         if (ImGui::BeginTable("##table", (int)columns.size(), flags, size))
         {
@@ -125,11 +127,11 @@ namespace mui
     TablePtr Table::bind(std::shared_ptr<Observable<int>> observable)
     {
         setSelectedRow(observable->get());
-        m_connections.push_back(
+        addConnection(
             observable->onValueChanged.connect([this](const int &val)
                                                { mui::App::queueMain([this, val]()
                                                                      { this->setSelectedRow(val); }); }));
-        m_connections.push_back(onRowSelectedSignal.connect(
+        addConnection(onRowSelectedSignal.connect(
             [observable](int val)
             { observable->set(val); }));
         return self();
@@ -146,19 +148,19 @@ namespace mui
     TablePtr Table::onRowSelected(std::function<void(int)> cb)
     {
         if (cb)
-            m_connections.push_back(onRowSelectedSignal.connect(std::move(cb)));
+            addConnection(onRowSelectedSignal.connect(std::move(cb)));
         return self();
     }
     TablePtr Table::onRowDoubleClicked(std::function<void(int)> cb)
     {
         if (cb)
-            m_connections.push_back(onRowDoubleClickedSignal.connect(std::move(cb)));
+            addConnection(onRowDoubleClickedSignal.connect(std::move(cb)));
         return self();
     }
     TablePtr Table::onSortRequested(std::function<void(int, bool)> cb)
     {
         if (cb)
-            m_connections.push_back(onSortRequestedSignal.connect(std::move(cb)));
+            addConnection(onSortRequestedSignal.connect(std::move(cb)));
         return self();
     }
 

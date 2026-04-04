@@ -50,6 +50,7 @@ namespace mui
         void renderControl() override;
 
         std::string getText() const;
+        std::string_view getView() const;
         EntryPtr setText(const std::string &t);
         EntryPtr setHint(const std::string &h);
         EntryPtr setReadOnly(bool r);

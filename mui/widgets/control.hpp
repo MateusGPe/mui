@@ -38,6 +38,7 @@ namespace mui
         // Centralized connection management for all controls
         // Ensures safe lifecycle and automatic disconnection upon destruction
         std::vector<mui::Connection> m_connections;
+        std::mutex m_connectionMutex;
 
     public:
         virtual ~IControl() = default;
@@ -46,7 +47,15 @@ namespace mui
         virtual std::string getID() const = 0;
         virtual bool isVisible() const = 0;
 
-        void clearConnections() { m_connections.clear(); }
+        void clearConnections() { 
+            std::lock_guard<std::mutex> lock(m_connectionMutex);
+            m_connections.clear(); 
+        }
+
+        void addConnection(mui::Connection conn) {
+            std::lock_guard<std::mutex> lock(m_connectionMutex);
+            m_connections.push_back(std::move(conn));
+        }
     };
 
     template <class Derived>
@@ -168,8 +177,6 @@ namespace mui
             return std::static_pointer_cast<Derived>(this->shared_from_this());
         }
 
-    public:
-        virtual ~Control() = default;
         ImVec2 ApplySizeConstraints(ImVec2 naturalSize) const
         {
             float w = width;
@@ -189,6 +196,9 @@ namespace mui
 
             return ImVec2(w, h);
         }
+
+    public:
+        virtual ~Control() = default;
 
         std::shared_ptr<Derived> addClass(const std::string &cls)
         {
@@ -285,10 +295,6 @@ namespace mui
             }
 
             ImDrawList *draw_list = ImGui::GetWindowDrawList();
-            // 1. Split channels using a local splitter to safely allow nesting
-            ImDrawListSplitter splitter;
-            splitter.Split(draw_list, 2);
-            splitter.SetCurrentChannel(draw_list, 1); // Foreground
 
             // 2. Render widget to get dimensions
             ImGui::BeginGroup();
@@ -299,7 +305,6 @@ namespace mui
             ImVec2 p_max = ImGui::GetItemRectMax();
 
             // 3. Switch to background to draw shadow
-            splitter.SetCurrentChannel(draw_list, 0);
             float rounding = m_resolvedShadowRounding < 0.0f ? ImGui::GetStyle().FrameRounding : m_resolvedShadowRounding;
             const ImVec4 *shadow_uvs = App::GetShadowUVs();
             if (shadow_tex)
@@ -310,13 +315,12 @@ namespace mui
                     activeShadowColor = App::GetThemeShadowColor();
                 }
                 ImU32 col32 = ImGui::GetColorU32(activeShadowColor);
+                
+                // Drop the per-widget splitter to save performance and draw to background list instead
                 ImGuiShadows::DrawShadowRect(
-                    draw_list, shadow_tex, shadow_uvs, p_min, p_max, col32,
+                    ImGui::GetBackgroundDrawList(), shadow_tex, shadow_uvs, p_min, p_max, col32,
                     m_resolvedShadowThickness, m_resolvedShadowOffset, rounding, m_resolvedShadowFillBackground);
             }
-
-            // 4. Merge
-            splitter.Merge(draw_list);
         }
 
         void onHandleDestroyed() override { ownsHandle = false; }
@@ -325,7 +329,7 @@ namespace mui
         template <typename... Args, typename F>
         std::shared_ptr<Derived> observe(Signal<Args...> &signal, F cb)
         {
-            m_connections.push_back(signal.connect(std::function<void(Args...)>(std::move(cb))));
+            addConnection(signal.connect(std::function<void(Args...)>(std::move(cb))));
             return self();
         }
 

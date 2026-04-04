@@ -77,26 +77,35 @@ namespace mui
     GroupPtr Group::onToggled(std::function<void(bool)> cb)
     {
         if (cb)
-            m_connections.push_back(onToggledSignal.connect(std::move(cb)));
+            addConnection(onToggledSignal.connect(std::move(cb)));
         return self();
     }
     GroupPtr Group::bindTitle(std::shared_ptr<Observable<std::string>> observable)
     {
         setTitle(observable->get());
-        m_connections.push_back(
-            observable->onValueChanged.connect([this](const std::string &val)
-                                               { mui::App::queueMain([this, val]()
-                                                                     { this->setTitle(val); }); }));
+        addConnection(
+            observable->onValueChanged
+                .connect(
+                    [this](const std::string &val)
+                    {
+                        mui::App::queueMain(
+                            [this, val]()
+                            { this->setTitle(val); });
+                    }));
         return self();
     }
     GroupPtr Group::bindOpen(std::shared_ptr<Observable<bool>> observable)
     {
         setOpen(observable->get());
-        m_connections.push_back(
-            observable->onValueChanged.connect([this](const bool &val)
-                                               { mui::App::queueMain([this, val]()
-                                                                     { this->setOpen(val); }); }));
-        m_connections.push_back(onToggledSignal.connect(
+        addConnection(
+            observable->onValueChanged
+                .connect(
+                    [this](const bool &val)
+                    {
+                        mui::App::queueMain([this, val]()
+                                            { this->setOpen(val); });
+                    }));
+        addConnection(onToggledSignal.connect(
             [observable](bool val)
             { observable->set(val); }));
         return self();

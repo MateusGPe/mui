@@ -19,6 +19,7 @@ namespace mui
             std::string icon;
             std::string tooltip;
             bool text_hover;
+            float cached_width = -1.0f;
         };
         std::vector<IconBtn> icons;
         

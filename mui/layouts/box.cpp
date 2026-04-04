@@ -49,52 +49,75 @@ namespace mui
         ImVec2 original_spacing = style.ItemSpacing;
         float item_spacing_y = (spacing >= 0.0f) ? spacing : original_spacing.y;
 
-        // Filter out invisible children early so they don't break spatial
-        // distribution calculations
-        std::vector<size_t> visible_indices;
+        std::vector<size_t> current_visible_indices;
+        current_visible_indices.reserve(children.size());
         for (size_t i = 0; i < children.size(); ++i)
         {
             if (children[i].control->isVisible())
-                visible_indices.push_back(i);
+                current_visible_indices.push_back(i);
         }
+
+        bool auto_size_changed = false;
+        for (size_t i : m_cachedVisibleIndices)
+        {
+            auto &child = children[i];
+            if (child.sizing.mode == Sizing::Mode::Auto)
+            {
+                if (std::abs(child.lastKnownSize.y - child.sizeUsedInLastLayout.y) > 0.5f)
+                {
+                    auto_size_changed = true;
+                    break;
+                }
+            }
+        }
+        if (m_layoutDirty || std::abs(avail.y - m_lastAvail.y) > 0.5f || current_visible_indices != m_cachedVisibleIndices || auto_size_changed)
+        {
+            m_cachedVisibleIndices = current_visible_indices;
+            m_cachedTotalStretchWeight = 0.0f;
+            m_cachedFixedSize = 0.0f;
+
+            float total_spacing = 0.0f;
+            if (m_cachedVisibleIndices.size() > 1)
+                total_spacing = (m_cachedVisibleIndices.size() - 1) * item_spacing_y;
+
+            for (size_t i : m_cachedVisibleIndices)
+            {
+                auto &child = children[i];
+                switch (child.sizing.mode)
+                {
+                case Sizing::Mode::Stretch:
+                    m_cachedTotalStretchWeight += child.sizing.value;
+                    break;
+                case Sizing::Mode::Fixed:
+                    m_cachedFixedSize += child.sizing.value;
+                    break;
+                case Sizing::Mode::Percent:
+                    m_cachedFixedSize += avail.y * child.sizing.value;
+                    break;
+                case Sizing::Mode::Auto:
+                    m_cachedFixedSize += child.lastKnownSize.y;
+                    child.sizeUsedInLastLayout.y = child.lastKnownSize.y;
+                    break;
+                }
+            }
+
+            m_cachedStretchUnit = 0.0f;
+            if (m_cachedTotalStretchWeight > 0)
+            {
+                float remaining_height = avail.y - m_cachedFixedSize - total_spacing;
+                if (!scrollable)
+                    remaining_height = std::max(0.0f, remaining_height);
+                m_cachedStretchUnit = remaining_height / m_cachedTotalStretchWeight;
+            }
+
+            m_layoutDirty = false;
+            m_lastAvail = avail;
+        }
+
+        const auto &visible_indices = m_cachedVisibleIndices;
 
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing,
                             ImVec2(original_spacing.x, item_spacing_y));
-
-        float total_stretch_weight = 0.0f;
-        float fixed_height = 0.0f;
-        float total_spacing = 0.0f;
-        if (visible_indices.size() > 1)
-            total_spacing = (visible_indices.size() - 1) * item_spacing_y;
-
-        for (size_t i : visible_indices)
-        {
-            auto &child = children[i];
-            switch (child.sizing.mode)
-            {
-            case Sizing::Mode::Stretch:
-                total_stretch_weight += child.sizing.value;
-                break;
-            case Sizing::Mode::Fixed:
-                fixed_height += child.sizing.value;
-                break;
-            case Sizing::Mode::Percent:
-                fixed_height += avail.y * child.sizing.value;
-                break;
-            case Sizing::Mode::Auto:
-                fixed_height += child.lastKnownSize.y;
-                break;
-            }
-        }
-
-        float stretch_unit_height = 0.0f;
-        if (total_stretch_weight > 0)
-        {
-            float remaining_height = avail.y - fixed_height - total_spacing;
-            if (!scrollable)
-                remaining_height = std::max(0.0f, remaining_height);
-            stretch_unit_height = remaining_height / total_stretch_weight;
-        }
 
         for (size_t idx = 0; idx < visible_indices.size(); ++idx)
         {
@@ -107,7 +130,7 @@ namespace mui
             switch (child.sizing.mode)
             {
             case Sizing::Mode::Stretch:
-                child_height = stretch_unit_height * child.sizing.value;
+                child_height = m_cachedStretchUnit * child.sizing.value;
                 if (!scrollable)
                     child_height = std::max(0.0f, child_height);
                 use_child_window = true;
@@ -231,47 +254,75 @@ namespace mui
         ImVec2 original_spacing = style.ItemSpacing;
         float item_spacing_x = (spacing >= 0.0f) ? spacing : original_spacing.x;
 
-        std::vector<size_t> visible_indices;
+        // Determine which children are visible. This is done every frame to catch
+        // dynamic changes in child visibility.
+        std::vector<size_t> current_visible_indices;
+        current_visible_indices.reserve(children.size());
         for (size_t i = 0; i < children.size(); ++i)
         {
             if (children[i].control->isVisible())
-                visible_indices.push_back(i);
+                current_visible_indices.push_back(i);
         }
 
-        float total_stretch_weight = 0.0f;
-        float fixed_width = 0.0f;
-        float total_spacing = 0.0f;
-        if (visible_indices.size() > 1)
-            total_spacing = (visible_indices.size() - 1) * item_spacing_x;
-
-        for (size_t i : visible_indices)
+        bool auto_size_changed = false;
+        for (size_t i : m_cachedVisibleIndices)
         {
             auto &child = children[i];
-            switch (child.sizing.mode)
+            if (child.sizing.mode == Sizing::Mode::Auto)
             {
-            case Sizing::Mode::Stretch:
-                total_stretch_weight += child.sizing.value;
-                break;
-            case Sizing::Mode::Fixed:
-                fixed_width += child.sizing.value;
-                break;
-            case Sizing::Mode::Percent:
-                fixed_width += avail.x * child.sizing.value;
-                break;
-            case Sizing::Mode::Auto:
-                fixed_width += child.lastKnownSize.x;
-                break;
+                if (std::abs(child.lastKnownSize.x - child.sizeUsedInLastLayout.x) > 0.5f)
+                {
+                    auto_size_changed = true;
+                    break;
+                }
             }
         }
 
-        float stretch_unit_width = 0.0f;
-        if (total_stretch_weight > 0)
+        if (m_layoutDirty || std::abs(avail.x - m_lastAvail.x) > 0.5f || current_visible_indices != m_cachedVisibleIndices || auto_size_changed)
         {
-            float remaining_width = avail.x - fixed_width - total_spacing;
-            if (!scrollable)
-                remaining_width = std::max(0.0f, remaining_width);
-            stretch_unit_width = remaining_width / total_stretch_weight;
+            m_cachedVisibleIndices = current_visible_indices;
+            m_cachedTotalStretchWeight = 0.0f;
+            m_cachedFixedSize = 0.0f;
+
+            float total_spacing = 0.0f;
+            if (m_cachedVisibleIndices.size() > 1)
+                total_spacing = (m_cachedVisibleIndices.size() - 1) * item_spacing_x;
+
+            for (size_t i : m_cachedVisibleIndices)
+            {
+                auto &child = children[i];
+                switch (child.sizing.mode)
+                {
+                case Sizing::Mode::Stretch:
+                    m_cachedTotalStretchWeight += child.sizing.value;
+                    break;
+                case Sizing::Mode::Fixed:
+                    m_cachedFixedSize += child.sizing.value;
+                    break;
+                case Sizing::Mode::Percent:
+                    m_cachedFixedSize += avail.x * child.sizing.value;
+                    break;
+                case Sizing::Mode::Auto:
+                    m_cachedFixedSize += child.lastKnownSize.x;
+                    child.sizeUsedInLastLayout.x = child.lastKnownSize.x;
+                    break;
+                }
+            }
+
+            m_cachedStretchUnit = 0.0f;
+            if (m_cachedTotalStretchWeight > 0)
+            {
+                float remaining_width = avail.x - m_cachedFixedSize - total_spacing;
+                if (!scrollable)
+                    remaining_width = std::max(0.0f, remaining_width);
+                m_cachedStretchUnit = remaining_width / m_cachedTotalStretchWeight;
+            }
+
+            m_layoutDirty = false;
+            m_lastAvail = avail;
         }
+
+        const auto &visible_indices = m_cachedVisibleIndices;
 
         for (size_t idx = 0; idx < visible_indices.size(); ++idx)
         {
@@ -284,7 +335,7 @@ namespace mui
             switch (child.sizing.mode)
             {
             case Sizing::Mode::Stretch:
-                child_width = stretch_unit_width * child.sizing.value;
+                child_width = m_cachedStretchUnit * child.sizing.value;
                 if (!scrollable)
                     child_width = std::max(0.0f, child_width);
                 use_child_window = true;
@@ -411,12 +462,24 @@ namespace mui
         float item_spacing_x = (spacing >= 0.0f) ? spacing : original_spacing.x;
         float item_spacing_y = (spacing >= 0.0f) ? spacing : original_spacing.y;
 
-        std::vector<size_t> visible_indices;
+        // Determine which children are visible. This is done every frame to catch
+        // dynamic changes in child visibility.
+        std::vector<size_t> current_visible_indices;
+        current_visible_indices.reserve(children.size());
         for (size_t i = 0; i < children.size(); ++i)
         {
             if (children[i].control->isVisible())
-                visible_indices.push_back(i);
+                current_visible_indices.push_back(i);
         }
+
+        if (m_layoutDirty || std::abs(contentWidth - m_lastAvail.x) > 0.5f || current_visible_indices != m_cachedVisibleIndices)
+        {
+            m_cachedVisibleIndices = current_visible_indices;
+            m_layoutDirty = false;
+            m_lastAvail.x = contentWidth;
+        }
+
+        const auto &visible_indices = m_cachedVisibleIndices;
 
         std::vector<std::vector<size_t>> lines;
         if (!visible_indices.empty())

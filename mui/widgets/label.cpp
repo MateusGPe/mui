@@ -23,9 +23,10 @@ namespace mui
         if (useCustomColor)
             scoped_color.push(ImGuiCol_Text, color);
 
-        if (spanAvailWidth)
+        ImVec2 final_size = ApplySizeConstraints(ImVec2(0.0f, 0.0f));
+        if (final_size.x > 0.0f)
         {
-            ScopedItemWidth width(-FLT_MIN);
+            ScopedItemWidth item_width(final_size.x);
             ImGui::TextWrapped("%s", text.c_str());
         }
         else

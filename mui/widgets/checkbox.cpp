@@ -116,12 +116,12 @@ namespace mui
     {
         setChecked(observable->get());
 
-        m_connections.push_back(
+        addConnection(
             observable->onValueChanged.connect([this](const bool &val)
                                                { mui::App::queueMain([this, val]()
                                                                      { this->setChecked(val); }); }));
 
-        m_connections.push_back(onToggledSignal.connect(
+        addConnection(onToggledSignal.connect(
             [observable](bool val)
             { observable->set(val); }));
 
@@ -131,7 +131,7 @@ namespace mui
     CheckboxPtr Checkbox::onToggled(std::function<void(bool)> cb)
     {
         if (cb)
-            m_connections.push_back(onToggledSignal.connect(std::move(cb)));
+            addConnection(onToggledSignal.connect(std::move(cb)));
         return self();
     }
 } // namespace mui

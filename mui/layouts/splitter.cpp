@@ -148,7 +148,7 @@ namespace mui
     SplitterView::onSplitRatioChanged(std::function<void(float)> cb)
     {
         if (cb)
-            m_connections.push_back(onSplitRatioChangedSignal.connect(std::move(cb)));
+            addConnection(onSplitRatioChangedSignal.connect(std::move(cb)));
         return self();
     }
 
@@ -156,11 +156,11 @@ namespace mui
     SplitterView::bindSplitRatio(std::shared_ptr<Observable<float>> observable)
     {
         setSplitRatio(observable->get());
-        m_connections.push_back(
+        addConnection(
             observable->onValueChanged.connect([this](const float &val)
                                                { mui::App::queueMain([this, val]()
                                                                      { this->setSplitRatio(val); }); }));
-        m_connections.push_back(onSplitRatioChangedSignal.connect(
+        addConnection(onSplitRatioChangedSignal.connect(
             [observable](float val)
             { observable->set(val); }));
         return self();

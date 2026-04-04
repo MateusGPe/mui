@@ -53,14 +53,14 @@ namespace mui
     {
         auto c = observable->get();
         setColor(c[0], c[1], c[2], c[3]);
-        m_connections.push_back(observable->onValueChanged.connect(
+        addConnection(observable->onValueChanged.connect(
             [this](const std::array<float, 4> &val)
             {
                 mui::App::queueMain(
                     [this, val]()
                     { this->setColor(val[0], val[1], val[2], val[3]); });
             }));
-        m_connections.push_back(onChangedSignal.connect(
+        addConnection(onChangedSignal.connect(
             [observable](const std::array<float, 4> &val)
             { observable->set(val); }));
         return self();
@@ -70,7 +70,7 @@ namespace mui
     ColorEdit::onChanged(std::function<void(const std::array<float, 4> &)> cb)
     {
         if (cb)
-            m_connections.push_back(onChangedSignal.connect(
+            addConnection(onChangedSignal.connect(
                 [cb](const std::array<float, 4> &val)
                 { cb(val); }));
         return self();

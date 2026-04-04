@@ -22,6 +22,10 @@ namespace mui
         char editBuffer[1024] = {0};
         bool isEditing = false;
         EntryPtr m_editEntry;
+        
+        bool m_segmentsDirty = true;
+        std::vector<float> m_cachedSegmentWidths;
+        ImVec2 m_lastAvail = {-1.0f, -1.0f};
 
         void parsePath();
 

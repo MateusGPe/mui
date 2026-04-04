@@ -47,7 +47,8 @@ namespace mui
         ImVec4 finalTintColor = tintColor;
         finalTintColor.w *= opacity;
 
-        ImGui::Image(textureId, ImVec2(width, height), uv0, uv1, finalTintColor,
+        ImVec2 final_size = ApplySizeConstraints(ImVec2(width, height));
+        ImGui::Image(textureId, final_size, uv0, uv1, finalTintColor,
                      borderColor);
 
         renderTooltip();

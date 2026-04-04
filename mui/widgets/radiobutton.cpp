@@ -71,7 +71,7 @@ namespace mui
     RadioButtonPtr RadioButton::onToggled(std::function<void(bool)> cb)
     {
         if (cb)
-            m_connections.push_back(onToggledSignal.connect(std::move(cb)));
+            addConnection(onToggledSignal.connect(std::move(cb)));
         return self();
     }
 

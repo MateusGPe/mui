@@ -54,17 +54,17 @@ namespace mui
     SliderIntPtr SliderInt::onChanged(std::function<void()> cb)
     {
         if (cb)
-            m_connections.push_back(this->onChangedSignal.connect([cb](int)
+            addConnection(this->onChangedSignal.connect([cb](int)
                                                                   { cb(); }));
         return self();
     }
     SliderIntPtr SliderInt::bind(std::shared_ptr<Observable<int>> observable)
     {
         value = observable->get();
-        m_connections.push_back(observable->onValueChanged.connect(
+        addConnection(observable->onValueChanged.connect(
             [this](const int &val)
             { this->value = val; }));
-        m_connections.push_back(this->onChangedSignal.connect(
+        addConnection(this->onChangedSignal.connect(
             [observable](int val)
             { observable->set(val); }));
         return self();
@@ -118,7 +118,7 @@ namespace mui
     SliderFloatPtr SliderFloat::onChanged(std::function<void()> cb)
     {
         if (cb)
-            m_connections.push_back(
+            addConnection(
                 this->onChangedSignal.connect([cb](float)
                                               { cb(); }));
         return self();
@@ -127,10 +127,10 @@ namespace mui
     SliderFloat::bind(std::shared_ptr<Observable<float>> observable)
     {
         value = observable->get();
-        m_connections.push_back(observable->onValueChanged.connect(
+        addConnection(observable->onValueChanged.connect(
             [this](const float &val)
             { this->value = val; }));
-        m_connections.push_back(this->onChangedSignal.connect(
+        addConnection(this->onChangedSignal.connect(
             [observable](float val)
             { observable->set(val); }));
         return self();

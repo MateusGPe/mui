@@ -32,104 +32,125 @@ namespace mui_dlg
     void FileDialog::m_setDirectory(const std::filesystem::path &p,
                                     bool addHistory)
     {
-        std::lock_guard<std::recursive_mutex> lock(m_contentMutex);
-
-        bool isSameDir = m_currentDirectory == p;
-
-        if (addHistory && !isSameDir)
-            m_backHistory.push(m_currentDirectory);
-
-        m_currentDirectory = p;
-        m_fixDrivePath(m_currentDirectory);
-
-        m_clearIconPreview();
-        m_content.clear(); // p == "" after this line, due to reference
-        m_selectedFileItem = -1;
-
-        if (m_type == MUI_DIALOG_DIRECTORY || m_type == MUI_DIALOG_FILE)
-            m_inputTextbox[0] = 0;
-        m_selections.clear();
-
-        if (!isSameDir)
+        std::string searchBufStr;
+        int filterSelectionVal;
+        std::vector<std::vector<std::string>> filterExts;
+        std::vector<FileTreeNode *> treeCacheCopy;
+        
         {
-            m_searchBuffer[0] = 0;
-            m_clearIcons();
-        }
+            std::lock_guard<std::recursive_mutex> lock(m_contentMutex);
 
-        if (m_currentDirectory.string() == "Quick Access")
-        {
-            for (auto &node : m_treeCache)
+            bool isSameDir = m_currentDirectory == p;
+
+            if (addHistory && !isSameDir)
+                m_backHistory.push(m_currentDirectory);
+
+            m_currentDirectory = p;
+            m_fixDrivePath(m_currentDirectory);
+
+            m_clearIconPreview();
+            m_content.clear(); // p == "" after this line, due to reference
+            m_selectedFileItem = -1;
+
+            if (m_type == MUI_DIALOG_DIRECTORY || m_type == MUI_DIALOG_FILE)
+                m_inputTextbox[0] = 0;
+            m_selections.clear();
+
+            if (!isSameDir)
             {
-                if (node->Path == m_currentDirectory)
-                    for (auto &c : node->Children)
-                        m_content.push_back(FileData(c->Path));
+                m_searchBuffer[0] = 0;
+                m_clearIcons();
             }
+
+            searchBufStr = m_searchBuffer;
+            filterSelectionVal = m_filterSelection;
+            filterExts = m_filterExtensions;
+            treeCacheCopy = m_treeCache; // Pointers are stable enough for this
         }
-        else if (m_currentDirectory.string() == "This PC")
-        {
-            for (auto &node : m_treeCache)
+
+        std::thread([this, p = m_currentDirectory, searchBufStr, filterSelectionVal, filterExts, treeCacheCopy]() {
+            std::vector<FileData> temp_content;
+            temp_content.reserve(1024);
+
+            if (p.string() == "Quick Access" || p.string() == "This PC")
             {
-                if (node->Path == m_currentDirectory)
-                    for (auto &c : node->Children)
-                        m_content.push_back(FileData(c->Path));
-            }
-        }
-        else
-        {
-            std::error_code ec;
-            if (std::filesystem::exists(m_currentDirectory, ec))
-                for (const auto &entry :
-                     std::filesystem::directory_iterator(m_currentDirectory, ec))
+                for (auto &node : treeCacheCopy)
                 {
-                    FileData info(entry.path());
+                    if (node->Path == p)
+                        for (auto &c : node->Children)
+                            temp_content.push_back(FileData(c->Path));
+                }
+            }
+            else
+            {
+                std::error_code ec;
+                if (std::filesystem::exists(p, ec))
+                {
+                    try {
+                        auto it = std::filesystem::directory_iterator(p, std::filesystem::directory_options::skip_permission_denied, ec);
+                        if (!ec) {
+                            auto end = std::filesystem::directory_iterator();
+                            while (it != end) {
+                                try {
+                                    const auto &entry = *it;
+                                    FileData info(entry.path());
 
-                    // skip files when MUI_DIALOG_DIRECTORY
-                    if (!info.IsDirectory && m_type == MUI_DIALOG_DIRECTORY)
-                        continue;
+                                    bool skip = false;
+                                    if (!info.IsDirectory && m_type == MUI_DIALOG_DIRECTORY)
+                                        skip = true;
 
-                    // check if filename matches search query
-                    if (m_searchBuffer[0])
-                    {
-                        std::string filename = info.Path.string();
+                                    if (!skip && !searchBufStr.empty())
+                                    {
+                                        std::string filename = info.Path.string();
+                                        std::string filenameSearch = filename;
+                                        std::string query = searchBufStr;
+                                        std::transform(filenameSearch.begin(), filenameSearch.end(),
+                                                       filenameSearch.begin(), ::tolower);
+                                        std::transform(query.begin(), query.end(), query.begin(), ::tolower);
 
-                        std::string filenameSearch = filename;
-                        std::string query(m_searchBuffer);
-                        std::transform(filenameSearch.begin(), filenameSearch.end(),
-                                       filenameSearch.begin(), ::tolower);
-                        std::transform(query.begin(), query.end(), query.begin(), ::tolower);
+                                        if (filenameSearch.find(query, 0) == std::string::npos)
+                                            skip = true;
+                                    }
 
-                        if (filenameSearch.find(query, 0) == std::string::npos)
-                            continue;
-                    }
+                                    if (!skip && !info.IsDirectory && m_type != MUI_DIALOG_DIRECTORY)
+                                    {
+                                        if (filterSelectionVal >= 0 && filterSelectionVal < filterExts.size())
+                                        {
+                                            const auto &exts = filterExts[filterSelectionVal];
+                                            if (exts.size() > 0)
+                                            {
+                                                std::string extension = info.Path.extension().string();
+                                                bool isWildcard =
+                                                    (std::count(exts.begin(), exts.end(), "*.*") > 0);
 
-                    // check if extension matches
-                    if (!info.IsDirectory && m_type != MUI_DIALOG_DIRECTORY)
-                    {
-                        if (m_filterSelection < m_filterExtensions.size())
-                        {
-                            const auto &exts = m_filterExtensions[m_filterSelection];
-                            if (exts.size() > 0)
-                            {
-                                std::string extension = info.Path.extension().string();
-                                bool isWildcard =
-                                    (std::count(exts.begin(), exts.end(), "*.*") > 0);
+                                                if (!isWildcard &&
+                                                    std::count(exts.begin(), exts.end(), extension) == 0)
+                                                    skip = true;
+                                            }
+                                        }
+                                    }
 
-                                // extension not found? skip
-                                // if it's not a wildcard filter and the extension doesn't match,
-                                // skip it
-                                if (!isWildcard &&
-                                    std::count(exts.begin(), exts.end(), extension) == 0)
-                                    continue;
+                                    if (!skip)
+                                        temp_content.push_back(info);
+                                } catch (...) {}
+                                
+                                it.increment(ec);
+                                if (ec) ec.clear();
                             }
                         }
-                    }
-
-                    m_content.push_back(info);
+                    } catch (...) {}
                 }
-        }
+            }
 
-        m_sortContent(m_sortColumn, m_sortDirection);
-        m_refreshIconPreview();
+            mui::App::queueMain([this, p, new_content = std::move(temp_content)]() mutable {
+                std::lock_guard<std::recursive_mutex> lock(m_contentMutex);
+                if (m_currentDirectory != p) return; // Stale thread
+                
+                m_content = std::move(new_content);
+                m_sortContent(m_sortColumn, m_sortDirection);
+                m_refreshIconPreview();
+            });
+        }).detach();
     }
 
     void FileDialog::m_sortContent(unsigned int column,

@@ -36,6 +36,7 @@ namespace mui
             IControlPtr control;
             Sizing sizing;
             ImVec2 lastKnownSize = ImVec2(0, 0); // Added to cache layout sizes for Box stretching
+            ImVec2 sizeUsedInLastLayout = ImVec2(0, 0);
 
             BoxChild(IControlPtr c, Sizing s = {}) : control(std::move(c)), sizing(s) {}
             BoxChild(IControlPtr c, bool stretchy) : control(std::move(c))
@@ -53,6 +54,12 @@ namespace mui
         bool fillHeight = false;
         bool showChildScrollbars = false;
         float spacing = -1.0f; // -1 means default
+        bool m_layoutDirty = true;
+        float m_cachedTotalStretchWeight = 0.0f;
+        float m_cachedFixedSize = 0.0f;
+        float m_cachedStretchUnit = 0.0f;
+        ImVec2 m_lastAvail = ImVec2(-1, -1);
+        std::vector<size_t> m_cachedVisibleIndices;
 
         Box()
         {
@@ -68,17 +75,19 @@ namespace mui
                 child.control->onHandleDestroyed();
         }
 
-        std::shared_ptr<Derived> append(IControlPtr child, Sizing sizing)
+        std::shared_ptr<Derived> append(const IControlPtr& child, Sizing sizing)
         {
             this->verifyState();
             children.emplace_back(child, sizing);
+            m_layoutDirty = true;
             return this->self();
         }
 
-        std::shared_ptr<Derived> append(IControlPtr child, bool stretchy = false)
+        std::shared_ptr<Derived> append(const IControlPtr& child, bool stretchy = false)
         {
             this->verifyState();
             children.emplace_back(child, stretchy);
+            m_layoutDirty = true;
             return this->self();
         }
 
@@ -89,6 +98,7 @@ namespace mui
             {
                 children.push_back(item);
             }
+            m_layoutDirty = true;
             return this->self();
         }
 
@@ -98,12 +108,14 @@ namespace mui
             if (index >= 0 && index < (int)children.size())
             {
                 children.erase(this->children.begin() + index);
+                m_layoutDirty = true;
             }
             return this->self();
         }
 
         std::shared_ptr<Derived> setPadded(bool p)
         {
+            m_layoutDirty = true;
             padded = p;
             return this->self();
         }
@@ -111,35 +123,41 @@ namespace mui
         std::shared_ptr<Derived> setScrollable(bool s)
         {
             scrollable = s;
+            m_layoutDirty = true;
             return this->self();
         }
 
         std::shared_ptr<Derived> setAutoScroll(bool a)
         {
+            m_layoutDirty = true;
             autoScroll = a;
             return this->self();
         }
 
         std::shared_ptr<Derived> setFillWidth(bool f)
         {
+            m_layoutDirty = true;
             fillWidth = f;
             return this->self();
         }
 
         std::shared_ptr<Derived> setFillHeight(bool f)
         {
+            m_layoutDirty = true;
             fillHeight = f;
             return this->self();
         }
 
         std::shared_ptr<Derived> setShowChildScrollbars(bool show)
         {
+            m_layoutDirty = true;
             showChildScrollbars = show;
             return this->self();
         }
 
         std::shared_ptr<Derived> setSpacing(float s)
         {
+            m_layoutDirty = true;
             spacing = s;
             return this->self();
         }
@@ -217,6 +235,7 @@ namespace mui
         FlowBoxPtr setAlign(Align align)
         {
             m_align = align;
+            m_layoutDirty = true;
             return self();
         }
     };

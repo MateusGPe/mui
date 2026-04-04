@@ -53,7 +53,7 @@ namespace mui
         void renderControl() override;
 
         // Layer Management
-        ImageStackViewPtr addLayer(ImagePtr image);
+        ImageStackViewPtr addLayer(const ImagePtr& image);
         ImageStackViewPtr loadFromMemory(const std::string &name, int width, int height, int channels, const unsigned char *data);
         ImageStackViewPtr removeLayer(int index);
         ImageStackViewPtr moveLayerUp(int index);

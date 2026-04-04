@@ -109,7 +109,7 @@ namespace mui
 
             if (withContextMenu && ImGui::BeginPopupContextItem("##context_menu"))
             {
-                std::string current_text = getText();
+                std::string current_text = std::string(getView());
                 bool has_text = !current_text.empty();
                 int start = selStart;
                 int end = selEnd;
@@ -191,9 +191,9 @@ namespace mui
             }
 
             if (changed)
-                onChangedSignal(getText());
+                onChangedSignal(std::string(getView()));
             if (entered)
-                onEnterSignal(getText());
+                onEnterSignal(std::string(getView()));
         };
 
         ScopedItemWidth item_width;
@@ -209,6 +209,13 @@ namespace mui
     {
         if (buffer)
             return std::string(buffer);
+        return text;
+    }
+
+    std::string_view Entry::getView() const
+    {
+        if (buffer)
+            return std::string_view(buffer);
         return text;
     }
 
@@ -325,11 +332,11 @@ namespace mui
     EntryPtr Entry::bind(std::shared_ptr<Observable<std::string>> observable)
     {
         setText(observable->get());
-        m_connections.push_back(
+        addConnection(
             observable->onValueChanged.connect([this](const std::string &val)
                                                { mui::App::queueMain([this, val]()
                                                                      { this->setText(val); }); }));
-        m_connections.push_back(onChangedSignal.connect(
+        addConnection(onChangedSignal.connect(
             [observable](const std::string &val)
             { observable->set(val); }));
         return self();
@@ -338,7 +345,7 @@ namespace mui
     EntryPtr Entry::onChanged(std::function<void()> cb)
     {
         if (cb)
-            m_connections.push_back(
+            addConnection(
                 onChangedSignal.connect([cb](const std::string &)
                                         { cb(); }));
         return self();
@@ -347,7 +354,7 @@ namespace mui
     EntryPtr Entry::onEnter(std::function<void(const std::string &)> cb)
     {
         if (cb)
-            m_connections.push_back(onEnterSignal.connect(std::move(cb)));
+            addConnection(onEnterSignal.connect(std::move(cb)));
         return self();
     }
 

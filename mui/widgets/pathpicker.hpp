@@ -13,6 +13,8 @@
 #include <memory>
 #include <utility>
 #include <vector>
+#include <thread>
+#include <atomic>
 
 #ifdef _WIN32
 #define INITIAL_PATH "C:\\"

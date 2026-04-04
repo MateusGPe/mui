@@ -34,7 +34,8 @@ namespace mui
             flags |= ImGuiTableFlags_RowBg;
         }
 
-        if (spanAvailWidth)
+        ImVec2 final_size = ApplySizeConstraints(ImVec2(0.0f, 0.0f));
+        if (final_size.x > 0.0f)
             flags |= ImGuiTableFlags_SizingStretchProp;
 
         // Apply custom vertical spacing if set
@@ -46,7 +47,8 @@ namespace mui
                 ImVec2(ImGui::GetStyle().ItemSpacing.x, itemSpacingY));
         }
 
-        if (ImGui::BeginTable("##property_grid", 2, flags))
+        ImVec2 outer_size(final_size.x > 0.0f ? final_size.x : 0.0f, 0.0f);
+        if (ImGui::BeginTable("##property_grid", 2, flags, outer_size))
         {
             ImGui::TableSetupColumn("Property", ImGuiTableColumnFlags_WidthFixed,
                                     nameColumnWidth);

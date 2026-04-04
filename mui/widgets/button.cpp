@@ -86,7 +86,7 @@ namespace mui
     ButtonPtr Button::onClick(std::function<void()> cb)
     {
         if (cb)
-            m_connections.push_back(onClickSignal.connect(std::move(cb)));
+            addConnection(onClickSignal.connect(std::move(cb)));
         return self();
     }
 } // namespace mui

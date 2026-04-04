@@ -24,11 +24,13 @@ namespace mui
         parsePath();
         m_editEntry = Entry::create(editBuffer, sizeof(editBuffer))
                           ->setAutoSelectAll(true)
-                          ->onEnter([this](const std::string &text)
-                                    {
-                      setPath(text);
-                      setIsEditing(false);
-                      onPathNavigatedSignal(currentPath); });
+                          ->onEnter(
+                              [this](const std::string &text)
+                              {
+                                  setPath(text);
+                                  setIsEditing(false);
+                                  onPathNavigatedSignal(currentPath);
+                              });
     }
 
     void BreadcrumbBar::parsePath()
@@ -56,11 +58,9 @@ namespace mui
         ImGuiStyle &style = ImGui::GetStyle();
 
         ImVec2 avail = ImGui::GetContentRegionAvail();
-        ImVec2 actualSize(spanAvailWidth ? avail.x : width,
-                          height > 0 ? height : ImGui::GetFrameHeight());
-
-        if (actualSize.x <= 0.0f)
-            actualSize.x = avail.x;
+        float natural_w = avail.x;
+        float natural_h = ImGui::GetFrameHeight();
+        ImVec2 actualSize = ApplySizeConstraints(ImVec2(natural_w, natural_h));
 
         // Get absolute position to calculate hover over the child rect
         ImVec2 pos = window->DC.CursorPos;
@@ -84,23 +84,30 @@ namespace mui
         if (!isEditing)
         {
             // --- 1. Measurement Phase ---
-            std::vector<float> segment_widths;
-            float total_width = 0.0f;
-            float separator_width =
-                ImGui::GetFrameHeight(); // Separator is an IconButton with this width
-
-            for (const auto &segment : segments)
+            if (m_segmentsDirty ||
+                std::abs(actualSize.x - m_lastAvail.x) > 0.5f)
             {
-                if (segment.empty())
+                m_cachedSegmentWidths.clear();
+                for (const auto &segment : segments)
                 {
-                    segment_widths.push_back(0.0f);
-                    continue;
+                    if (segment.empty())
+                    {
+                        m_cachedSegmentWidths.push_back(0.0f);
+                        continue;
+                    }
+                    float button_width = ImGui::CalcTextSize(segment.c_str()).x + style.FramePadding.x * 2.0f;
+                    m_cachedSegmentWidths.push_back(button_width);
                 }
-                // IconButton with setSize(0,y) auto-sizes its width based on text.
-                float button_width =
-                    ImGui::CalcTextSize(segment.c_str()).x + style.FramePadding.x * 2.0f;
-                segment_widths.push_back(button_width);
-                total_width += button_width;
+                m_segmentsDirty = false;
+                m_lastAvail = actualSize;
+            }
+
+            float total_width = 0.0f;
+            float separator_width = ImGui::GetFrameHeight(); // Separator is an IconButton with this width
+
+            for (float w : m_cachedSegmentWidths)
+            {
+                total_width += w;
             }
             total_width += (segments.size() + 1) * separator_width;
 
@@ -167,7 +174,7 @@ namespace mui
             {
                 ScopedID btn_id(static_cast<int>(i));
                 if (ImGui::Button(segments[i].c_str(),
-                                  ImVec2(segment_widths[i], actualSize.y)))
+                                  ImVec2(m_cachedSegmentWidths[i], actualSize.y)))
                 {
                     navigate_to_segment(i);
                 }
@@ -280,7 +287,7 @@ namespace mui
                 // separator is part of the block.
                 float available_for_last =
                     actualSize.x -
-                    (separator_width + segment_widths[0] + separator_width) -
+                    (separator_width + m_cachedSegmentWidths[0] + separator_width) -
                     ellipsis_width - separator_width;
 
                 size_t last_segment_start_idx = segments.size();
@@ -289,7 +296,7 @@ namespace mui
                 for (int i = segments.size() - 1; i > 0; --i)
                 {
                     // The width needed for a segment includes the separator before it.
-                    float needed = segment_widths[i] + separator_width;
+                    float needed = m_cachedSegmentWidths[i] + separator_width;
                     if (last_segments_width + needed > available_for_last)
                         break;
                     last_segments_width += needed;
@@ -379,39 +386,50 @@ namespace mui
 
     BreadcrumbBarPtr BreadcrumbBar::setPath(const std::string &path)
     {
+        if (currentPath == path)
+            return self();
+        m_segmentsDirty = true;
         currentPath = path;
         parsePath();
         return self();
     }
 
-    BreadcrumbBarPtr
-    BreadcrumbBar::bind(std::shared_ptr<Observable<std::string>> observable)
+    BreadcrumbBarPtr BreadcrumbBar::bind(
+        std::shared_ptr<Observable<std::string>> observable)
     {
         setPath(observable->get());
-        m_connections.push_back(
+        addConnection(
             observable->onValueChanged.connect([this](const std::string &val)
                                                { mui::App::queueMain([this, val]()
                                                                      { this->setPath(val); }); }));
-        m_connections.push_back(onPathNavigatedSignal.connect(
+        addConnection(onPathNavigatedSignal.connect(
             [observable](const std::string &val)
             { observable->set(val); }));
         return self();
     }
 
-    BreadcrumbBarPtr
-    BreadcrumbBar::onPathNavigated(std::function<void(const std::string &)> cb)
+    BreadcrumbBarPtr BreadcrumbBar::onPathNavigated(
+        std::function<void(const std::string &)> cb)
     {
         if (cb)
-            m_connections.push_back(onPathNavigatedSignal.connect(std::move(cb)));
+            addConnection(onPathNavigatedSignal.connect(std::move(cb)));
         return self();
     }
+
     BreadcrumbBarPtr BreadcrumbBar::setIsEditing(bool editing)
     {
+        if (isEditing == editing)
+            return self();
+
         isEditing = editing;
         if (editing)
         {
             std::strncpy(editBuffer, currentPath.c_str(), sizeof(editBuffer) - 1);
             editBuffer[sizeof(editBuffer) - 1] = '\0'; // Ensure null-termination
+        }
+        else
+        {
+            m_segmentsDirty = true;
         }
         return self();
     }

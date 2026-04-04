@@ -158,13 +158,13 @@ namespace mui
     TreeNodePtr TreeNode::onClick(std::function<void()> cb)
     {
         if (cb)
-            m_connections.push_back(onClickSignal.connect(std::move(cb)));
+            addConnection(onClickSignal.connect(std::move(cb)));
         return self();
     }
     TreeNodePtr TreeNode::onDoubleClick(std::function<void()> cb)
     {
         if (cb)
-            m_connections.push_back(onDoubleClickSignal.connect(std::move(cb)));
+            addConnection(onDoubleClickSignal.connect(std::move(cb)));
         return self();
     }
 
@@ -176,7 +176,7 @@ namespace mui
     TreeNode::bindSelected(std::shared_ptr<Observable<bool>> observable)
     {
         setSelected(observable->get());
-        m_connections.push_back(
+        addConnection(
             observable->onValueChanged.connect([this](const bool &val)
                                                { mui::App::queueMain([this, val]()
                                                                      { this->setSelected(val); }); }));

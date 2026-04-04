@@ -72,11 +72,11 @@ namespace mui
     ListBoxPtr ListBox::bind(std::shared_ptr<Observable<int>> observable)
     {
         setSelected(observable->get());
-        m_connections.push_back(
+        addConnection(
             observable->onValueChanged.connect([this](const int &val)
                                                { mui::App::queueMain([this, val]()
                                                                      { this->setSelected(val); }); }));
-        m_connections.push_back(onSelectedSignal.connect(
+        addConnection(onSelectedSignal.connect(
             [observable](int val)
             { observable->set(val); }));
         return self();
@@ -95,14 +95,14 @@ namespace mui
     ListBoxPtr ListBox::onSelected(std::function<void()> cb)
     {
         if (cb)
-            m_connections.push_back(onSelectedSignal.connect([cb](int)
+            addConnection(onSelectedSignal.connect([cb](int)
                                                              { cb(); }));
         return self();
     }
     ListBoxPtr ListBox::onDoubleClick(std::function<void()> cb)
     {
         if (cb)
-            m_connections.push_back(onDoubleClickSignal.connect([cb](int)
+            addConnection(onDoubleClickSignal.connect([cb](int)
                                                                 { cb(); }));
         return self();
     }

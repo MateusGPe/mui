@@ -29,12 +29,15 @@ namespace mui
             const ImGuiStyle &style = g.Style;
             const ImGuiID slider_id = window->GetID("##range");
 
-            float w = ImGui::CalcItemWidth();
             const ImVec2 label_size = ImGui::CalcTextSize(text.c_str(), NULL, true);
+            float natural_w = ImGui::CalcItemWidth();
+            float natural_h = label_size.y + style.FramePadding.y * 2.0f;
+            ImVec2 final_size = ApplySizeConstraints(ImVec2(natural_w, natural_h));
+            float w = final_size.x > 0.0f ? final_size.x : natural_w;
+
             const ImRect frame_bb(window->DC.CursorPos,
                                   ImVec2(window->DC.CursorPos.x + w,
-                                         window->DC.CursorPos.y + label_size.y +
-                                             style.FramePadding.y * 2.0f));
+                                         window->DC.CursorPos.y + natural_h));
             const ImRect total_bb(
                 frame_bb.Min,
                 ImVec2(frame_bb.Max.x + (label_size.x > 0.0f
@@ -219,14 +222,14 @@ namespace mui
     {
         auto range = observable->get();
         setRange(range.first, range.second);
-        m_connections.push_back(observable->onValueChanged.connect(
+        addConnection(observable->onValueChanged.connect(
             [this](const std::pair<float, float> &val)
             {
                 mui::App::queueMain(
                     [this, val]()
                     { this->setRange(val.first, val.second); });
             }));
-        m_connections.push_back(
+        addConnection(
             onChangedSignal.connect([observable](float minVal, float maxVal)
                                     { observable->set({minVal, maxVal}); }));
         return self();
@@ -235,7 +238,7 @@ namespace mui
     RangeSliderPtr RangeSlider::onChanged(std::function<void(float, float)> cb)
     {
         if (cb)
-            m_connections.push_back(onChangedSignal.connect(std::move(cb)));
+            addConnection(onChangedSignal.connect(std::move(cb)));
         return self();
     }
 

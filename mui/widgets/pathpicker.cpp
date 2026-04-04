@@ -343,8 +343,6 @@ namespace mui
 
     void PathPicker::updateFileList()
     {
-        m_fileCombo->clear();
-
         std::error_code ec;
         std::filesystem::path dir = m_breadcrumb->getPath();
         fixDrivePath(dir);
@@ -353,134 +351,92 @@ namespace mui
 
         std::string currentFilename;
         if (!std::filesystem::is_directory(m_path, ec))
-        {
             currentFilename = std::filesystem::path(m_path).filename().string();
-        }
 
-        std::vector<std::filesystem::path> directories;
-        std::vector<std::filesystem::path> files;
+        PathPickerMode currentMode = m_mode;
+        int filterSel = m_filterSelection;
+        auto filtersCpy = m_filters;
 
-        try
-        {
-            auto it = std::filesystem::directory_iterator(
-                dir, std::filesystem::directory_options::skip_permission_denied, ec);
-            if (!ec)
-            {
-                auto end = std::filesystem::directory_iterator();
-                while (it != end)
-                {
-                    try
-                    {
-                        const auto &entry = *it;
-                        if (entry.is_directory(ec))
-                            directories.push_back(entry.path());
-                        else if (entry.is_regular_file(ec))
-                            files.push_back(entry.path());
-                    }
-                    catch (...)
-                    {
-                        /* Suppress individual read failures */
-                    }
+        std::thread([this, dir, currentFilename, currentMode, filterSel, filtersCpy]() {
+            std::vector<std::filesystem::path> directories;
+            std::vector<std::filesystem::path> files;
+            directories.reserve(1024);
+            files.reserve(1024);
 
-                    it.increment(ec);
-                    if (ec)
-                    {
-                        ec.clear();
+            std::error_code ec;
+            try {
+                auto it = std::filesystem::directory_iterator(dir, std::filesystem::directory_options::skip_permission_denied, ec);
+                if (!ec) {
+                    for (auto end = std::filesystem::directory_iterator(); it != end; it.increment(ec)) {
+                        if (ec) { ec.clear(); continue; }
+                        try {
+                            const auto &entry = *it;
+                            if (entry.is_directory(ec)) directories.push_back(entry.path());
+                            else if (entry.is_regular_file(ec)) files.push_back(entry.path());
+                        } catch (...) {}
                     }
                 }
+            } catch (...) {}
+
+            auto sort_by_name = [](const auto &a, const auto &b) {
+                return a.filename().string() < b.filename().string();
+            };
+            std::sort(directories.begin(), directories.end(), sort_by_name);
+            std::sort(files.begin(), files.end(), sort_by_name);
+
+            struct ComboItem { std::string text; bool is_target; };
+            std::vector<ComboItem> combo_items;
+            combo_items.reserve(directories.size() + files.size() + 1);
+
+            int targetIdx = -1;
+            for (const auto &p : directories) {
+                combo_items.push_back({FOLDER_PREFIX + p.filename().string(), false});
             }
-        }
-        catch (...)
-        {
-            /* Suppress outright catastrophic directory open failures */
-        }
 
-        auto sort_by_name = [](const auto &a, const auto &b)
-        {
-            return a.filename().string() < b.filename().string();
-        };
-        std::sort(directories.begin(), directories.end(), sort_by_name);
-        std::sort(files.begin(), files.end(), sort_by_name);
+            if (currentMode == PathPickerMode::File) {
+                std::vector<std::string> lower_exts;
+                bool filter_active = filterSel >= 0 && filterSel < static_cast<int>(filtersCpy.size());
+                bool is_wildcard = false;
 
-        int current_item_index = 0;
-        int targetIdx = -1;
-
-        for (const auto &p : directories)
-        {
-            m_fileCombo->append(FOLDER_PREFIX + p.filename().string());
-            current_item_index++;
-        }
-
-        if (m_mode == PathPickerMode::File) // Only add files to combo if in File mode
-        {
-            std::vector<std::string> lower_exts;
-            bool filter_active = m_filterSelection >= 0 &&
-                                 m_filterSelection < static_cast<int>(m_filters.size());
-            bool is_wildcard = false;
-
-            if (filter_active)
-            {
-                const auto &exts = m_filters[m_filterSelection].second;
-                for (const auto &e : exts)
-                {
-                    if (e == "*.*" || e == ".*" || e == "*")
-                    {
-                        is_wildcard = true;
-                        break;
+                if (filter_active) {
+                    const auto &exts = filtersCpy[filterSel].second;
+                    for (const auto &e : exts) {
+                        if (e == "*.*" || e == ".*" || e == "*") { is_wildcard = true; break; }
+                        std::string lower_e = e;
+                        if (lower_e.length() > 0 && lower_e[0] == '*') lower_e = lower_e.substr(1);
+                        std::transform(lower_e.begin(), lower_e.end(), lower_e.begin(), ::tolower);
+                        lower_exts.push_back(lower_e);
                     }
-                    std::string lower_e = e;
-                    if (lower_e.length() > 0 && lower_e[0] == '*')
-                        lower_e = lower_e.substr(1);
+                }
 
-                    std::transform(lower_e.begin(), lower_e.end(), lower_e.begin(),
-                                   [](unsigned char c)
-                                   { return std::tolower(c); });
-                    lower_exts.push_back(lower_e);
+                for (const auto &p : files) {
+                    std::string fname = p.filename().string();
+                    if (filter_active && !is_wildcard && !lower_exts.empty()) {
+                        std::string file_ext = p.extension().string();
+                        std::transform(file_ext.begin(), file_ext.end(), file_ext.begin(), ::tolower);
+                        if (std::find(lower_exts.begin(), lower_exts.end(), file_ext) == lower_exts.end()) continue;
+                    }
+                    
+                    bool is_target = (!currentFilename.empty() && fname == currentFilename);
+                    if (is_target) targetIdx = combo_items.size();
+                    combo_items.push_back({FILE_PREFIX + fname, is_target});
                 }
             }
 
-            for (const auto &p : files)
-            {
-                std::string fname = p.filename().string();
-
-                if (filter_active && !is_wildcard && !lower_exts.empty())
-                {
-                    std::string file_ext = p.extension().string();
-                    std::transform(file_ext.begin(), file_ext.end(), file_ext.begin(),
-                                   [](unsigned char c)
-                                   { return std::tolower(c); });
-
-                    bool found = false;
-                    for (const auto &e : lower_exts)
-                    {
-                        if (e == file_ext)
-                        {
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (!found)
-                        continue;
-                }
-
-                m_fileCombo->append(FILE_PREFIX + fname);
-                if (!currentFilename.empty() && fname == currentFilename)
-                    targetIdx = current_item_index;
-                current_item_index++;
+            if (targetIdx == -1 && !currentFilename.empty() && currentMode == PathPickerMode::File) {
+                targetIdx = combo_items.size();
+                combo_items.push_back({FILE_PREFIX + currentFilename, true});
             }
-        }
 
-        if (targetIdx == -1 && !currentFilename.empty() &&
-            m_mode == PathPickerMode::File)
-        {
-            m_fileCombo->append(FILE_PREFIX + currentFilename);
-            targetIdx = current_item_index;
-        }
-
-        if (targetIdx >= 0)
-        {
-            m_fileCombo->setSelectedIndex(targetIdx);
-        }
+            App::queueMain([this, dir, combo_items = std::move(combo_items), targetIdx]() {
+                if (dir != m_breadcrumb->getPath()) return; // Stale thread
+                m_fileCombo->clear();
+                for (const auto& item : combo_items) {
+                    m_fileCombo->append(item.text);
+                }
+                if (targetIdx >= 0) m_fileCombo->setSelectedIndex(targetIdx);
+            });
+        }).detach();
     }
 
     void PathPicker::renderControl()
@@ -709,11 +665,11 @@ namespace mui
     PathPicker::bind(std::shared_ptr<Observable<std::string>> observable)
     {
         setPath(observable->get());
-        m_connections.push_back(
+        addConnection(
             observable->onValueChanged.connect([this](const std::string &val)
                                                { mui::App::queueMain([this, val]()
                                                                      { this->setPath(val); }); }));
-        m_connections.push_back(onPathChangedSignal.connect(
+        addConnection(onPathChangedSignal.connect(
             [observable](const std::string &val)
             { observable->set(val); }));
         return self();
@@ -723,7 +679,7 @@ namespace mui
     PathPicker::onPathChanged(std::function<void(const std::string &)> cb)
     {
         if (cb)
-            m_connections.push_back(onPathChangedSignal.connect(std::move(cb)));
+            addConnection(onPathChangedSignal.connect(std::move(cb)));
         return self();
     }
 } // namespace mui

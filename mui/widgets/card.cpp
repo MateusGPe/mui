@@ -21,20 +21,22 @@ namespace mui
 
         // Explicitly set the next window size.
         // Passing 0.0f forces an auto-fit on that axis.
-        // Passing GetContentRegionAvail() forces it to fill available space.
         ImVec2 avail = ImGui::GetContentRegionAvail();
-        ImGui::SetNextWindowSize(
-            ImVec2(spanAvailWidth ? avail.x : 0.0f, fillHeight ? avail.y : 0.0f));
+        float natural_w = 0.0f;
+        float natural_h = fillHeight ? avail.y : 0.0f;
+        ImVec2 final_size = ApplySizeConstraints(ImVec2(natural_w, natural_h));
+
+        ImGui::SetNextWindowSize(final_size);
 
         ImGuiChildFlags child_flags = ImGuiChildFlags_Borders;
         ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoScrollbar;
 
         // Apply auto-resize flags for the axes designated as 0.0f
-        if (!spanAvailWidth)
+        if (final_size.x <= 0.0f)
         {
             child_flags |= ImGuiChildFlags_AutoResizeX;
         }
-        if (!fillHeight)
+        if (final_size.y <= 0.0f)
         {
             child_flags |= ImGuiChildFlags_AutoResizeY;
         }

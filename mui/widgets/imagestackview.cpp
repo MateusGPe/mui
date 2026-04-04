@@ -37,36 +37,36 @@ namespace mui
         m_sidebar = ImageStackSidebar::create(this);
 
         // Connect signals from sidebar to this view's methods
-        m_connections.push_back(m_sidebar->onLayerSelect.connect([this](int index)
+        addConnection(m_sidebar->onLayerSelect.connect([this](int index)
                                                                  {
     m_selectedLayer = index;
     m_slideshowTimer = 0.0f; }));
-        m_connections.push_back(m_sidebar->onLayerMoveUp.connect(
+        addConnection(m_sidebar->onLayerMoveUp.connect(
             [this](int index)
             { moveLayerUp(index); }));
-        m_connections.push_back(m_sidebar->onLayerMoveDown.connect(
+        addConnection(m_sidebar->onLayerMoveDown.connect(
             [this](int index)
             { moveLayerDown(index); }));
-        m_connections.push_back(m_sidebar->onLayerRemove.connect(
+        addConnection(m_sidebar->onLayerRemove.connect(
             [this](int index)
             { removeLayer(index); }));
-        m_connections.push_back(
+        addConnection(
             m_sidebar->onFitView.connect([this]()
                                          { fitToView(); }));
-        m_connections.push_back(m_sidebar->onToggleThumbnailMode.connect(
+        addConnection(m_sidebar->onToggleThumbnailMode.connect(
             [this](bool mode)
             { setThumbnailMode(mode); }));
-        m_connections.push_back(m_sidebar->onToggleSingleLayerMode.connect(
+        addConnection(m_sidebar->onToggleSingleLayerMode.connect(
             [this](bool mode)
             { setSingleLayerMode(mode); }));
-        m_connections.push_back(m_sidebar->onToggleSlideshowMode.connect(
+        addConnection(m_sidebar->onToggleSlideshowMode.connect(
             [this](bool mode)
             { setSlideshowMode(mode); }));
     }
 
     ImageStackView::~ImageStackView() { clearLayers(); }
 
-    ImageStackViewPtr ImageStackView::addLayer(ImagePtr image)
+    ImageStackViewPtr ImageStackView::addLayer(const ImagePtr& image)
     {
         if (!image)
             return self();

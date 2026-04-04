@@ -108,11 +108,11 @@ namespace mui
     ComboBoxPtr ComboBox::bind(std::shared_ptr<Observable<int>> observable)
     {
         setSelectedIndex(observable->get());
-        m_connections.push_back(
+        addConnection(
             observable->onValueChanged.connect([this](const int &val)
                                                { mui::App::queueMain([this, val]()
                                                                      { this->setSelectedIndex(val); }); }));
-        m_connections.push_back(
+        addConnection(
             onChangedSignal.connect([observable](int val)
                                     { observable->set(val); }));
         return self();
@@ -121,7 +121,7 @@ namespace mui
     ComboBoxPtr ComboBox::onChanged(std::function<void(int)> cb)
     {
         if (cb)
-            m_connections.push_back(onChangedSignal.connect(cb));
+            addConnection(onChangedSignal.connect(cb));
 
         return self();
     }
